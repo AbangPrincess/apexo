@@ -18,30 +18,30 @@ abstract final class Breakpoints {
 
 /// Horizontal padding that centers content in [maxWidth] while keeping the
 /// scrollbar at the window edge.
-EdgeInsets pageInsets(double width,
-    {double maxWidth = 720, double top = Space.m, double bottom = Space.xl}) {
+EdgeInsets pageInsets(
+  double width, {
+  double maxWidth = 720,
+  double top = Space.m,
+  double bottom = Space.xl,
+}) {
   final side = math.max(Space.m, (width - maxWidth) / 2);
   return EdgeInsets.fromLTRB(side, top, side, bottom);
 }
 
 /// A ListView whose content is centered and width-capped on wide screens.
 class PageListView extends StatelessWidget {
-  const PageListView({
-    super.key,
-    required this.children,
-    this.maxWidth = 720,
-  });
+  const PageListView({super.key, required this.children, this.maxWidth = 720});
 
   final List<Widget> children;
   final double maxWidth;
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
-        builder: (context, c) => ListView(
-          padding: pageInsets(c.maxWidth, maxWidth: maxWidth),
-          children: children,
-        ),
-      );
+    builder: (context, c) => ListView(
+      padding: pageInsets(c.maxWidth, maxWidth: maxWidth),
+      children: children,
+    ),
+  );
 }
 
 /// Centers [child] and caps its width.
@@ -53,9 +53,9 @@ class MaxWidth extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: child,
-        ),
-      );
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
 }

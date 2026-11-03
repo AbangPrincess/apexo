@@ -3,12 +3,15 @@ import 'units.dart';
 
 /// One timestamped GPS fix.
 class Fix {
-  const Fix(this.lat, this.lng, this.time, {this.accuracyM = 0});
+  const Fix(this.lat, this.lng, this.time, {this.accuracyM = 0, this.speedMps});
 
   final double lat;
   final double lng;
   final DateTime time;
   final double accuracyM;
+
+  /// Speed reported by the device, when it has one.
+  final double? speedMps;
 
   GeoPoint get point => GeoPoint(lat, lng);
 }
@@ -28,8 +31,13 @@ class SpeedStats {
   final double maxKmh;
   final int droppedFixes;
 
-  static const empty =
-      SpeedStats(distanceM: 0, movingSec: 0, avgKmh: 0, maxKmh: 0, droppedFixes: 0);
+  static const empty = SpeedStats(
+    distanceM: 0,
+    movingSec: 0,
+    avgKmh: 0,
+    maxKmh: 0,
+    droppedFixes: 0,
+  );
 }
 
 /// Distance, moving time and average/max speed from raw fixes.

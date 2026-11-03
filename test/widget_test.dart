@@ -13,7 +13,7 @@ const sizes = {
   'desktop': Size(1366, 800),
 };
 
-Future<void> pumpApp(WidgetTester tester, Size size) async {
+Future<FakeRepository> pumpApp(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
@@ -23,6 +23,7 @@ Future<void> pumpApp(WidgetTester tester, Size size) async {
   addTearDown(repo.dispose);
   await tester.pumpWidget(PedalTrackApp(repository: repo, prefs: prefs));
   await tester.pumpAndSettle();
+  return repo;
 }
 
 Future<void> tapVisible(WidgetTester tester, Finder finder) async {
@@ -37,18 +38,24 @@ Future<void> goTo(WidgetTester tester, String tab) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> signInDemo(WidgetTester tester) async {
+  await tapVisible(tester, find.text('Continue with demo account'));
+}
+
 void main() {
   for (final MapEntry(key: name, value: size) in sizes.entries) {
     testWidgets('$name: demo account, every tab, units setting', (tester) async {
       await pumpApp(tester, size);
-      await tester.tap(find.text('Continue with demo account'));
+      await signInDemo(tester);
+      expect(find.text('Morning Ride'), findsOneWidget);
+      expect(find.text('This week'), findsOneWidget);
+
+      await tapVisible(tester, find.text('Morning Ride'));
+      expect(find.text('Elapsed time'), findsOneWidget);
+      await tester.pageBack();
       await tester.pumpAndSettle();
 
-      expect(find.text('Morning Ride'), findsOneWidget);
-      expect(find.text('Recent activities'), findsOneWidget);
-
       await goTo(tester, 'circle');
-      expect(find.text('Trail Buddies'), findsWidgets);
       expect(find.text('Jero'), findsOneWidget);
       expect(find.text('TRAIL7'), findsOneWidget);
 
@@ -61,37 +68,95 @@ void main() {
       expect(find.text("Shane's phone battery is at 15%"), findsOneWidget);
 
       await goTo(tester, 'me');
+      expect(find.text('Achievements'), findsOneWidget);
+      expect(find.text('Century Club'), findsOneWidget);
+      await tapVisible(tester, find.byTooltip('Settings').first);
       await tapVisible(tester, find.text('Miles'));
+      await tester.pageBack();
+      await tester.pumpAndSettle();
 
       await goTo(tester, 'home');
-      expect(find.text('mph'), findsNothing); // units live in rich text spans
       expect(find.textContaining('mph', findRichText: true), findsWidgets);
     });
 
-    testWidgets('$name: new account sees friendly empty states', (tester) async {
+    testWidgets('$name: sign-up waits for email verification', (tester) async {
       await pumpApp(tester, size);
       await tapVisible(tester, find.text('Create account'));
-
       final fields = find.byType(TextFormField);
       await tester.enterText(fields.at(0), 'Ana');
       await tester.enterText(fields.at(1), 'ana@example.com');
       await tester.enterText(fields.at(2), 'secret-123');
       await tapVisible(tester, find.widgetWithText(FilledButton, 'Create account'));
 
+      expect(find.text('Check your email'), findsOneWidget);
+      await tapVisible(tester, find.text("I've verified my email"));
+      expect(find.textContaining('Not verified yet'), findsOneWidget);
+
+      await tapVisible(tester, find.text('Open demo inbox'));
+      await tapVisible(tester, find.widgetWithText(FilledButton, 'Verify email'));
+
       expect(find.text('No activities yet'), findsOneWidget);
       await goTo(tester, 'circle');
       expect(find.text('Ride with your people'), findsOneWidget);
       await goTo(tester, 'alerts');
       expect(find.text('All quiet'), findsOneWidget);
+      await goTo(tester, 'me');
+      expect(find.text('0 of 13 earned'), findsOneWidget);
     });
   }
 
-  testWidgets('wrong password shows a safe error', (tester) async {
+  testWidgets('five wrong passwords lock sign-in with a countdown', (tester) async {
     await pumpApp(tester, sizes['iPhone']!);
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(0), 'someone@example.com');
-    await tester.enterText(fields.at(1), 'not-the-password');
-    await tapVisible(tester, find.widgetWithText(OutlinedButton, 'Sign in'));
-    expect(find.text('Email or password is incorrect.'), findsOneWidget);
+    for (var i = 0; i < 5; i++) {
+      await tester.enterText(fields.at(1), 'guess-$i');
+      await tapVisible(tester, find.widgetWithText(OutlinedButton, 'Sign in'));
+    }
+    expect(find.textContaining('Too many attempts'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(OutlinedButton),
+        matching: find.textContaining('Try again in'),
+      ),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 31));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(OutlinedButton, 'Sign in'), findsOneWidget);
+  });
+
+  testWidgets('record with simulated GPS, pause, finish and save', (tester) async {
+    await pumpApp(tester, sizes['iPhone']!);
+    await signInDemo(tester);
+    await goTo(tester, 'record');
+    await tapVisible(tester, find.text('START'));
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(seconds: 1));
+    }
+    expect(find.text('Recording'), findsOneWidget);
+    expect(find.text('0:30'), findsOneWidget);
+
+    await tapVisible(tester, find.bySemanticsLabel('PAUSE'));
+    expect(find.text('Paused'), findsOneWidget);
+    await tapVisible(tester, find.bySemanticsLabel('FINISH'));
+    expect(find.text('Save activity'), findsWidgets);
+
+    await tester.enterText(find.byType(TextField).last, 'Test loop');
+    await tapVisible(tester, find.widgetWithText(FilledButton, 'Save activity'));
+    expect(find.text('Test loop'), findsOneWidget);
+  });
+
+  testWidgets('edit profile bio and hometown', (tester) async {
+    await pumpApp(tester, sizes['iPhone']!);
+    await signInDemo(tester);
+    await goTo(tester, 'me');
+    await tapVisible(tester, find.text('Edit profile'));
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(1), 'Weekend climber from the south.');
+    await tester.enterText(fields.at(2), 'Koronadal City');
+    await tapVisible(tester, find.widgetWithText(FilledButton, 'Save profile'));
+    expect(find.text('Weekend climber from the south.'), findsOneWidget);
+    expect(find.text('From Koronadal City'), findsOneWidget);
   });
 }

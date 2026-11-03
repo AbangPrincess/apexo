@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/theme.dart';
 import '../../core/validators.dart';
 import 'auth_widgets.dart';
+import 'password_checklist.dart';
 import 'session_controller.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -31,9 +32,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     if (!(_form.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
     final navigator = Navigator.of(context);
-    final ok = await context
-        .read<SessionController>()
-        .createAccount(_name.text, _email.text, _password.text);
+    final ok = await context.read<SessionController>().createAccount(
+      _name.text,
+      _email.text,
+      _password.text,
+    );
     // Signed in: drop this route so the app shell shows.
     if (ok && mounted) navigator.popUntil((r) => r.isFirst);
   }
@@ -90,6 +93,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 onChanged: (_) => session.clearError(),
                 onSubmitted: _create,
               ),
+              const SizedBox(height: Space.s),
+              PasswordChecklist(controller: _password),
               if (session.error != null) ...[
                 const SizedBox(height: Space.m),
                 ErrorBanner(session.error!),
@@ -102,8 +107,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                     ? const ButtonSpinner(color: Colors.white)
                     : const Text('Create account'),
               ),
+              const SizedBox(height: Space.m),
+              Text(
+                "We'll email you a link to confirm it's really you before the account opens.",
+                textAlign: TextAlign.center,
+                style: t.bodySmall?.copyWith(color: AppColors.textMuted),
+              ),
               if (session.isDemo) ...[
-                const SizedBox(height: Space.m),
+                const SizedBox(height: Space.s),
                 Text(
                   'Demo mode: accounts are kept in memory and cleared when you reload.',
                   textAlign: TextAlign.center,

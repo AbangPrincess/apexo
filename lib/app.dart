@@ -6,9 +6,12 @@ import 'core/theme.dart';
 import 'data/repository.dart';
 import 'features/auth/session_controller.dart';
 import 'features/auth/sign_in_screen.dart';
+import 'features/auth/verify_email_screen.dart';
 import 'features/circle/circle_controller.dart';
 import 'features/feed/activities_controller.dart';
 import 'features/me/settings_controller.dart';
+import 'features/record/location_source.dart';
+import 'features/record/record_controller.dart';
 import 'shell/app_shell.dart';
 import 'widgets/brand_mark.dart';
 
@@ -24,10 +27,16 @@ class PedalTrackApp extends StatelessWidget {
       providers: [
         Provider<AppRepository>.value(value: repository),
         ChangeNotifierProvider(create: (_) => SessionController(repository), lazy: false),
-        ChangeNotifierProvider(
-            create: (_) => SettingsController(prefs, repository), lazy: false),
+        ChangeNotifierProvider(create: (_) => SettingsController(prefs, repository), lazy: false),
         ChangeNotifierProvider(create: (_) => ActivitiesController(repository)),
         ChangeNotifierProvider(create: (_) => CircleController(repository)),
+        ChangeNotifierProvider(
+          create: (_) => RecordController(
+            repository,
+            device: DeviceLocationSource(),
+            simulator: SimulatedLocationSource(),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'PedalTrack',
@@ -47,11 +56,14 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     final ready = context.select<SessionController, bool>((s) => s.ready);
     final signedIn = context.select<SessionController, bool>((s) => s.user != null);
+    final verify = context.select<SessionController, bool>((s) => s.needsVerification);
     final Widget child = !ready
         ? const Scaffold(body: Center(child: BrandMark(size: 40)))
-        : signedIn
-            ? const AppShell(key: ValueKey('shell'))
-            : const SignInScreen(key: ValueKey('sign-in'));
+        : !signedIn
+        ? const SignInScreen(key: ValueKey('sign-in'))
+        : verify
+        ? const VerifyEmailScreen(key: ValueKey('verify'))
+        : const AppShell(key: ValueKey('shell'));
     return AnimatedSwitcher(duration: kMotion, child: child);
   }
 }

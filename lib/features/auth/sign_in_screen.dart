@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/login_throttle.dart';
 import '../../core/theme.dart';
 import '../../core/validators.dart';
 import '../../widgets/brand_mark.dart';
 import '../../widgets/responsive.dart';
 import 'auth_widgets.dart';
 import 'create_account_screen.dart';
+import 'forgot_password_screen.dart';
 import 'session_controller.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -37,14 +39,24 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _openCreateAccount() {
     context.read<SessionController>().clearError();
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const CreateAccountScreen()));
+  }
+
+  void _openForgotPassword() {
+    context.read<SessionController>().clearError();
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const CreateAccountScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) => ForgotPasswordScreen(initialEmail: _email.text.trim()),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final session = context.watch<SessionController>();
+    final lock = session.lockLeftFor(_email.text);
     final t = Theme.of(context).textTheme;
     final phone = MediaQuery.sizeOf(context).width < Breakpoints.expanded;
     final pending = session.pending;
@@ -91,7 +103,10 @@ class _SignInScreenState extends State<SignInScreen> {
                 autocorrect: false,
                 textInputAction: TextInputAction.next,
                 validator: validateEmail,
-                onChanged: (_) => session.clearError(),
+                onChanged: (_) {
+                  session.clearError();
+                  setState(() {}); // the lock applies per email
+                },
                 decoration: const InputDecoration(labelText: 'Email'),
               ),
               const SizedBox(height: Space.m),
@@ -101,17 +116,24 @@ class _SignInScreenState extends State<SignInScreen> {
                 onChanged: (_) => session.clearError(),
                 onSubmitted: _signIn,
               ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: session.busy ? null : _openForgotPassword,
+                  child: const Text('Forgot password?'),
+                ),
+              ),
               if (session.error != null) ...[
-                const SizedBox(height: Space.m),
+                const SizedBox(height: Space.s),
                 ErrorBanner(session.error!),
               ],
-              const SizedBox(height: Space.l),
+              const SizedBox(height: Space.m),
               OutlinedButton(
-                onPressed: session.busy ? null : _signIn,
+                onPressed: session.busy || lock != null ? null : _signIn,
                 style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                 child: pending == SessionAction.signIn
                     ? const ButtonSpinner()
-                    : const Text('Sign in'),
+                    : Text(lock == null ? 'Sign in' : 'Try again in ${formatWait(lock)}'),
               ),
               const SizedBox(height: Space.m),
               Wrap(

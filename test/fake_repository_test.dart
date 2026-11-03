@@ -64,24 +64,33 @@ void main() {
     final after = await repo.watchAlerts(DemoIds.circle).first;
     expect(after.where((a) => a.type == AlertType.geofence), hasLength(1));
 
-    final jero = (await repo.watchMembers(DemoIds.circle).first)
-        .firstWhere((m) => m.uid == DemoIds.jero);
+    final jero = (await repo.watchMembers(DemoIds.circle).first).firstWhere(
+      (m) => m.uid == DemoIds.jero,
+    );
     expect(jero.status, MemberStatus.alert);
     expect(jero.vehicle!.status, VehicleStatus.stolen);
     expect(jero.speedKmh, greaterThan(10));
   });
 
   test('email accounts: create, sign out, sign in', () async {
-    await repo.createAccount(displayName: ' Ana ', email: 'Ana@Example.com', password: 'secret-123');
+    await repo.createAccount(
+      displayName: ' Ana ',
+      email: 'Ana@Example.com',
+      password: 'secret-123',
+    );
     expect(repo.currentUser!.displayName, 'Ana');
     expect(await repo.watchCircles(repo.currentUser!.uid).first, isEmpty);
     await repo.signOut();
     expect(repo.currentUser, isNull);
 
-    await expectLater(repo.signIn(email: 'ana@example.com', password: 'wrong-pass'),
-        throwsA(isA<AuthException>()));
-    await expectLater(repo.signIn(email: 'nobody@example.com', password: 'secret-123'),
-        throwsA(isA<AuthException>()));
+    await expectLater(
+      repo.signIn(email: 'ana@example.com', password: 'wrong-pass'),
+      throwsA(isA<AuthException>()),
+    );
+    await expectLater(
+      repo.signIn(email: 'nobody@example.com', password: 'secret-123'),
+      throwsA(isA<AuthException>()),
+    );
     await repo.signIn(email: ' ana@example.com', password: 'secret-123');
     expect(repo.currentUser!.email, 'Ana@Example.com');
 
@@ -93,8 +102,7 @@ void main() {
 
   test('profile settings update the signed-in user', () async {
     await repo.signInDemo();
-    await repo.updateProfile(DemoIds.you,
-        units: Units.mi, defaultActivity: ActivityType.driving);
+    await repo.updateProfile(DemoIds.you, units: Units.mi, defaultActivity: ActivityType.driving);
     expect(repo.currentUser!.units, Units.mi);
     expect(repo.currentUser!.defaultActivity, ActivityType.driving);
   });

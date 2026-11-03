@@ -27,8 +27,7 @@ class StatValue extends StatelessWidget {
       StatSize.small => t.titleMedium,
       StatSize.medium => t.titleLarge,
       StatSize.large => t.displaySmall?.copyWith(fontWeight: FontWeight.w700),
-    }
-        ?.copyWith(fontFeatures: kTabular, letterSpacing: -0.5, height: 1.1);
+    }?.copyWith(fontFeatures: kTabular, letterSpacing: -0.5, height: 1.1);
     final unitStyle = t.bodyMedium?.copyWith(color: AppColors.textMuted);
 
     return Semantics(
@@ -41,10 +40,12 @@ class StatValue extends StatelessWidget {
           Text(label, style: t.labelMedium?.copyWith(color: AppColors.textMuted)),
           const SizedBox(height: 2),
           Text.rich(
-            TextSpan(children: [
-              TextSpan(text: value, style: valueStyle),
-              if (unit != null) TextSpan(text: ' $unit', style: unitStyle),
-            ]),
+            TextSpan(
+              children: [
+                TextSpan(text: value, style: valueStyle),
+                if (unit != null) TextSpan(text: ' $unit', style: unitStyle),
+              ],
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

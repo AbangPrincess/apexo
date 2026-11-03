@@ -52,17 +52,18 @@ class _CircleScreenState extends State<CircleScreen> {
       body: !ctrl.loaded
           ? const Center(child: CircularProgressIndicator.adaptive())
           : circle == null
-              ? EmptyState(
-                  icon: Icons.people_outline_rounded,
-                  title: 'Ride with your people',
-                  message: 'Create a circle or join one with an invite code. Members see each '
-                      'other live on the map, and only after they agree to share.',
-                  actionLabel: 'Create a circle',
-                  onAction: () => showComingSoon(context, 'Creating circles'),
-                  secondaryLabel: 'Join with a code',
-                  onSecondary: () => showComingSoon(context, 'Joining circles'),
-                )
-              : _body(context, ctrl, circle),
+          ? EmptyState(
+              icon: Icons.people_outline_rounded,
+              title: 'Ride with your people',
+              message:
+                  'Create a circle or join one with an invite code. Members see each '
+                  'other live on the map, and only after they agree to share.',
+              actionLabel: 'Create a circle',
+              onAction: () => showComingSoon(context, 'Creating circles'),
+              secondaryLabel: 'Join with a code',
+              onSecondary: () => showComingSoon(context, 'Joining circles'),
+            )
+          : _body(context, ctrl, circle),
     );
   }
 
@@ -97,20 +98,26 @@ class _CircleScreenState extends State<CircleScreen> {
       onFocus: (m) => _map.focus(m.point),
     );
 
-    return LayoutBuilder(builder: (context, c) {
-      if (c.maxWidth >= Breakpoints.expanded) {
-        return Row(children: [
-          Expanded(child: map),
-          const VerticalDivider(width: 1),
-          SizedBox(width: 380, child: panel),
-        ]);
-      }
-      return Column(children: [
-        Expanded(flex: 11, child: map),
-        const Divider(),
-        Expanded(flex: 10, child: panel),
-      ]);
-    });
+    return LayoutBuilder(
+      builder: (context, c) {
+        if (c.maxWidth >= Breakpoints.expanded) {
+          return Row(
+            children: [
+              Expanded(child: map),
+              const VerticalDivider(width: 1),
+              SizedBox(width: 380, child: panel),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            Expanded(flex: 11, child: map),
+            const Divider(),
+            Expanded(flex: 10, child: panel),
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -141,9 +148,7 @@ class _MemberPanel extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.s, Space.s),
           child: Row(
             children: [
-              Expanded(
-                child: Text('${members.length} members', style: t.titleMedium),
-              ),
+              Expanded(child: Text('${members.length} members', style: t.titleMedium)),
               Tooltip(
                 message: 'Copy invite code',
                 child: TextButton.icon(
@@ -155,8 +160,10 @@ class _MemberPanel extends StatelessWidget {
                       ..showSnackBar(const SnackBar(content: Text('Invite code copied')));
                   },
                   icon: const Icon(Icons.copy_rounded, size: 18),
-                  label: Text(circle.inviteCode,
-                      style: const TextStyle(letterSpacing: 1.5, fontFeatures: kTabular)),
+                  label: Text(
+                    circle.inviteCode,
+                    style: const TextStyle(letterSpacing: 1.5, fontFeatures: kTabular),
+                  ),
                 ),
               ),
             ],

@@ -10,11 +10,15 @@ class BottomNav extends StatelessWidget {
     required this.current,
     required this.onSelect,
     this.alertCount = 0,
+    this.recording = false,
   });
 
   final AppTab current;
   final ValueChanged<AppTab> onSelect;
   final int alertCount;
+
+  /// A ride is being recorded: the center button turns green.
+  final bool recording;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +37,11 @@ class BottomNav extends StatelessWidget {
                 Expanded(
                   key: ValueKey('nav-${tab.name}'),
                   child: tab == AppTab.record
-                      ? _RecordButton(selected: current == tab, onTap: () => onSelect(tab))
+                      ? _RecordButton(
+                          selected: current == tab,
+                          recording: recording,
+                          onTap: () => onSelect(tab),
+                        )
                       : _NavItem(
                           tab: tab,
                           selected: current == tab,
@@ -50,12 +58,7 @@ class BottomNav extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.tab,
-    required this.selected,
-    required this.onTap,
-    this.badge = 0,
-  });
+  const _NavItem({required this.tab, required this.selected, required this.onTap, this.badge = 0});
 
   final AppTab tab;
   final bool selected;
@@ -77,11 +80,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Badge(
-              isLabelVisible: badge > 0,
-              label: Text('$badge'),
-              child: icon,
-            ),
+            Badge(isLabelVisible: badge > 0, label: Text('$badge'), child: icon),
             const SizedBox(height: 4),
             AnimatedDefaultTextStyle(
               duration: kMotion,
@@ -100,9 +99,10 @@ class _NavItem extends StatelessWidget {
 }
 
 class _RecordButton extends StatelessWidget {
-  const _RecordButton({required this.selected, required this.onTap});
+  const _RecordButton({required this.selected, required this.recording, required this.onTap});
 
   final bool selected;
+  final bool recording;
   final VoidCallback onTap;
 
   @override
@@ -110,16 +110,13 @@ class _RecordButton extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: 'Record',
+      label: recording ? 'Recording in progress' : 'Record',
       excludeSemantics: true,
       child: Center(
         child: Material(
-          color: AppColors.accent,
+          color: recording ? AppColors.tracking : AppColors.accent,
           shape: CircleBorder(
-            side: BorderSide(
-              color: selected ? AppColors.accentSoft : AppColors.surface,
-              width: 4,
-            ),
+            side: BorderSide(color: selected ? AppColors.accentSoft : AppColors.surface, width: 4),
           ),
           child: InkWell(
             customBorder: const CircleBorder(),

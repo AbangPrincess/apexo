@@ -4,8 +4,12 @@ enum ActivityType {
   motorcycling('Motorcycling', 'Moto ride', speedCapMps: 60, autoPauseKmh: 3),
   driving('Driving', 'Drive', speedCapMps: 70, autoPauseKmh: 3);
 
-  const ActivityType(this.label, this.noun,
-      {required this.speedCapMps, required this.autoPauseKmh});
+  const ActivityType(
+    this.label,
+    this.noun, {
+    required this.speedCapMps,
+    required this.autoPauseKmh,
+  });
 
   final String label;
 

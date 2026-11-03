@@ -7,8 +7,11 @@ import 'models/user.dart';
 
 /// User-facing auth failure with a message that is safe to show.
 class AuthException implements Exception {
-  const AuthException(this.message);
+  const AuthException(this.message, {this.retryAfter});
   final String message;
+
+  /// Set when the action is blocked for a while (lockout or resend cooldown).
+  final Duration? retryAfter;
 
   @override
   String toString() => message;
@@ -30,11 +33,30 @@ abstract interface class AuthRepository {
     required String password,
   });
   Future<void> signOut();
+
+  /// Sends (or re-sends) the verification link to the signed-in user.
+  Future<void> sendEmailVerification();
+
+  /// Re-reads the signed-in user, e.g. after they opened the link.
+  Future<void> reloadUser();
+
+  /// Sends a reset link. Succeeds silently for unknown emails so the form
+  /// never reveals which emails have accounts.
+  Future<void> sendPasswordReset(String email);
 }
 
 abstract interface class ProfileRepository {
-  Future<void> updateProfile(String uid,
-      {String? displayName, Units? units, ActivityType? defaultActivity});
+  /// Null leaves a field unchanged; an empty string clears it.
+  Future<void> updateProfile(
+    String uid, {
+    String? displayName,
+    Units? units,
+    ActivityType? defaultActivity,
+    String? bio,
+    String? hometown,
+    String? photoUrl,
+    String? coverUrl,
+  });
   Stream<List<Vehicle>> watchVehicles(String uid);
 }
 

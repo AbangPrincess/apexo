@@ -27,8 +27,6 @@ T readEnum<T extends Enum>(List<T> values, Object? name, T fallback) {
   return fallback;
 }
 
-Map<String, dynamic>? readMap(Object? v) =>
-    v is Map ? Map<String, dynamic>.from(v) : null;
+Map<String, dynamic>? readMap(Object? v) => v is Map ? Map<String, dynamic>.from(v) : null;
 
-List<String> readStringList(Object? v) =>
-    v is List ? v.whereType<String>().toList() : const [];
+List<String> readStringList(Object? v) => v is List ? v.whereType<String>().toList() : const [];

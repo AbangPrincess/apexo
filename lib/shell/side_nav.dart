@@ -12,12 +12,14 @@ class SideNav extends StatelessWidget {
     required this.onSelect,
     required this.extended,
     this.alertCount = 0,
+    this.recording = false,
   });
 
   final AppTab current;
   final ValueChanged<AppTab> onSelect;
   final bool extended;
   final int alertCount;
+  final bool recording;
 
   static const _railTabs = [AppTab.home, AppTab.circle, AppTab.alerts, AppTab.me];
 
@@ -42,6 +44,7 @@ class SideNav extends StatelessWidget {
               key: const ValueKey('nav-record'),
               extended: extended,
               selected: current == AppTab.record,
+              recording: recording,
               onTap: () => onSelect(AppTab.record),
             ),
           ],
@@ -65,10 +68,17 @@ class SideNav extends StatelessWidget {
 }
 
 class _RecordAction extends StatelessWidget {
-  const _RecordAction({super.key, required this.extended, required this.selected, required this.onTap});
+  const _RecordAction({
+    super.key,
+    required this.extended,
+    required this.selected,
+    required this.recording,
+    required this.onTap,
+  });
 
   final bool extended;
   final bool selected;
+  final bool recording;
   final VoidCallback onTap;
 
   @override
@@ -80,22 +90,24 @@ class _RecordAction extends StatelessWidget {
         child: FilledButton.icon(
           onPressed: onTap,
           icon: icon,
-          label: const Text('Record'),
+          label: Text(recording ? 'Recording…' : 'Record'),
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 52),
+            backgroundColor: recording ? AppColors.tracking : null,
             side: selected ? const BorderSide(color: AppColors.accentSoft, width: 3) : null,
           ),
         ),
       );
     }
     return Tooltip(
-      message: 'Record',
+      message: recording ? 'Recording in progress' : 'Record',
       child: IconButton.filled(
         onPressed: onTap,
         icon: icon,
         iconSize: 26,
         style: IconButton.styleFrom(
           minimumSize: const Size(56, 56),
+          backgroundColor: recording ? AppColors.tracking : null,
           side: selected ? const BorderSide(color: AppColors.accentSoft, width: 3) : null,
         ),
       ),

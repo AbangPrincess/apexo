@@ -37,22 +37,29 @@ class AlertsScreen extends StatelessWidget {
         onAction: () => context.read<ShellController>().go(AppTab.circle),
       );
     } else {
-      body = PageListView(children: [
-        if (circle != null) ...[
-          Text(circle.name, style: t.titleMedium),
-          const SizedBox(height: Space.xs),
-          Text('Alerts from members of this circle',
-              style: t.bodySmall?.copyWith(color: AppColors.textMuted)),
-          const SizedBox(height: Space.m),
+      body = PageListView(
+        children: [
+          if (circle != null) ...[
+            Text(circle.name, style: t.titleMedium),
+            const SizedBox(height: Space.xs),
+            Text(
+              'Alerts from members of this circle',
+              style: t.bodySmall?.copyWith(color: AppColors.textMuted),
+            ),
+            const SizedBox(height: Space.m),
+          ],
+          for (final a in alerts) ...[
+            _AlertCard(key: ValueKey(a.id), alert: a, seen: uid != null && a.ackBy.contains(uid)),
+            const SizedBox(height: 12),
+          ],
         ],
-        for (final a in alerts) ...[
-          _AlertCard(key: ValueKey(a.id), alert: a, seen: uid != null && a.ackBy.contains(uid)),
-          const SizedBox(height: 12),
-        ],
-      ]);
+      );
     }
 
-    return Scaffold(appBar: AppBar(title: const Text('Alerts')), body: body);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Alerts')),
+      body: body,
+    );
   }
 }
 
@@ -63,11 +70,11 @@ class _AlertCard extends StatelessWidget {
   final bool seen;
 
   String get _detail => switch (alert.type) {
-        AlertType.geofence => 'Moved ${alert.distanceM.round()} m from its boundary',
-        AlertType.motion => 'Movement detected while guarded',
-        AlertType.lowbattery => 'Guard may stop soon',
-        AlertType.sos => 'Asked the circle for help',
-      };
+    AlertType.geofence => 'Moved ${alert.distanceM.round()} m from its boundary',
+    AlertType.motion => 'Movement detected while guarded',
+    AlertType.lowbattery => 'Guard may stop soon',
+    AlertType.sos => 'Asked the circle for help',
+  };
 
   @override
   Widget build(BuildContext context) {

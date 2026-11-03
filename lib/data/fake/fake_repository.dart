@@ -8,25 +8,31 @@ import '../models/circle_alert.dart';
 import '../models/user.dart';
 import '../repository.dart';
 import 'demo_seed.dart';
+import 'fake_auth.dart';
 import 'demo_simulator.dart';
-import 'live_value.dart';
+import 'fake_store.dart';
 
 /// In-memory demo backend that mirrors the Firestore layout. Nothing is
 /// persisted or logged; everything resets when the app reloads.
-class FakeRepository extends AppRepository {
+class FakeRepository extends AppRepository implements DemoMailbox {
   FakeRepository({
     this.simulate = true,
     this.latency = const Duration(milliseconds: 350),
     DateTime? now,
-  }) : seed = DemoSeed.build(now ?? DateTime.now()) {
-    _profiles[seed.you.uid] = seed.you;
-    _vehiclesOf(seed.you.uid).value = seed.vehicles;
-    _activitiesOf(seed.you.uid).value = seed.activities;
-    _circles.value = [seed.circle];
-    _membersOf(seed.circle.id).value = seed.members;
-    _alertsOf(seed.circle.id).value = seed.alerts;
-    simulator = DemoSimulator(_World(this),
-        loop: seed.jeroLoop, boundary: seed.jeroBoundary);
+    FakeAuth? auth,
+  }) : seed = DemoSeed.build(now ?? DateTime.now()),
+       accounts = auth ?? FakeAuth() {
+    _store.profiles[seed.you.uid] = seed.you;
+    _store.vehiclesOf(seed.you.uid).value = seed.vehicles;
+    _store.activitiesOf(seed.you.uid).value = seed.activities;
+    _store.circles.value = [seed.circle];
+    _store.membersOf(seed.circle.id).value = seed.members;
+    _store.alertsOf(seed.circle.id).value = seed.alerts;
+    simulator = DemoSimulator(
+      CircleWorld(_store, seed.circle.id),
+      loop: seed.jeroLoop,
+      boundary: seed.jeroBoundary,
+    );
   }
 
   /// Animate demo members while the demo account is signed in.
@@ -37,27 +43,12 @@ class FakeRepository extends AppRepository {
   final DemoSeed seed;
   late final DemoSimulator simulator;
 
-  final _auth = LiveValue<AppUser?>(null);
-  final _accounts = <String, _Account>{};
-  final _profiles = <String, AppUser>{};
-  final _vehicles = <String, LiveValue<List<Vehicle>>>{};
-  final _activities = <String, LiveValue<List<Activity>>>{};
-  final _circles = LiveValue<List<Circle>>(const []);
-  final _members = <String, LiveValue<List<Member>>>{};
-  final _alerts = <String, LiveValue<List<CircleAlert>>>{};
+  /// Accounts, lockout and the demo outbox (the "auth server").
+  final FakeAuth accounts;
+  final _store = FakeStore();
   int _nextUid = 1;
 
-  LiveValue<List<Vehicle>> _vehiclesOf(String uid) =>
-      _vehicles.putIfAbsent(uid, () => LiveValue(const []));
-  LiveValue<List<Activity>> _activitiesOf(String uid) =>
-      _activities.putIfAbsent(uid, () => LiveValue(const []));
-  LiveValue<List<Member>> _membersOf(String cid) =>
-      _members.putIfAbsent(cid, () => LiveValue(const []));
-  LiveValue<List<CircleAlert>> _alertsOf(String cid) =>
-      _alerts.putIfAbsent(cid, () => LiveValue(const []));
-
-  Future<void> _wait() =>
-      latency == Duration.zero ? Future.value() : Future.delayed(latency);
+  Future<void> _wait() => latency == Duration.zero ? Future.value() : Future.delayed(latency);
 
   // Auth ---------------------------------------------------------------------
 
@@ -65,27 +56,23 @@ class FakeRepository extends AppRepository {
   bool get isDemo => true;
 
   @override
-  AppUser? get currentUser => _auth.value;
+  AppUser? get currentUser => _store.auth.value;
 
   @override
-  Stream<AppUser?> authStateChanges() => _auth.stream;
+  Stream<AppUser?> authStateChanges() => _store.auth.stream;
 
   @override
   Future<void> signInDemo() async {
     await _wait();
-    _auth.value = _profiles[DemoIds.you];
+    _store.auth.value = _store.profiles[DemoIds.you];
     if (simulate) simulator.start();
   }
 
   @override
   Future<void> signIn({required String email, required String password}) async {
     await _wait();
-    final account = _accounts[email.trim().toLowerCase()];
-    // One message for both cases, so the form never reveals which emails exist.
-    if (account == null || !account.matches(password)) {
-      throw const AuthException('Email or password is incorrect.');
-    }
-    _auth.value = _profiles[account.uid];
+    final account = accounts.checkPassword(email, password);
+    _store.auth.value = _store.profiles[account.uid]?.copyWith(emailVerified: account.verified);
   }
 
   @override
@@ -95,118 +82,138 @@ class FakeRepository extends AppRepository {
     required String password,
   }) async {
     await _wait();
-    final key = email.trim().toLowerCase();
-    if (_accounts.containsKey(key)) {
-      throw const AuthException('That email already has an account. Sign in instead.');
-    }
     final uid = 'user-${_nextUid++}';
+    final account = accounts.create(uid, email, password);
     final user = AppUser(
       uid: uid,
       displayName: displayName.trim(),
-      email: email.trim(),
+      email: account.email,
       createdAt: DateTime.now(),
+      emailVerified: false,
     );
-    _accounts[key] = _Account(uid, password);
-    _profiles[uid] = user;
-    _auth.value = user;
+    _store.profiles[uid] = user;
+    // Signed in, but held at the verification screen until verified.
+    _store.auth.value = user;
+    accounts.sendVerification(account);
   }
 
   @override
   Future<void> signOut() async {
     simulator.stop();
-    _auth.value = null;
+    _store.auth.value = null;
   }
+
+  @override
+  Future<void> sendEmailVerification() async {
+    await _wait();
+    final account = _currentAccount();
+    if (account == null || account.verified) return;
+    accounts.sendVerification(account);
+  }
+
+  @override
+  Future<void> reloadUser() async {
+    await _wait();
+    final user = _store.auth.value;
+    if (user == null) return;
+    final account = accounts.byUid(user.uid);
+    _store.auth.value = _store.profiles[user.uid]?.copyWith(
+      emailVerified: account?.verified ?? true,
+    );
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) async {
+    await _wait();
+    accounts.sendReset(email);
+  }
+
+  FakeAccount? _currentAccount() {
+    final user = _store.auth.value;
+    return user == null ? null : accounts.byUid(user.uid);
+  }
+
+  // Demo mailbox --------------------------------------------------------------
+
+  @override
+  List<DemoEmail> inbox(String email) => accounts.inbox(email);
+
+  @override
+  Future<void> openVerifyLink(DemoEmail email) async {
+    final account = accounts.verify(email);
+    final profile = _store.profiles[account.uid];
+    if (profile != null) _store.profiles[account.uid] = profile.copyWith(emailVerified: true);
+    if (_store.auth.value?.uid == account.uid) _store.auth.value = _store.profiles[account.uid];
+  }
+
+  @override
+  Future<void> resetPassword(DemoEmail email, String newPassword) async =>
+      accounts.reset(email, newPassword);
 
   // Profile -------------------------------------------------------------------
 
   @override
-  Future<void> updateProfile(String uid,
-      {String? displayName, Units? units, ActivityType? defaultActivity}) async {
-    final current = _profiles[uid];
+  Future<void> updateProfile(
+    String uid, {
+    String? displayName,
+    Units? units,
+    ActivityType? defaultActivity,
+    String? bio,
+    String? hometown,
+    String? photoUrl,
+    String? coverUrl,
+  }) async {
+    final current = _store.profiles[uid];
     if (current == null) return;
     final next = current.copyWith(
-        displayName: displayName, units: units, defaultActivity: defaultActivity);
-    _profiles[uid] = next;
-    if (_auth.value?.uid == uid) _auth.value = next;
+      displayName: displayName,
+      units: units,
+      defaultActivity: defaultActivity,
+      bio: bio,
+      hometown: hometown,
+      photoUrl: photoUrl,
+      coverUrl: coverUrl,
+    );
+    _store.profiles[uid] = next;
+    if (_store.auth.value?.uid == uid) _store.auth.value = next;
   }
 
   @override
-  Stream<List<Vehicle>> watchVehicles(String uid) => _vehiclesOf(uid).stream;
+  Stream<List<Vehicle>> watchVehicles(String uid) => _store.vehiclesOf(uid).stream;
 
   // Activities ----------------------------------------------------------------
 
   @override
-  Stream<List<Activity>> watchActivities(String uid) => _activitiesOf(uid).stream;
+  Stream<List<Activity>> watchActivities(String uid) => _store.activitiesOf(uid).stream;
 
   @override
   Future<void> saveActivity(String uid, Activity activity) async {
-    final store = _activitiesOf(uid);
+    final store = _store.activitiesOf(uid);
     store.value = [activity, ...store.value.where((a) => a.id != activity.id)]
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
   }
 
   @override
   Future<void> deleteActivity(String uid, String activityId) async {
-    final store = _activitiesOf(uid);
+    final store = _store.activitiesOf(uid);
     store.value = store.value.where((a) => a.id != activityId).toList();
   }
 
   // Circles -------------------------------------------------------------------
 
   @override
-  Stream<List<Circle>> watchCircles(String uid) => _circles.stream
-      .map((all) => all.where((c) => c.memberUids.contains(uid)).toList());
+  Stream<List<Circle>> watchCircles(String uid) =>
+      _store.circles.stream.map((all) => all.where((c) => c.memberUids.contains(uid)).toList());
 
   @override
-  Stream<List<Member>> watchMembers(String circleId) => _membersOf(circleId).stream;
+  Stream<List<Member>> watchMembers(String circleId) => _store.membersOf(circleId).stream;
 
   @override
-  Stream<List<CircleAlert>> watchAlerts(String circleId) => _alertsOf(circleId).stream;
+  Stream<List<CircleAlert>> watchAlerts(String circleId) => _store.alertsOf(circleId).stream;
 
   @override
   void dispose() {
     simulator.stop();
-    _auth.close();
-    _circles.close();
-    for (final v in [..._vehicles.values, ..._activities.values]) {
-      v.close();
-    }
-    for (final v in [..._members.values, ..._alerts.values]) {
-      v.close();
-    }
-  }
-}
-
-class _Account {
-  _Account(this.uid, this._password);
-  final String uid;
-  final String _password;
-  bool matches(String password) => password == _password;
-}
-
-/// Lets the simulator edit the seeded circle without exposing the stores.
-class _World implements DemoWorld {
-  _World(this.repo);
-  final FakeRepository repo;
-
-  LiveValue<List<Member>> get _members => repo._membersOf(DemoIds.circle);
-
-  @override
-  Member? member(String uid) {
-    for (final m in _members.value) {
-      if (m.uid == uid) return m;
-    }
-    return null;
-  }
-
-  @override
-  void putMember(Member member) => _members.value = [
-        for (final m in _members.value) m.uid == member.uid ? member : m,
-      ];
-
-  @override
-  void addAlert(CircleAlert alert) {
-    final store = repo._alertsOf(DemoIds.circle);
-    store.value = [alert, ...store.value];
+    _store.close();
   }
 }

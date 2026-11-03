@@ -14,13 +14,22 @@ Ride tracking, live circles and theft alerts for bikes, motorbikes and cars. Bui
 3. Tap **Continue with demo account**.
 
 What the demo shows:
-- **Home**: 6 sample activities (cycling, motorcycling, driving) around Koronadal City.
-- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane on the map. Jero starts riding a loop.
-- About 20 s after you sign in, Jero's bike leaves its 50 m boundary. An alert appears, his ring turns red and the Alerts tab gets a badge.
-- **Me**: switch between km and miles and choose your default activity.
-- **Create account** shows what a new user sees: friendly empty states on every tab.
+- **Home**: this week's totals and 6 sample activities around Koronadal City, each with its route drawn. Pull down to refresh. Tap an activity to see it on a map with all its stats, or delete it.
+- **Record**: pick Cycling, Motorcycling or Driving and press START. In the demo, simulated GPS rides a loop so you can try it at your desk (switch it off to use real GPS). The time, distance and speed update live. The ride auto-pauses when you stop. Finish to name it, choose who sees it, and save.
+- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane on the map. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. An alert appears, his ring turns red and the Alerts tab gets a badge.
+- **Me**: a profile with a cover photo, profile photo, bio and hometown, achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
+- **Create account**: you get a verification email before the account opens. In demo mode, emails appear in a "Demo inbox" because nothing is really sent.
 
-The phone layout uses a bottom bar with a center Record button. Tablets and desktop browsers get a side rail with content capped at a readable width. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
+The phone layout uses a bottom bar with a center Record button that turns green while recording. Tablets and desktop browsers get a side rail with content capped at a readable width. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
+
+## Account security
+
+- New accounts must verify their email before they can use the app.
+- Five wrong passwords lock that email for 30 seconds. Each further lock doubles, up to 15 minutes. Unknown emails are treated the same way, so the form never reveals who has an account.
+- Forgot password sends a reset link. Opening it also lifts any lock.
+- Verification and reset emails can be re-sent once a minute, and a new link replaces the old one.
+- New passwords need at least 8 characters, with a letter and a number.
+- Location data (GPS tags) is removed from photos before they are saved.
 
 To check the code:
 
@@ -34,22 +43,22 @@ flutter test
 
 ## Needs you
 
-Nothing yet. The app runs on a built-in demo backend. Firebase setup steps will be added here in phase 6.
+- **Real emails** (verification and password reset) need the Firebase backend, which comes in phase 6. Until then, demo emails show in the in-app Demo inbox.
+- **iPhone**: building needs a Mac with Xcode. The location and photo permission texts are already in place.
 
 ## Known limits
 
-- The web version can't track in the background.
+- The web version can't track in the background. Keep the tab open while recording.
 - Push notifications while the app is fully closed need the paid Firebase plan.
 - The public OpenStreetMap tiles are fine for development and demos. Production needs a tile provider.
 - GPS is weaker under tree cover.
-- Android 14 foreground-service rules apply.
-- iPhone builds need a Mac with Xcode. The iOS project is included, and every screen is designed for iPhone.
+- Android 14 foreground-service rules apply. Android shows a "Recording ride" notification while recording.
 - Demo mode keeps everything in memory, so it resets when you reload.
 
 ## Assumptions
 
-- Units and default activity are saved to your profile. These two values are the only things cached on the device. Email, password and location are never stored in browser storage.
-- Passwords need at least 8 characters.
+- Units and default activity are saved to your profile. These two values are the only things cached on the device. Email, password, photos and location are never stored in browser storage.
+- Profile photos are stored as small images on the profile itself, so they work on the free Firebase plan.
 - Packages are added in the phase that first uses them.
 - Tabs load the first time you open them, so map tiles download only when you open Circle.
 

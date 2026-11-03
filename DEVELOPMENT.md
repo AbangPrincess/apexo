@@ -17,7 +17,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 
 ## Progress
 [x] P1 Foundation + demo backend + app shell
-[ ] P2 Record + feed + activity detail
+[x] P2 Record + feed + activity detail (+ owner requests: email verification, sign-in lockout, password reset, profile photos and achievements)
 [ ] P3 Weather
 [ ] P4 Circles
 [ ] P5 Vehicle guard + alerts
@@ -34,3 +34,11 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - Demo alert: Jero's 50 m boundary is evaluated with `insideBoundary`; the alert fires after 2 consecutive outside fixes (~20 s after sign-in), once per session. Full re-arm logic arrives in P5.
 - Demo invite code TRAIL7 is kept as specified even though it contains I and L; generated codes (P4) exclude look-alikes and joining normalizes case and spaces.
 - Password minimum is 8 characters (Firebase only enforces 6).
+- P2: new passwords need 8+ characters with a letter and a number (live checklist on sign-up).
+- P2: sign-up uses verify-after-create (the Firebase model): the account is created, a link is emailed, and the app stays on "Check your email" until it is verified. P6 Firestore rules must also require `request.auth.token.email_verified`. A code-by-email flow would need Cloud Functions (paid plan).
+- P2: demo mode cannot send real email, so the demo backend keeps an outbox shown in a clearly labelled "Demo inbox". Links work once, a resend expires older links, and resends have a 60 s cooldown.
+- P2: sign-in lockout lives in the backend (FakeAuth in demo; Firebase's own limits in P6, plus the same LoginThrottle client-side). 5 failures lock that email for 30 s, doubling up to 15 min. Unknown emails fail and lock the same way, and reset requests never reveal whether an email has an account.
+- P2: profile photos are resized on the device (avatar 512 px, cover 1600 px), checked by their bytes (JPEG/PNG/WebP only, size caps), stripped of GPS EXIF tags, and stored as small data URIs on the profile. This works on the free Firebase plan, where Cloud Storage now needs the paid plan.
+- P2: settings moved from the Me tab to a Settings screen (gear icon); Me is now a social-style profile with cover, photo, details, achievements, weekly chart and totals.
+- P2: recording uses `package:clock` time so tests can fake it. The demo backend defaults to simulated GPS (switchable) so recording can be tried at a desk.
+- P2: Android permissions for location, foreground service, wake lock and notifications are declared now (recording needs them); a short explanation dialog appears before the system permission request. Full rationale screens and the notification permission request remain in P6.

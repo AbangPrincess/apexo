@@ -21,21 +21,21 @@ class Circle {
   final DateTime createdAt;
 
   factory Circle.fromMap(String id, Map<String, dynamic> m) => Circle(
-        id: id,
-        name: readString(m['name'], 'Circle'),
-        inviteCode: readString(m['inviteCode']),
-        ownerUid: readString(m['ownerUid']),
-        memberUids: readStringList(m['memberUids']),
-        createdAt: readDate(m['createdAt']),
-      );
+    id: id,
+    name: readString(m['name'], 'Circle'),
+    inviteCode: readString(m['inviteCode']),
+    ownerUid: readString(m['ownerUid']),
+    memberUids: readStringList(m['memberUids']),
+    createdAt: readDate(m['createdAt']),
+  );
 
   Map<String, dynamic> toMap() => {
-        'name': name,
-        'inviteCode': inviteCode,
-        'ownerUid': ownerUid,
-        'memberUids': memberUids,
-        'createdAt': createdAt,
-      };
+    'name': name,
+    'inviteCode': inviteCode,
+    'ownerUid': ownerUid,
+    'memberUids': memberUids,
+    'createdAt': createdAt,
+  };
 }
 
 enum MemberStatus {
@@ -57,10 +57,10 @@ class MemberVehicle {
   final VehicleStatus status;
 
   factory MemberVehicle.fromMap(Map<String, dynamic> m) => MemberVehicle(
-        type: readEnum(VehicleType.values, m['type'], VehicleType.bike),
-        name: readString(m['name']),
-        status: readEnum(VehicleStatus.values, m['status'], VehicleStatus.ok),
-      );
+    type: readEnum(VehicleType.values, m['type'], VehicleType.bike),
+    name: readString(m['name']),
+    status: readEnum(VehicleStatus.values, m['status'], VehicleStatus.ok),
+  );
 
   Map<String, dynamic> toMap() => {'type': type.name, 'name': name, 'status': status.name};
 
@@ -122,17 +122,17 @@ class Member {
   }
 
   Map<String, dynamic> toMap() => {
-        'displayName': displayName,
-        'lat': lat,
-        'lng': lng,
-        'speedKmh': speedKmh,
-        'heading': heading,
-        'battery': battery,
-        'status': status.name,
-        'sharing': sharing,
-        'ts': ts,
-        'vehicle': vehicle?.toMap(),
-      };
+    'displayName': displayName,
+    'lat': lat,
+    'lng': lng,
+    'speedKmh': speedKmh,
+    'heading': heading,
+    'battery': battery,
+    'status': status.name,
+    'sharing': sharing,
+    'ts': ts,
+    'vehicle': vehicle?.toMap(),
+  };
 
   Member copyWith({
     double? lat,
@@ -144,18 +144,17 @@ class Member {
     bool? sharing,
     DateTime? ts,
     MemberVehicle? vehicle,
-  }) =>
-      Member(
-        uid: uid,
-        displayName: displayName,
-        lat: lat ?? this.lat,
-        lng: lng ?? this.lng,
-        speedKmh: speedKmh ?? this.speedKmh,
-        heading: heading ?? this.heading,
-        battery: battery ?? this.battery,
-        status: status ?? this.status,
-        sharing: sharing ?? this.sharing,
-        ts: ts ?? this.ts,
-        vehicle: vehicle ?? this.vehicle,
-      );
+  }) => Member(
+    uid: uid,
+    displayName: displayName,
+    lat: lat ?? this.lat,
+    lng: lng ?? this.lng,
+    speedKmh: speedKmh ?? this.speedKmh,
+    heading: heading ?? this.heading,
+    battery: battery ?? this.battery,
+    status: status ?? this.status,
+    sharing: sharing ?? this.sharing,
+    ts: ts ?? this.ts,
+    vehicle: vehicle ?? this.vehicle,
+  );
 }

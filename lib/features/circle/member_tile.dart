@@ -46,8 +46,12 @@ class MemberTile extends StatelessWidget {
       title: Row(
         children: [
           Flexible(
-            child: Text(m.displayName,
-                style: t.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+            child: Text(
+              m.displayName,
+              style: t.titleMedium,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           if (isOwner) const _Tag('Owner'),
         ],
@@ -90,16 +94,18 @@ class _Tag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        margin: const EdgeInsets.only(left: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.hairline),
-        ),
-        child: Text(label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textMuted)),
-      );
+    margin: const EdgeInsets.only(left: 6),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: AppColors.surfaceAlt,
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: AppColors.hairline),
+    ),
+    child: Text(
+      label,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textMuted),
+    ),
+  );
 }
 
 class _Battery extends StatelessWidget {
@@ -124,11 +130,12 @@ class _Battery extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: color),
-          Text('$percent%',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: color, fontFeatures: kTabular)),
+          Text(
+            '$percent%',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color, fontFeatures: kTabular),
+          ),
         ],
       ),
     );

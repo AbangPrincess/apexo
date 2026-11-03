@@ -39,27 +39,27 @@ class CircleAlert {
   final List<String> ackBy;
 
   factory CircleAlert.fromMap(String id, Map<String, dynamic> m) => CircleAlert(
-        id: id,
-        type: readEnum(AlertType.values, m['type'], AlertType.geofence),
-        ownerUid: readString(m['ownerUid']),
-        vehicleName: readString(m['vehicleName']),
-        message: readString(m['message']),
-        lat: readDouble(m['lat']),
-        lng: readDouble(m['lng']),
-        distanceM: readDouble(m['distanceM']),
-        ts: readDate(m['ts']),
-        ackBy: readStringList(m['ackBy']),
-      );
+    id: id,
+    type: readEnum(AlertType.values, m['type'], AlertType.geofence),
+    ownerUid: readString(m['ownerUid']),
+    vehicleName: readString(m['vehicleName']),
+    message: readString(m['message']),
+    lat: readDouble(m['lat']),
+    lng: readDouble(m['lng']),
+    distanceM: readDouble(m['distanceM']),
+    ts: readDate(m['ts']),
+    ackBy: readStringList(m['ackBy']),
+  );
 
   Map<String, dynamic> toMap() => {
-        'type': type.name,
-        'ownerUid': ownerUid,
-        'vehicleName': vehicleName,
-        'message': message,
-        'lat': lat,
-        'lng': lng,
-        'distanceM': distanceM,
-        'ts': ts,
-        'ackBy': ackBy,
-      };
+    'type': type.name,
+    'ownerUid': ownerUid,
+    'vehicleName': vehicleName,
+    'message': message,
+    'lat': lat,
+    'lng': lng,
+    'distanceM': distanceM,
+    'ts': ts,
+    'ackBy': ackBy,
+  };
 }

@@ -51,17 +51,20 @@ abstract final class AppTheme {
       surfaceTint: Colors.transparent,
     );
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
-    final text = base.textTheme.apply(
-      bodyColor: AppColors.text,
-      displayColor: AppColors.text,
-    );
+    final text = base.textTheme.apply(bodyColor: AppColors.text, displayColor: AppColors.text);
     final rounded12 = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
 
     return base.copyWith(
       scaffoldBackgroundColor: AppColors.surface,
       textTheme: text.copyWith(
-        headlineMedium: text.headlineMedium?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
-        headlineSmall: text.headlineSmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.3),
+        headlineMedium: text.headlineMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.5,
+        ),
+        headlineSmall: text.headlineSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.3,
+        ),
         titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
         titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
@@ -148,9 +151,8 @@ abstract final class AppTheme {
     );
   }
 
-  static OutlineInputBorder _inputBorder(Color color, [double width = 1]) =>
-      OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: color, width: width),
-      );
+  static OutlineInputBorder _inputBorder(Color color, [double width = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide(color: color, width: width),
+  );
 }

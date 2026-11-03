@@ -1,201 +1,153 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/activity_type.dart';
+import '../../core/achievements.dart';
+import '../../core/geo.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
+import '../../data/models/activity.dart';
 import '../../data/models/user.dart';
-import '../../widgets/adaptive.dart';
-import '../../widgets/responsive.dart';
-import '../../widgets/visuals.dart';
+import '../../data/repository.dart';
 import '../auth/session_controller.dart';
+import '../circle/circle_controller.dart';
+import '../feed/activities_controller.dart';
+import 'achievements_section.dart';
+import 'edit_profile_screen.dart';
+import 'photo_picker.dart';
+import 'profile_details.dart';
+import 'profile_header.dart';
 import 'settings_controller.dart';
+import 'settings_screen.dart';
+import 'stats_section.dart';
 
+/// The rider's profile: cover and photo, details, achievements and stats.
 class MeScreen extends StatelessWidget {
   const MeScreen({super.key});
 
-  Future<void> _signOut(BuildContext context) async {
-    final session = context.read<SessionController>();
-    final ok = await confirmAction(
+  void _push(BuildContext context, Widget screen) =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+
+  Future<void> _changePhoto(BuildContext context, AppUser user, PhotoSlot slot) async {
+    final repo = context.read<AppRepository>();
+    final messenger = ScaffoldMessenger.of(context);
+    final avatar = slot == PhotoSlot.avatar;
+    final url = await pickProfilePhoto(
       context,
-      title: 'Sign out?',
-      message: session.isDemo ? 'Demo changes stay until you reload the app.' : null,
-      confirmLabel: 'Sign out',
-      destructive: true,
+      slot: slot,
+      hasPhoto: (avatar ? user.photoUrl : user.coverUrl).isNotEmpty,
     );
-    if (ok) await session.signOut();
+    if (url == null) return;
+    await repo.updateProfile(
+      user.uid,
+      photoUrl: avatar ? url : null,
+      coverUrl: avatar ? null : url,
+    );
+    messenger.showSnackBar(
+      SnackBar(content: Text(url.isEmpty ? 'Photo removed' : 'Photo updated')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final user = context.select<SessionController, AppUser?>((s) => s.user);
-    final isDemo = context.read<SessionController>().isDemo;
-    final settings = context.watch<SettingsController>();
-    final t = Theme.of(context).textTheme;
+    final items = context.select<ActivitiesController, List<Activity>>((a) => a.items);
+    final units = context.select<SettingsController, Units>((s) => s.units);
+    final circles = context.select<CircleController, int>((c) => c.circles.length);
     if (user == null) return const SizedBox.shrink();
 
+    final total = items.fold<double>(0, (s, a) => s + a.distanceM);
+    final longest = items.isEmpty
+        ? const <GeoPoint>[]
+        : items.reduce((a, b) => a.distanceM >= b.distanceM ? a : b).points;
+    final statsLine =
+        '${items.length} ${items.length == 1 ? 'activity' : 'activities'} · '
+        '${formatDistance(total, units)} ${units.distanceLabel} · '
+        '$circles ${circles == 1 ? 'circle' : 'circles'}';
+    final now = DateTime.now();
+    void edit() => _push(context, EditProfileScreen(user: user));
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Me')),
-      body: PageListView(
-        children: [
-          _ProfileHeader(user: user, isDemo: isDemo),
-          const SizedBox(height: Space.l),
-          const _SectionLabel('Preferences'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(Space.m),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Units', style: t.titleSmall),
-                  const SizedBox(height: Space.s),
-                  SizedBox(
-                    width: double.infinity,
-                    child: SegmentedButton<Units>(
-                      showSelectedIcon: false,
-                      segments: const [
-                        ButtonSegment(value: Units.km, label: Text('Kilometers')),
-                        ButtonSegment(value: Units.mi, label: Text('Miles')),
-                      ],
-                      selected: {settings.units},
-                      onSelectionChanged: (s) => settings.setUnits(s.first),
-                    ),
-                  ),
-                  const SizedBox(height: Space.m),
-                  const Divider(),
-                  const SizedBox(height: Space.m),
-                  Text('Default activity', style: t.titleSmall),
-                  const SizedBox(height: 2),
-                  Text('Preselected when you open Record',
-                      style: t.bodySmall?.copyWith(color: AppColors.textMuted)),
-                  const SizedBox(height: Space.s),
-                  Wrap(
-                    spacing: Space.s,
-                    runSpacing: Space.s,
-                    children: [
-                      for (final type in ActivityType.values)
-                        ChoiceChip(
-                          avatar: Icon(type.icon, size: 18),
-                          label: Text(type.label),
-                          selected: settings.defaultActivity == type,
-                          onSelected: (_) => settings.setDefaultActivity(type),
-                        ),
-                    ],
-                  ),
-                ],
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: LayoutBuilder(
+        builder: (context, c) {
+          final wide = c.maxWidth >= 760;
+          final side = math.max(0.0, (c.maxWidth - 980) / 2);
+          final pad = wide ? Space.xl : Space.m;
+          final intro = ProfileDetails(user: user, onEdit: edit);
+          final achievements = AchievementsSection(
+            achievements: computeAchievements(items),
+            units: units,
+          );
+          final week = WeeklyChartCard(activities: items, units: units, now: now);
+          final totals = TypeTotalsCard(activities: items, units: units);
+
+          return ListView(
+            padding: EdgeInsets.fromLTRB(side, 0, side, Space.xl),
+            children: [
+              ProfileHeader(
+                user: user,
+                statsLine: statsLine,
+                wide: wide,
+                coverRoute: longest,
+                onChangeAvatar: () => _changePhoto(context, user, PhotoSlot.avatar),
+                onChangeCover: () => _changePhoto(context, user, PhotoSlot.cover),
+                actions: ProfileActions(
+                  expand: !wide,
+                  onEdit: edit,
+                  onSettings: () => _push(context, const SettingsScreen()),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: Space.l),
-          const _SectionLabel('Account'),
-          Card(
-            child: Column(
-              children: [
-                const ListTile(
-                  leading: Icon(Icons.shield_outlined),
-                  title: Text('Privacy'),
-                  subtitle: Text(
-                      'Your location is shared only inside circles you join, and you can pause it any time.'),
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.logout_rounded, color: AppColors.alert),
-                  title: const Text('Sign out', style: TextStyle(color: AppColors.alert)),
-                  onTap: () => _signOut(context),
-                ),
-              ],
-            ),
-          ),
-          if (isDemo) ...[
-            const SizedBox(height: Space.l),
-            Text(
-              'Demo mode · data is kept in memory and resets when you reload.',
-              textAlign: TextAlign.center,
-              style: t.bodySmall?.copyWith(color: AppColors.textMuted),
-            ),
-          ],
-        ],
+              const SizedBox(height: Space.l),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: pad),
+                child: wide
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 340,
+                            child: Column(
+                              children: [
+                                Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(Space.m),
+                                    child: intro,
+                                  ),
+                                ),
+                                const SizedBox(height: Space.m),
+                                week,
+                                const SizedBox(height: Space.m),
+                                totals,
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: Space.l),
+                          Expanded(child: achievements),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          intro,
+                          const SizedBox(height: Space.l),
+                          const Divider(),
+                          const SizedBox(height: Space.l),
+                          achievements,
+                          const SizedBox(height: Space.l),
+                          week,
+                          const SizedBox(height: Space.m),
+                          totals,
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
-}
-
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.user, required this.isDemo});
-
-  final AppUser user;
-  final bool isDemo;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 32,
-          backgroundColor: AppColors.accent,
-          child: Text(user.initial,
-              style: const TextStyle(
-                  color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700)),
-        ),
-        const SizedBox(width: Space.m),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(user.displayName, style: t.headlineSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 2),
-              Text(user.email,
-                  style: t.bodyMedium?.copyWith(color: AppColors.textMuted),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis),
-              if (isDemo) ...[
-                const SizedBox(height: Space.s),
-                const IconTileLabel(icon: Icons.science_outlined, label: 'Demo account'),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(left: Space.xs, bottom: Space.s),
-        child: Text(text,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: AppColors.textMuted)),
-      );
-}
-
-/// Small pill with an icon, e.g. "Demo account".
-class IconTileLabel extends StatelessWidget {
-  const IconTileLabel({super.key, required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.accentSoft,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 14, color: AppColors.accent),
-          const SizedBox(width: 4),
-          Text(label,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(color: AppColors.accent)),
-        ]),
-      );
 }

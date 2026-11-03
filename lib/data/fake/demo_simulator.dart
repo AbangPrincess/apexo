@@ -18,11 +18,12 @@ abstract interface class DemoWorld {
 /// Moves Jero around his loop once per [interval]. His bike is guarded with a
 /// 50 m boundary, so ~20 s in the geofence trips and an alert is written.
 class DemoSimulator {
-  DemoSimulator(this.world,
-      {required this.loop,
-      required this.boundary,
-      this.interval = const Duration(seconds: 1)})
-      : _cumulative = _cumulativeDistances(loop);
+  DemoSimulator(
+    this.world, {
+    required this.loop,
+    required this.boundary,
+    this.interval = const Duration(seconds: 1),
+  }) : _cumulative = _cumulativeDistances(loop);
 
   final DemoWorld world;
   final List<GeoPoint> loop;
@@ -76,29 +77,33 @@ class DemoSimulator {
       status = MemberStatus.alert;
       vehicle = vehicle?.withStatus(VehicleStatus.stolen);
       final name = vehicle?.name ?? 'vehicle';
-      world.addAlert(CircleAlert(
-        id: 'alert-${now.microsecondsSinceEpoch}',
-        type: AlertType.geofence,
-        ownerUid: DemoIds.jero,
-        vehicleName: name,
-        message: "${jero.displayName}'s $name is on the move",
-        lat: pos.lat,
-        lng: pos.lng,
-        distanceM: distanceM(boundary.center, pos),
-        ts: now,
-      ));
+      world.addAlert(
+        CircleAlert(
+          id: 'alert-${now.microsecondsSinceEpoch}',
+          type: AlertType.geofence,
+          ownerUid: DemoIds.jero,
+          vehicleName: name,
+          message: "${jero.displayName}'s $name is on the move",
+          lat: pos.lat,
+          lng: pos.lng,
+          distanceM: distanceM(boundary.center, pos),
+          ts: now,
+        ),
+      );
     }
 
-    world.putMember(jero.copyWith(
-      lat: pos.lat,
-      lng: pos.lng,
-      speedKmh: mpsToKmh(mps),
-      heading: bearingDeg(prev, pos),
-      battery: _steps % 90 == 0 ? math.max(5, jero.battery - 1) : jero.battery,
-      status: status,
-      vehicle: vehicle,
-      ts: now,
-    ));
+    world.putMember(
+      jero.copyWith(
+        lat: pos.lat,
+        lng: pos.lng,
+        speedKmh: mpsToKmh(mps),
+        heading: bearingDeg(prev, pos),
+        battery: _steps % 90 == 0 ? math.max(5, jero.battery - 1) : jero.battery,
+        status: status,
+        vehicle: vehicle,
+        ts: now,
+      ),
+    );
   }
 
   void _heartbeat(String uid, DateTime now) {

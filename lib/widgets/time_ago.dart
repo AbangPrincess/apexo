@@ -36,9 +36,9 @@ class _TimeAgoState extends State<TimeAgo> {
 
   @override
   Widget build(BuildContext context) => Text(
-        '${widget.prefix}${formatAgo(widget.time, DateTime.now())}${widget.suffix}',
-        style: widget.style,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
+    '${widget.prefix}${formatAgo(widget.time, DateTime.now())}${widget.suffix}',
+    style: widget.style,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+  );
 }

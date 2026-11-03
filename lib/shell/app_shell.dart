@@ -10,6 +10,7 @@ import '../features/circle/circle_controller.dart';
 import '../features/circle/circle_screen.dart';
 import '../features/feed/home_screen.dart';
 import '../features/me/me_screen.dart';
+import '../features/record/record_controller.dart';
 import '../features/record/record_screen.dart';
 import '../widgets/responsive.dart';
 import '../widgets/visuals.dart';
@@ -59,67 +60,76 @@ class _AppShellState extends State<AppShell> {
     if (!mounted || _shell.tab == AppTab.alerts) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        duration: const Duration(seconds: 6),
-        content: Row(
-          children: [
-            Icon(alert.type.icon, color: alert.type.color),
-            const SizedBox(width: Space.m),
-            Expanded(child: Text(alert.message)),
-          ],
+      ..showSnackBar(
+        SnackBar(
+          duration: const Duration(seconds: 6),
+          content: Row(
+            children: [
+              Icon(alert.type.icon, color: alert.type.color),
+              const SizedBox(width: Space.m),
+              Expanded(child: Text(alert.message)),
+            ],
+          ),
+          action: SnackBarAction(label: 'View', onPressed: () => _shell.go(AppTab.alerts)),
         ),
-        action: SnackBarAction(label: 'View', onPressed: () => _shell.go(AppTab.alerts)),
-      ));
+      );
   }
 
   Widget _page(AppTab tab) => switch (tab) {
-        AppTab.home => const HomeScreen(),
-        AppTab.circle => const CircleScreen(),
-        AppTab.record => const RecordScreen(),
-        AppTab.alerts => const AlertsScreen(),
-        AppTab.me => const MeScreen(),
-      };
+    AppTab.home => const HomeScreen(),
+    AppTab.circle => const CircleScreen(),
+    AppTab.record => const RecordScreen(),
+    AppTab.alerts => const AlertsScreen(),
+    AppTab.me => const MeScreen(),
+  };
 
   @override
   Widget build(BuildContext context) {
     final unseen = context.select<CircleController, int>((c) => c.unseenCount);
+    final recording = context.select<RecordController, bool>((r) => r.isActive);
     final tab = _shell.tab;
     final badge = tab == AppTab.alerts ? 0 : unseen;
     final body = IndexedStack(
       index: tab.index,
       children: [
-        for (final t in AppTab.values)
-          _visited.contains(t) ? _page(t) : const SizedBox.shrink(),
+        for (final t in AppTab.values) _visited.contains(t) ? _page(t) : const SizedBox.shrink(),
       ],
     );
 
     return ChangeNotifierProvider.value(
       value: _shell,
-      child: LayoutBuilder(builder: (context, c) {
-        if (c.maxWidth < Breakpoints.medium) {
+      child: LayoutBuilder(
+        builder: (context, c) {
+          if (c.maxWidth < Breakpoints.medium) {
+            return Scaffold(
+              body: body,
+              bottomNavigationBar: BottomNav(
+                current: tab,
+                onSelect: _shell.go,
+                alertCount: badge,
+                recording: recording,
+              ),
+            );
+          }
           return Scaffold(
-            body: body,
-            bottomNavigationBar:
-                BottomNav(current: tab, onSelect: _shell.go, alertCount: badge),
-          );
-        }
-        return Scaffold(
-          body: SafeArea(
-            child: Row(
-              children: [
-                SideNav(
-                  current: tab,
-                  onSelect: _shell.go,
-                  extended: c.maxWidth >= Breakpoints.large,
-                  alertCount: badge,
-                ),
-                const VerticalDivider(width: 1),
-                Expanded(child: body),
-              ],
+            body: SafeArea(
+              child: Row(
+                children: [
+                  SideNav(
+                    current: tab,
+                    onSelect: _shell.go,
+                    extended: c.maxWidth >= Breakpoints.large,
+                    alertCount: badge,
+                    recording: recording,
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: body),
+                ],
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        },
+      ),
     );
   }
 }

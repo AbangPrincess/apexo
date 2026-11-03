@@ -15,8 +15,7 @@ import '../../data/repository.dart';
 class SettingsController extends ChangeNotifier {
   SettingsController(this._prefs, this._repo) {
     _units = readEnum(Units.values, _prefs.getString(_kUnits), Units.km);
-    _activity = readEnum(
-        ActivityType.values, _prefs.getString(_kActivity), ActivityType.cycling);
+    _activity = readEnum(ActivityType.values, _prefs.getString(_kActivity), ActivityType.cycling);
     _sub = _repo.authStateChanges().listen(_onUser);
   }
 

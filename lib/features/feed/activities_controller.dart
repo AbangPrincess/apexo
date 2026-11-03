@@ -40,6 +40,26 @@ class ActivitiesController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Re-subscribes and waits for fresh data (pull to refresh).
+  Future<void> refresh() async {
+    final uid = _uid;
+    if (uid == null) return;
+    await _sub?.cancel();
+    final first = Completer<void>();
+    _sub = _repo.watchActivities(uid).listen((list) {
+      _items = list;
+      _loaded = true;
+      notifyListeners();
+      if (!first.isCompleted) first.complete();
+    });
+    await first.future.timeout(const Duration(seconds: 10), onTimeout: () {});
+  }
+
+  Future<void> delete(String activityId) async {
+    final uid = _uid;
+    if (uid != null) await _repo.deleteActivity(uid, activityId);
+  }
+
   @override
   void dispose() {
     _authSub.cancel();

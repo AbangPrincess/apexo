@@ -14,6 +14,7 @@ class MapView extends StatelessWidget {
     this.fitPoints = const [],
     this.markers = const [],
     this.circles = const [],
+    this.polylines = const [],
     this.controller,
   });
 
@@ -24,6 +25,7 @@ class MapView extends StatelessWidget {
   final List<GeoPoint> fitPoints;
   final List<MapMarker> markers;
   final List<MapCircle> circles;
+  final List<MapPolyline> polylines;
   final MapViewController? controller;
 
   static LatLng _ll(GeoPoint p) => LatLng(p.lat, p.lng);
@@ -52,28 +54,45 @@ class MapView extends StatelessWidget {
           userAgentPackageName: 'com.pedaltrack.pedaltrack',
           maxNativeZoom: 19,
         ),
+        if (polylines.isNotEmpty)
+          PolylineLayer(
+            polylines: [
+              for (final l in polylines)
+                Polyline(
+                  points: l.points.map(_ll).toList(),
+                  color: l.color,
+                  strokeWidth: l.width,
+                  borderColor: Colors.white,
+                  borderStrokeWidth: 1.5,
+                ),
+            ],
+          ),
         if (circles.isNotEmpty)
-          CircleLayer(circles: [
-            for (final c in circles)
-              CircleMarker(
-                point: _ll(c.center),
-                radius: c.radiusM,
-                useRadiusInMeter: true,
-                color: c.color.withValues(alpha: 0.12),
-                borderColor: c.color,
-                borderStrokeWidth: 2,
+          CircleLayer(
+            circles: [
+              for (final c in circles)
+                CircleMarker(
+                  point: _ll(c.center),
+                  radius: c.radiusM,
+                  useRadiusInMeter: true,
+                  color: c.color.withValues(alpha: 0.12),
+                  borderColor: c.color,
+                  borderStrokeWidth: 2,
+                ),
+            ],
+          ),
+        MarkerLayer(
+          markers: [
+            for (final m in markers)
+              Marker(
+                key: ValueKey(m.id),
+                point: _ll(m.point),
+                width: m.size,
+                height: m.size,
+                child: m.child,
               ),
-          ]),
-        MarkerLayer(markers: [
-          for (final m in markers)
-            Marker(
-              key: ValueKey(m.id),
-              point: _ll(m.point),
-              width: m.size,
-              height: m.size,
-              child: m.child,
-            ),
-        ]),
+          ],
+        ),
         const _Attribution(),
       ],
     );
@@ -87,26 +106,26 @@ class _Attribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.bottomRight,
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              child: Text(
-                '© OpenStreetMap contributors',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: Color(0xFF6B6B76)),
-              ),
-            ),
+    alignment: Alignment.bottomRight,
+    child: Padding(
+      padding: const EdgeInsets.all(4),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          child: Text(
+            '© OpenStreetMap contributors',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontSize: 11, color: Color(0xFF6B6B76)),
           ),
         ),
-      );
+      ),
+    ),
+  );
 }
 
 class MapMarker {
@@ -116,6 +135,14 @@ class MapMarker {
   final GeoPoint point;
   final Widget child;
   final double size;
+}
+
+class MapPolyline {
+  const MapPolyline({required this.points, required this.color, this.width = 4});
+
+  final List<GeoPoint> points;
+  final Color color;
+  final double width;
 }
 
 class MapCircle {

@@ -11,8 +11,7 @@ class GeoPoint {
   final double lng;
 
   @override
-  bool operator ==(Object other) =>
-      other is GeoPoint && other.lat == lat && other.lng == lng;
+  bool operator ==(Object other) => other is GeoPoint && other.lat == lat && other.lng == lng;
 
   @override
   int get hashCode => Object.hash(lat, lng);
@@ -34,10 +33,10 @@ class Boundary {
   Map<String, dynamic> toMap() => {'lat': lat, 'lng': lng, 'radiusM': radiusM};
 
   factory Boundary.fromMap(Map<String, dynamic> m) => Boundary(
-        lat: (m['lat'] as num).toDouble(),
-        lng: (m['lng'] as num).toDouble(),
-        radiusM: (m['radiusM'] as num).toDouble(),
-      );
+    lat: (m['lat'] as num).toDouble(),
+    lng: (m['lng'] as num).toDouble(),
+    radiusM: (m['radiusM'] as num).toDouble(),
+  );
 }
 
 double _rad(double deg) => deg * math.pi / 180;
@@ -70,8 +69,7 @@ double bearingDeg(GeoPoint a, GeoPoint b) {
   final lat2 = _rad(b.lat);
   final dLng = _rad(b.lng - a.lng);
   final y = math.sin(dLng) * math.cos(lat2);
-  final x = math.cos(lat1) * math.sin(lat2) -
-      math.sin(lat1) * math.cos(lat2) * math.cos(dLng);
+  final x = math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(dLng);
   return (_deg(math.atan2(y, x)) + 360) % 360;
 }
 
@@ -84,11 +82,9 @@ GeoPoint offsetM(GeoPoint origin, {double northM = 0, double eastM = 0}) {
 
 /// True when a fix is inside [boundary]. The fix's accuracy radius is added to
 /// the boundary radius so a noisy fix near the edge is not treated as an exit.
-bool insideBoundary(double lat, double lng, Boundary boundary,
-    [double accuracyM = 0]) {
+bool insideBoundary(double lat, double lng, Boundary boundary, [double accuracyM = 0]) {
   final slack = accuracyM.isFinite && accuracyM > 0 ? accuracyM : 0;
-  return haversineM(lat, lng, boundary.lat, boundary.lng) <=
-      boundary.radiusM + slack;
+  return haversineM(lat, lng, boundary.lat, boundary.lng) <= boundary.radiusM + slack;
 }
 
 /// Drops points closer than [minSpacingM] to the previously kept point.

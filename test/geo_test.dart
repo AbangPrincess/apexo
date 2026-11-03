@@ -78,11 +78,7 @@ void main() {
 
   group('polyline', () {
     test('matches the reference encoding', () {
-      const pts = [
-        GeoPoint(38.5, -120.2),
-        GeoPoint(40.7, -120.95),
-        GeoPoint(43.252, -126.453),
-      ];
+      const pts = [GeoPoint(38.5, -120.2), GeoPoint(40.7, -120.95), GeoPoint(43.252, -126.453)];
       expect(encodePolyline(pts), '_p~iF~ps|U_ulLnnqC_mqNvxq`@');
       final back = decodePolyline('_p~iF~ps|U_ulLnnqC_mqNvxq`@');
       expect(back.length, 3);

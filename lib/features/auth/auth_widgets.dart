@@ -14,32 +14,33 @@ class AuthLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, c) {
-      final wide = c.maxWidth >= Breakpoints.expanded;
-      final form = SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: Space.l, vertical: Space.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
-              child: child,
+    return LayoutBuilder(
+      builder: (context, c) {
+        final wide = c.maxWidth >= Breakpoints.expanded;
+        final form = SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: Space.l, vertical: Space.xl),
+              child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 400), child: child),
             ),
           ),
-        ),
-      );
-      final back = showBack
-          ? const SafeArea(child: Padding(padding: EdgeInsets.all(Space.s), child: BackButton()))
-          : const SizedBox.shrink();
-      if (!wide) return Scaffold(body: Stack(children: [form, back]));
-      return Scaffold(
-        body: Row(
-          children: [
-            const Expanded(child: _BrandPanel()),
-            Expanded(child: Stack(children: [form, back])),
-          ],
-        ),
-      );
-    });
+        );
+        final back = showBack
+            ? const SafeArea(
+                child: Padding(padding: EdgeInsets.all(Space.s), child: BackButton()),
+              )
+            : const SizedBox.shrink();
+        if (!wide) return Scaffold(body: Stack(children: [form, back]));
+        return Scaffold(
+          body: Row(
+            children: [
+              const Expanded(child: _BrandPanel()),
+              Expanded(child: Stack(children: [form, back])),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 
@@ -70,17 +71,21 @@ class _BrandPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Ride further.\nStay close.\nKeep it safe.',
-                      style: t.displaySmall?.copyWith(fontWeight: FontWeight.w800, height: 1.15)),
+                  Text(
+                    'Ride further.\nStay close.\nKeep it safe.',
+                    style: t.displaySmall?.copyWith(fontWeight: FontWeight.w800, height: 1.15),
+                  ),
                   const SizedBox(height: Space.l),
                   for (final (icon, label) in _pillars)
                     Padding(
                       padding: const EdgeInsets.only(bottom: Space.m),
-                      child: Row(children: [
-                        IconTile(icon: icon, size: 40),
-                        const SizedBox(width: Space.m),
-                        Expanded(child: Text(label, style: t.titleMedium)),
-                      ]),
+                      child: Row(
+                        children: [
+                          IconTile(icon: icon, size: 40),
+                          const SizedBox(width: Space.m),
+                          Expanded(child: Text(label, style: t.titleMedium)),
+                        ],
+                      ),
                     ),
                 ],
               ),
@@ -134,7 +139,6 @@ class _PasswordFieldState extends State<PasswordField> {
       onFieldSubmitted: (_) => widget.onSubmitted?.call(),
       decoration: InputDecoration(
         labelText: 'Password',
-        helperText: widget.newPassword ? 'At least 8 characters' : null,
         suffixIcon: IconButton(
           tooltip: _hidden ? 'Show password' : 'Hide password',
           icon: Icon(_hidden ? Icons.visibility_outlined : Icons.visibility_off_outlined),
@@ -152,20 +156,24 @@ class ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Semantics(
-        liveRegion: true,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.alert.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
+    liveRegion: true,
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.alert.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.alert, size: 20),
+          const SizedBox(width: Space.s),
+          Expanded(
+            child: Text(message, style: const TextStyle(color: AppColors.alert)),
           ),
-          child: Row(children: [
-            const Icon(Icons.error_outline_rounded, color: AppColors.alert, size: 20),
-            const SizedBox(width: Space.s),
-            Expanded(child: Text(message, style: const TextStyle(color: AppColors.alert))),
-          ]),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 class OrDivider extends StatelessWidget {
@@ -174,15 +182,19 @@ class OrDivider extends StatelessWidget {
   final String label;
 
   @override
-  Widget build(BuildContext context) => Row(children: [
-        const Expanded(child: Divider()),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+  Widget build(BuildContext context) => Row(
+    children: [
+      const Expanded(child: Divider()),
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
         ),
-        const Expanded(child: Divider()),
-      ]);
+      ),
+      const Expanded(child: Divider()),
+    ],
+  );
 }
 
 /// Spinner sized for a button label.
@@ -193,10 +205,10 @@ class ButtonSpinner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox.square(
-        dimension: 20,
-        child: CircularProgressIndicator.adaptive(
-          strokeWidth: 2.4,
-          valueColor: color == null ? null : AlwaysStoppedAnimation(color!),
-        ),
-      );
+    dimension: 20,
+    child: CircularProgressIndicator.adaptive(
+      strokeWidth: 2.4,
+      valueColor: color == null ? null : AlwaysStoppedAnimation(color!),
+    ),
+  );
 }

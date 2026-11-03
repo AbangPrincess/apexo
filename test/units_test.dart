@@ -62,7 +62,7 @@ void main() {
 
     test('password and name', () {
       expect(validatePassword('short'), isNotNull);
-      expect(validatePassword('longenough'), isNull);
+      expect(validatePassword('longenough1'), isNull);
       expect(validateDisplayName('  '), isNotNull);
       expect(validateDisplayName('Jero'), isNull);
     });
