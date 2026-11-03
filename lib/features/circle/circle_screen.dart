@@ -85,6 +85,7 @@ class _CircleScreenState extends State<CircleScreen> {
                 ringColor: m.status.color,
                 badge: m.vehicle?.type.icon,
                 highlight: m.uid == ctrl.uid,
+                outline: true,
                 size: 48,
               ),
             ),

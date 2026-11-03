@@ -148,14 +148,10 @@ class _Cover extends StatelessWidget {
         child: image != null
             ? Image(image: image, fit: BoxFit.cover, gaplessPlayback: true)
             : ColoredBox(
-                color: AppColors.accentSoft,
-                // No cover yet: the rider's longest route, drawn faintly.
+                color: AppColors.darkRaised,
+                // No cover yet: the rider's longest route on stealth charcoal.
                 child: CustomPaint(
-                  painter: RoutePainter(
-                    route,
-                    AppColors.accent.withValues(alpha: 0.35),
-                    padding: 28,
-                  ),
+                  painter: RoutePainter(route, AppColors.data.withValues(alpha: 0.9), padding: 28),
                 ),
               ),
       ),

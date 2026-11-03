@@ -28,7 +28,7 @@ class PasswordChecklist extends StatelessWidget {
                     ok ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
                     key: ValueKey(ok),
                     size: 16,
-                    color: ok ? AppColors.tracking : AppColors.parked,
+                    color: ok ? AppColors.ink : AppColors.parked,
                   ),
                 ),
                 const SizedBox(width: Space.xs),

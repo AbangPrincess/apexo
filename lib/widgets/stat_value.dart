@@ -12,6 +12,8 @@ class StatValue extends StatelessWidget {
     this.unit,
     this.size = StatSize.medium,
     this.align = CrossAxisAlignment.start,
+    this.onDark = false,
+    this.valueColor,
   });
 
   final String label;
@@ -20,15 +22,26 @@ class StatValue extends StatelessWidget {
   final StatSize size;
   final CrossAxisAlignment align;
 
+  /// Light text for dark surfaces.
+  final bool onDark;
+  final Color? valueColor;
+
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final valueStyle = switch (size) {
-      StatSize.small => t.titleMedium,
-      StatSize.medium => t.titleLarge,
-      StatSize.large => t.displaySmall?.copyWith(fontWeight: FontWeight.w700),
-    }?.copyWith(fontFeatures: kTabular, letterSpacing: -0.5, height: 1.1);
-    final unitStyle = t.bodyMedium?.copyWith(color: AppColors.textMuted);
+    final valueStyle =
+        switch (size) {
+          StatSize.small => t.titleMedium,
+          StatSize.medium => t.titleLarge,
+          StatSize.large => t.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+        }?.copyWith(
+          fontFeatures: kTabular,
+          letterSpacing: -0.5,
+          height: 1.1,
+          color: valueColor ?? (onDark ? Colors.white : null),
+        );
+    final muted = onDark ? AppColors.onDarkMuted : AppColors.textMuted;
+    final unitStyle = t.bodyMedium?.copyWith(color: muted);
 
     return Semantics(
       label: '$label ${unit == null ? value : '$value $unit'}',
@@ -37,7 +50,7 @@ class StatValue extends StatelessWidget {
         crossAxisAlignment: align,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(label, style: t.labelMedium?.copyWith(color: AppColors.textMuted)),
+          Text(label, style: t.labelMedium?.copyWith(color: muted)),
           const SizedBox(height: 2),
           Text.rich(
             TextSpan(

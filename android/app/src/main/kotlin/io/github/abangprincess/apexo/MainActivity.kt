@@ -1,4 +1,4 @@
-package com.pedaltrack.pedaltrack
+package io.github.abangprincess.apexo
 
 import io.flutter.embedding.android.FlutterActivity
 

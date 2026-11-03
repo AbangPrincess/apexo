@@ -1,10 +1,10 @@
 {
-    "name": "PedalTrack",
-    "short_name": "PedalTrack",
+    "name": "Apexo",
+    "short_name": "Apexo",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#2563EB",
+    "theme_color": "#121316",
     "description": "Ride tracking, live circles and theft alerts for bikes, motorbikes and cars.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

@@ -1,17 +1,51 @@
 import 'package:flutter/material.dart';
 
+/// The six Apexo brand colors. Screens use the roles in [AppColors], never
+/// these directly, so each color keeps one meaning across the app.
+abstract final class Palette {
+  static const apexRed = Color(0xFFE10600);
+  static const hyperOrange = Color(0xFFFF6A13);
+  static const voltYellow = Color(0xFFD4FF00);
+  static const asphaltBlack = Color(0xFF121316);
+  static const stealthCharcoal = Color(0xFF2A2D33);
+  static const carbonGray = Color(0xFF6B7079);
+}
+
 abstract final class AppColors {
-  static const accent = Color(0xFF2563EB);
-  static const accentSoft = Color(0xFFEEF3FE);
+  /// Brand: logo, START, selected tab, links.
+  static const accent = Palette.apexRed;
+  static const accentSoft = Color(0xFFFDECEB);
+
+  /// Ink: text, primary buttons, selected chips.
+  static const ink = Palette.asphaltBlack;
+  static const text = Palette.asphaltBlack;
+  static const textMuted = Palette.carbonGray;
+
+  /// Light surfaces.
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFF7F7F8);
-  static const hairline = Color(0xFFE6E6E9);
-  static const text = Color(0xFF111111);
-  static const textMuted = Color(0xFF6B6B76);
-  static const tracking = Color(0xFF16A34A);
-  static const alert = Color(0xFFDC2626);
-  static const parked = Color(0xFF9CA3AF);
-  static const caution = Color(0xFFF59E0B);
+  static const surfaceAlt = Color(0xFFF4F4F5);
+  static const hairline = Color(0xFFE4E5E8);
+
+  /// Dark surfaces: hero cards, the recording cockpit, snackbars.
+  static const dark = Palette.asphaltBlack;
+  static const darkRaised = Palette.stealthCharcoal;
+  static const darkLine = Color(0xFF3A3E45);
+  static const onDarkMuted = Color(0xFFA6AAB2);
+
+  /// Signals. Volt means live or go, orange caution, red stop or alert,
+  /// carbon parked or inactive.
+  static const tracking = Palette.voltYellow;
+  static const caution = Palette.hyperOrange;
+  static const alert = Palette.apexRed;
+  static const parked = Palette.carbonGray;
+
+  /// The rider's own data: routes, charts, progress.
+  static const data = Palette.hyperOrange;
+
+  /// Readable text or icon color on a solid [color] fill. Volt and orange
+  /// are light, so they always carry ink; red and the grays carry white.
+  static Color on(Color color) =>
+      color.computeLuminance() > 0.3 ? Palette.asphaltBlack : Colors.white;
 }
 
 /// 8-pt grid.
@@ -34,9 +68,11 @@ abstract final class AppTheme {
       primary: AppColors.accent,
       onPrimary: Colors.white,
       primaryContainer: AppColors.accentSoft,
-      onPrimaryContainer: AppColors.accent,
-      secondaryContainer: AppColors.accentSoft,
-      onSecondaryContainer: AppColors.accent,
+      onPrimaryContainer: const Color(0xFF8F0400),
+      secondary: AppColors.ink,
+      onSecondary: Colors.white,
+      secondaryContainer: AppColors.surfaceAlt,
+      onSecondaryContainer: AppColors.ink,
       surface: AppColors.surface,
       onSurface: AppColors.text,
       onSurfaceVariant: AppColors.textMuted,
@@ -47,6 +83,8 @@ abstract final class AppTheme {
       surfaceContainerHighest: AppColors.hairline,
       outline: AppColors.hairline,
       outlineVariant: AppColors.hairline,
+      inverseSurface: AppColors.darkRaised,
+      onInverseSurface: Colors.white,
       error: AppColors.alert,
       surfaceTint: Colors.transparent,
     );
@@ -89,8 +127,15 @@ abstract final class AppTheme {
         ),
       ),
       dividerTheme: const DividerThemeData(color: AppColors.hairline, thickness: 1, space: 1),
+      // Primary actions are ink; red stays for the brand and for alerts.
       filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(minimumSize: const Size(64, 48), shape: rounded12),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(64, 48),
+          shape: rounded12,
+          backgroundColor: AppColors.ink,
+          foregroundColor: Colors.white,
+          disabledBackgroundColor: AppColors.hairline,
+        ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -109,24 +154,26 @@ abstract final class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: Space.m, vertical: 14),
         border: _inputBorder(AppColors.hairline),
         enabledBorder: _inputBorder(AppColors.hairline),
-        focusedBorder: _inputBorder(AppColors.accent, 1.5),
+        // Focus is ink so it never looks like an error (red).
+        focusedBorder: _inputBorder(AppColors.ink, 1.5),
         errorBorder: _inputBorder(AppColors.alert),
         focusedErrorBorder: _inputBorder(AppColors.alert, 1.5),
       ),
       chipTheme: base.chipTheme.copyWith(
         backgroundColor: AppColors.surface,
-        selectedColor: AppColors.accentSoft,
+        selectedColor: AppColors.ink,
         side: const BorderSide(color: AppColors.hairline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         labelStyle: text.labelLarge,
+        secondaryLabelStyle: text.labelLarge?.copyWith(color: Colors.white),
         showCheckmark: false,
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: SegmentedButton.styleFrom(
           minimumSize: const Size(48, 48),
           foregroundColor: AppColors.text,
-          selectedBackgroundColor: AppColors.accentSoft,
-          selectedForegroundColor: AppColors.accent,
+          selectedBackgroundColor: AppColors.ink,
+          selectedForegroundColor: Colors.white,
           side: const BorderSide(color: AppColors.hairline),
         ),
       ),
@@ -138,7 +185,8 @@ abstract final class AppTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.text,
+        backgroundColor: AppColors.darkRaised,
+        actionTextColor: Palette.voltYellow,
         shape: rounded12,
         insetPadding: const EdgeInsets.all(Space.m),
       ),
@@ -148,6 +196,7 @@ abstract final class AppTheme {
         minVerticalPadding: 12,
       ),
       badgeTheme: const BadgeThemeData(backgroundColor: AppColors.alert),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.accent),
     );
   }
 

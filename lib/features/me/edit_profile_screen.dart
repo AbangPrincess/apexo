@@ -96,9 +96,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 height: 130,
                 child: cover == null
                     ? const ColoredBox(
-                        color: AppColors.accentSoft,
+                        color: AppColors.darkRaised,
                         child: Center(
-                          child: Text('Your longest route shows here until you add one'),
+                          child: Text(
+                            'Your longest route shows here until you add one',
+                            style: TextStyle(color: AppColors.onDarkMuted),
+                          ),
                         ),
                       )
                     : Image(image: cover, fit: BoxFit.cover, width: double.infinity),

@@ -1,4 +1,4 @@
-name: pedaltrack
+name: apexo
 description: "Ride tracking, live circles and theft alerts for bikes, motorbikes and cars."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -41,6 +41,7 @@ dependencies:
   geolocator: ^14.1.2
   image_picker: ^1.2.3
   clock: ^1.1.2
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:

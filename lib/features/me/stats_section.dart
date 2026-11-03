@@ -79,7 +79,7 @@ class _BarsPainter extends CustomPainter {
       final h = maxV <= 0 ? 0.0 : (days[i] / maxV) * (chartH - 4);
       final x = slot * i + (slot - barW) / 2;
       final color = days[i] > 0
-          ? (i == today ? AppColors.accent : AppColors.accent.withValues(alpha: 0.55))
+          ? (i == today ? AppColors.data : AppColors.data.withValues(alpha: 0.45))
           : AppColors.hairline;
       final barH = math.max(h, 4.0); // a stub shows empty days
       canvas.drawRRect(

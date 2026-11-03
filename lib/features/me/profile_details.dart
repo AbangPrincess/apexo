@@ -20,7 +20,12 @@ const _months = [
 ];
 
 class ProfileActions extends StatelessWidget {
-  const ProfileActions({super.key, required this.expand, required this.onEdit, required this.onSettings});
+  const ProfileActions({
+    super.key,
+    required this.expand,
+    required this.onEdit,
+    required this.onSettings,
+  });
 
   final bool expand;
   final VoidCallback onEdit;
@@ -32,11 +37,7 @@ class ProfileActions extends StatelessWidget {
       onPressed: onEdit,
       icon: const Icon(Icons.edit_outlined, size: 18),
       label: const Text('Edit profile'),
-      style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accentSoft,
-        foregroundColor: AppColors.accent,
-        minimumSize: const Size(0, 44),
-      ),
+      style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
     );
     final settings = IconButton.outlined(
       tooltip: 'Settings',

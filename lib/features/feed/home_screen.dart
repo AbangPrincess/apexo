@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/activity_type.dart';
 import '../../core/theme.dart';
 import '../../core/time_format.dart';
 import '../../core/units.dart';
@@ -13,6 +14,8 @@ import '../../widgets/profile_image.dart';
 import '../../widgets/responsive.dart';
 import '../auth/session_controller.dart';
 import '../me/settings_controller.dart';
+import '../weather/weather_card.dart';
+import '../weather/weather_controller.dart';
 import 'activities_controller.dart';
 import 'activity_card.dart';
 import 'activity_detail_screen.dart';
@@ -54,27 +57,39 @@ class _Feed extends StatelessWidget {
   Widget build(BuildContext context) {
     final feed = context.watch<ActivitiesController>();
     final units = context.select<SettingsController, Units>((s) => s.units);
+    final type = context.select<SettingsController, ActivityType>((s) => s.defaultActivity);
     final name = context.select<SessionController, String>((s) => s.user?.displayName ?? '');
     final t = Theme.of(context).textTheme;
     final now = DateTime.now();
+    final weather = WeatherCard(key: const ValueKey('home-weather'), type: type);
 
     if (!feed.loaded) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
     if (feed.items.isEmpty) {
-      return EmptyState(
-        icon: Icons.route_rounded,
-        title: 'No activities yet',
-        message:
-            'Record your first ride, commute or drive. It will show up here with its route and stats.',
-        actionLabel: 'Start recording',
-        onAction: () => context.read<ShellController>().go(AppTab.record),
+      return LayoutBuilder(
+        builder: (context, c) => ListView(
+          padding: pageInsets(c.maxWidth),
+          children: [
+            weather,
+            const SizedBox(height: Space.s),
+            EmptyState(
+              icon: Icons.route_rounded,
+              title: 'No activities yet',
+              message:
+                  'Record your first ride, commute or drive. It will show up here with its route and stats.',
+              actionLabel: 'Start recording',
+              onAction: () => context.read<ShellController>().go(AppTab.record),
+            ),
+          ],
+        ),
       );
     }
 
     final hello = name.isEmpty || name == 'You' ? greeting(now) : '${greeting(now)}, $name';
     return RefreshIndicator.adaptive(
-      onRefresh: feed.refresh,
+      onRefresh: () =>
+          Future.wait([feed.refresh(), context.read<WeatherController>().load(force: true)]),
       child: LayoutBuilder(
         builder: (context, c) => ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -83,6 +98,8 @@ class _Feed extends StatelessWidget {
             Text(hello, style: t.headlineSmall),
             const SizedBox(height: Space.xs),
             Text(formatLongDate(now), style: t.bodyMedium?.copyWith(color: AppColors.textMuted)),
+            const SizedBox(height: Space.m),
+            weather,
             const SizedBox(height: Space.m),
             WeeklyHeader(activities: feed.items, units: units, now: now),
             const SizedBox(height: Space.l),

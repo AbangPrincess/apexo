@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/login_throttle.dart';
-import 'package:pedaltrack/data/fake/fake_auth.dart';
-import 'package:pedaltrack/data/fake/fake_repository.dart';
-import 'package:pedaltrack/data/repository.dart';
+import 'package:apexo/core/login_throttle.dart';
+import 'package:apexo/data/fake/fake_auth.dart';
+import 'package:apexo/data/fake/fake_repository.dart';
+import 'package:apexo/data/repository.dart';
 
 void main() {
   late DateTime clock;

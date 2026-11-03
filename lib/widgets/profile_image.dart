@@ -39,7 +39,7 @@ class UserAvatar extends StatelessWidget {
     final image = profileImage(photoUrl);
     final avatar = CircleAvatar(
       radius: radius,
-      backgroundColor: AppColors.accent,
+      backgroundColor: AppColors.ink,
       foregroundImage: image,
       child: Text(
         initial,

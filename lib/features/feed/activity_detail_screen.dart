@@ -47,15 +47,15 @@ class ActivityDetailScreen extends StatelessWidget {
         : MapView(
             initialCenter: points.first,
             fitPoints: points,
-            polylines: [MapPolyline(points: points, color: AppColors.accent)],
+            polylines: [MapPolyline(points: points, color: AppColors.data)],
             markers: [
               MapMarker(
                 id: 'start',
                 point: points.first,
                 size: 22,
-                child: const _Dot(AppColors.tracking),
+                child: const _Dot(AppColors.tracking, ring: AppColors.ink),
               ),
-              MapMarker(id: 'end', point: points.last, size: 22, child: const _Dot(AppColors.text)),
+              MapMarker(id: 'end', point: points.last, size: 22, child: const _Dot(AppColors.ink)),
             ],
           );
     final details = _Details(activity: activity, units: units);
@@ -193,16 +193,17 @@ class _Details extends StatelessWidget {
 }
 
 class _Dot extends StatelessWidget {
-  const _Dot(this.color);
+  const _Dot(this.color, {this.ring = Colors.white});
 
   final Color color;
+  final Color ring;
 
   @override
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(
       color: color,
       shape: BoxShape.circle,
-      border: Border.all(color: Colors.white, width: 3),
+      border: Border.all(color: ring, width: 3),
     ),
   );
 }

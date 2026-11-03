@@ -39,7 +39,7 @@ class WeeklyHeader extends StatelessWidget {
         : '${_months[from.month - 1]} ${from.day} – ${_months[to.month - 1]} ${to.day}';
 
     return Card(
-      color: AppColors.accentSoft,
+      color: AppColors.dark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius)),
       child: Padding(
         padding: const EdgeInsets.all(Space.m),
@@ -48,9 +48,9 @@ class WeeklyHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('This week', style: t.titleMedium),
+                Text('This week', style: t.titleMedium?.copyWith(color: Colors.white)),
                 const Spacer(),
-                Text(range, style: t.bodySmall?.copyWith(color: AppColors.textMuted)),
+                Text(range, style: t.bodySmall?.copyWith(color: AppColors.onDarkMuted)),
               ],
             ),
             const SizedBox(height: 12),
@@ -61,16 +61,19 @@ class WeeklyHeader extends StatelessWidget {
                     label: 'Distance',
                     value: formatDistance(week.distanceM, units),
                     unit: units.distanceLabel,
+                    onDark: true,
+                    valueColor: AppColors.tracking,
                   ),
                 ),
                 Expanded(
                   child: StatValue(
                     label: 'Moving time',
                     value: formatDurationShort(week.movingSec),
+                    onDark: true,
                   ),
                 ),
                 Expanded(
-                  child: StatValue(label: 'Activities', value: '${week.count}'),
+                  child: StatValue(label: 'Activities', value: '${week.count}', onDark: true),
                 ),
               ],
             ),

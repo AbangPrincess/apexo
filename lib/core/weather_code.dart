@@ -12,3 +12,9 @@ String weatherLabel(int code) => switch (code) {
   >= 95 => 'Thunderstorm',
   _ => 'Unknown',
 };
+
+/// Rain, drizzle, showers or thunderstorm.
+bool isRainCode(int code) => (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95;
+
+/// Thunderstorm, with or without hail.
+bool isStormCode(int code) => code >= 95;

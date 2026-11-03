@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/achievements.dart';
-import 'package:pedaltrack/core/activity_summary.dart';
-import 'package:pedaltrack/core/activity_type.dart';
-import 'package:pedaltrack/core/image_check.dart';
-import 'package:pedaltrack/core/login_throttle.dart';
-import 'package:pedaltrack/core/validators.dart';
-import 'package:pedaltrack/core/weather_code.dart';
+import 'package:apexo/core/achievements.dart';
+import 'package:apexo/core/activity_summary.dart';
+import 'package:apexo/core/activity_type.dart';
+import 'package:apexo/core/image_check.dart';
+import 'package:apexo/core/login_throttle.dart';
+import 'package:apexo/core/validators.dart';
+import 'package:apexo/core/weather_code.dart';
 
 class _A implements ActivityFacts {
   _A(this.type, this.startedAt, this.distanceM);

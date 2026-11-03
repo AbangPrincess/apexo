@@ -57,9 +57,7 @@ Future<void> _act(BuildContext sheet, DemoMailbox mailbox, DemoEmail e) async {
     if (e.kind == DemoEmailKind.verify) {
       await mailbox.openVerifyLink(e);
       navigator.pop();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Email verified. Welcome to PedalTrack!')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Email verified. Welcome to Apexo!')));
       return;
     }
     final password = await _askNewPassword(sheet);
@@ -125,7 +123,7 @@ class _EmailCard extends StatelessWidget {
               children: [
                 const Icon(Icons.mail_outline_rounded, size: 18, color: AppColors.accent),
                 const SizedBox(width: Space.s),
-                Expanded(child: Text('PedalTrack', style: t.labelLarge)),
+                Expanded(child: Text('Apexo', style: t.labelLarge)),
                 TimeAgo(email.sentAt, style: muted),
               ],
             ),

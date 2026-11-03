@@ -5,7 +5,8 @@ import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../widgets/stat_value.dart';
 
-/// Time on top, then distance, speed and average speed.
+/// Time on top, then distance, speed and average speed. [dark] is the
+/// recording cockpit: a stealth charcoal panel with white figures.
 class RecordStats extends StatelessWidget {
   const RecordStats({
     super.key,
@@ -14,6 +15,7 @@ class RecordStats extends StatelessWidget {
     required this.distanceM,
     required this.speedKmh,
     required this.avgKmh,
+    this.dark = false,
   });
 
   final Units units;
@@ -21,10 +23,13 @@ class RecordStats extends StatelessWidget {
   final double distanceM;
   final double speedKmh;
   final double avgKmh;
+  final bool dark;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: dark ? AppColors.darkRaised : null,
+      shape: dark ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius)) : null,
       child: Padding(
         padding: const EdgeInsets.all(Space.l),
         child: Column(
@@ -34,9 +39,10 @@ class RecordStats extends StatelessWidget {
               value: formatDuration(movingTime.inSeconds),
               size: StatSize.large,
               align: CrossAxisAlignment.center,
+              onDark: dark,
             ),
             const SizedBox(height: Space.l),
-            const Divider(),
+            Divider(color: dark ? AppColors.darkLine : null),
             const SizedBox(height: Space.m),
             Row(
               children: [
@@ -51,6 +57,9 @@ class RecordStats extends StatelessWidget {
                       value: value,
                       unit: unit,
                       align: CrossAxisAlignment.center,
+                      onDark: dark,
+                      // Live distance is the headline number: volt on dark.
+                      valueColor: dark && label == 'Distance' ? AppColors.tracking : null,
                     ),
                   ),
               ],
@@ -62,7 +71,8 @@ class RecordStats extends StatelessWidget {
   }
 }
 
-/// "Recording", "Paused" or "Auto-paused" with a colored dot.
+/// "Recording", "Paused" or "Auto-paused" with a colored dot, on the dark
+/// cockpit background.
 class RecordStatusPill extends StatelessWidget {
   const RecordStatusPill({super.key, required this.state, required this.simulated});
 
@@ -74,7 +84,7 @@ class RecordStatusPill extends StatelessWidget {
     final (label, color) = switch (state) {
       RideState.recording => ('Recording', AppColors.tracking),
       RideState.autoPaused => ('Auto-paused · start moving to resume', AppColors.caution),
-      _ => ('Paused', AppColors.parked),
+      _ => ('Paused', AppColors.onDarkMuted),
     };
     final t = Theme.of(context).textTheme;
     return Semantics(
@@ -89,7 +99,7 @@ class RecordStatusPill extends StatelessWidget {
             duration: kMotion,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.12),
+              color: color.withValues(alpha: 0.16),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Row(
@@ -101,12 +111,12 @@ class RecordStatusPill extends StatelessWidget {
                   decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 ),
                 const SizedBox(width: 6),
-                Text(label, style: t.labelLarge?.copyWith(color: AppColors.text)),
+                Text(label, style: t.labelLarge?.copyWith(color: Colors.white)),
               ],
             ),
           ),
           if (simulated)
-            Text('Simulated GPS', style: t.labelMedium?.copyWith(color: AppColors.textMuted)),
+            Text('Simulated GPS', style: t.labelMedium?.copyWith(color: AppColors.onDarkMuted)),
         ],
       ),
     );
@@ -121,6 +131,8 @@ class RoundAction extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.color = AppColors.accent,
+    this.foreground,
+    this.border,
     this.size = 104,
   });
 
@@ -128,17 +140,25 @@ class RoundAction extends StatelessWidget {
   final IconData? icon;
   final VoidCallback? onPressed;
   final Color color;
+
+  /// Defaults to ink or white, whichever reads better on [color].
+  final Color? foreground;
+  final Color? border;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final fill = onPressed == null ? AppColors.parked : color;
+    final fg = foreground ?? AppColors.on(fill);
     return Semantics(
       button: true,
       label: label,
       excludeSemantics: true,
       child: Material(
-        color: onPressed == null ? AppColors.parked : color,
-        shape: const CircleBorder(),
+        color: fill,
+        shape: CircleBorder(
+          side: border == null ? BorderSide.none : BorderSide(color: border!, width: 2),
+        ),
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: onPressed,
@@ -147,11 +167,11 @@ class RoundAction extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) Icon(icon, color: Colors.white, size: size * 0.28),
+                if (icon != null) Icon(icon, color: fg, size: size * 0.28),
                 Text(
                   label,
                   style: TextStyle(
-                    color: Colors.white,
+                    color: fg,
                     fontSize: size * (icon == null ? 0.17 : 0.13),
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.1,

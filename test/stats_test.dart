@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/activity_type.dart';
-import 'package:pedaltrack/core/stats.dart';
+import 'package:apexo/core/activity_type.dart';
+import 'package:apexo/core/stats.dart';
 
 void main() {
   final t0 = DateTime.utc(2026, 1, 1, 8);

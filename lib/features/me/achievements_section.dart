@@ -95,7 +95,6 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = achievement;
     final t = Theme.of(context).textTheme;
-    final color = a.earned ? AppColors.accent : AppColors.parked;
     return Tooltip(
       message: _goal,
       triggerMode: TooltipTriggerMode.tap,
@@ -105,9 +104,9 @@ class _Badge extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: a.earned ? AppColors.accentSoft : AppColors.surface,
+            color: a.earned ? AppColors.dark : AppColors.surface,
             borderRadius: BorderRadius.circular(kRadius),
-            border: Border.all(color: a.earned ? AppColors.accentSoft : AppColors.hairline),
+            border: Border.all(color: a.earned ? AppColors.dark : AppColors.hairline),
           ),
           child: Column(
             children: [
@@ -115,15 +114,15 @@ class _Badge extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: a.earned ? AppColors.accent : AppColors.surfaceAlt,
+                  color: a.earned ? AppColors.tracking : AppColors.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(_icon, color: a.earned ? Colors.white : color, size: 26),
+                child: Icon(_icon, color: a.earned ? AppColors.ink : AppColors.parked, size: 26),
               ),
               const SizedBox(height: Space.s),
               Text(
                 a.title,
-                style: t.labelLarge,
+                style: t.labelLarge?.copyWith(color: a.earned ? Colors.white : null),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -146,7 +145,7 @@ class _Badge extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: a.progress,
                     minHeight: 4,
-                    color: AppColors.accent,
+                    color: AppColors.data,
                     backgroundColor: AppColors.surfaceAlt,
                   ),
                 ),

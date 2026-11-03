@@ -11,7 +11,7 @@ class RouteThumbnail extends StatelessWidget {
     super.key,
     required this.points,
     this.height = 120,
-    this.color = AppColors.accent,
+    this.color = AppColors.data,
     this.background = AppColors.surfaceAlt,
   });
 
@@ -88,12 +88,13 @@ class RoutePainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..strokeJoin = StrokeJoin.round,
     );
-    _dot(canvas, at(points.first), AppColors.tracking);
-    _dot(canvas, at(points.last), AppColors.text);
+    // Start: volt with an ink ring; finish: ink with a white ring.
+    _dot(canvas, at(points.first), AppColors.tracking, ring: AppColors.ink);
+    _dot(canvas, at(points.last), AppColors.ink);
   }
 
-  void _dot(Canvas canvas, Offset o, Color fill) {
-    canvas.drawCircle(o, 5.5, Paint()..color = Colors.white);
+  void _dot(Canvas canvas, Offset o, Color fill, {Color ring = Colors.white}) {
+    canvas.drawCircle(o, 5.5, Paint()..color = ring);
     canvas.drawCircle(o, 4, Paint()..color = fill);
   }
 

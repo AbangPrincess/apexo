@@ -14,6 +14,7 @@ import '../../widgets/visuals.dart';
 import '../auth/auth_widgets.dart';
 import '../auth/session_controller.dart';
 import '../me/settings_controller.dart';
+import '../weather/weather_card.dart';
 import 'finish_sheet.dart';
 import 'record_controller.dart';
 import 'record_widgets.dart';
@@ -37,7 +38,7 @@ class _RecordScreenState extends State<RecordScreen> {
         context,
         title: 'Use your location?',
         message:
-            'PedalTrack uses your location while you record, to map your route, '
+            'Apexo uses your location while you record, to map your route, '
             'distance and speed. It is not shared unless you post the activity to a circle.',
         confirmLabel: 'Continue',
       );
@@ -63,8 +64,17 @@ class _RecordScreenState extends State<RecordScreen> {
     final rec = context.watch<RecordController>();
     final units = context.select<SettingsController, Units>((s) => s.units);
 
+    // While a ride is live the screen becomes a dark cockpit: higher
+    // contrast in sunlight and less battery on OLED phones.
+    final cockpit = rec.isActive;
     return Scaffold(
-      appBar: AppBar(title: const Text('Record')),
+      backgroundColor: cockpit ? AppColors.dark : null,
+      appBar: AppBar(
+        title: Text('Record', style: cockpit ? const TextStyle(color: Colors.white) : null),
+        backgroundColor: cockpit ? AppColors.dark : null,
+        foregroundColor: cockpit ? Colors.white : null,
+        shape: cockpit ? const Border() : null,
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, c) {
@@ -74,7 +84,7 @@ class _RecordScreenState extends State<RecordScreen> {
               padding: pageInsets(c.maxWidth, maxWidth: 560, bottom: Space.m),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: c.maxHeight - Space.xl),
-                child: rec.isActive ? _live(rec, units) : _idle(rec, units),
+                child: rec.isActive ? _live(rec, units) : _idle(rec, roomy: c.maxHeight >= 900),
               ),
             );
           },
@@ -83,7 +93,7 @@ class _RecordScreenState extends State<RecordScreen> {
     );
   }
 
-  Widget _idle(RecordController rec, Units units) {
+  Widget _idle(RecordController rec, {required bool roomy}) {
     final t = Theme.of(context).textTheme;
     final muted = t.bodySmall?.copyWith(color: AppColors.textMuted);
     return _TwoPart(
@@ -95,7 +105,11 @@ class _RecordScreenState extends State<RecordScreen> {
           children: [
             for (final type in ActivityType.values)
               ChoiceChip(
-                avatar: Icon(type.icon, size: 18),
+                avatar: Icon(
+                  type.icon,
+                  size: 18,
+                  color: type == _type ? Colors.white : AppColors.text,
+                ),
                 label: Text(type.label),
                 selected: type == _type,
                 onSelected: (_) => setState(() => _type = type),
@@ -103,7 +117,9 @@ class _RecordScreenState extends State<RecordScreen> {
           ],
         ),
         const SizedBox(height: Space.l),
-        RecordStats(units: units, movingTime: Duration.zero, distanceM: 0, speedKmh: 0, avgKmh: 0),
+        // Before a ride the weather call takes the place of the stats, which
+        // appear once recording starts. Short screens fold the hourly part.
+        WeatherCard(key: const ValueKey('record-weather'), type: _type, compact: !roomy),
         const SizedBox(height: Space.s),
         if (context.read<SessionController>().isDemo)
           SwitchListTile.adaptive(
@@ -159,18 +175,21 @@ class _RecordScreenState extends State<RecordScreen> {
           distanceM: rec.distanceM,
           speedKmh: rec.currentKmh,
           avgKmh: rec.avgKmh,
+          dark: true,
         ),
         const SizedBox(height: Space.m),
         if (path.length >= 2)
-          RouteThumbnail(points: path, height: 150, background: AppColors.surface)
+          RouteThumbnail(
+            points: path,
+            height: 150,
+            color: AppColors.tracking,
+            background: AppColors.darkRaised,
+          )
         else
           SizedBox(
             height: 150,
             child: Center(
-              child: Text(
-                'Waiting for GPS…',
-                style: TextStyle(color: AppColors.textMuted.withValues(alpha: 0.9)),
-              ),
+              child: Text('Waiting for GPS…', style: TextStyle(color: AppColors.onDarkMuted)),
             ),
           ),
         if (rec.error != null) ...[const SizedBox(height: Space.m), ErrorBanner(rec.error!)],
@@ -184,13 +203,14 @@ class _RecordScreenState extends State<RecordScreen> {
                   RoundAction(
                     label: 'RESUME',
                     icon: Icons.play_arrow_rounded,
+                    color: AppColors.tracking,
                     onPressed: rec.resume,
                     size: 96,
                   ),
                   RoundAction(
                     label: 'FINISH',
                     icon: Icons.stop_rounded,
-                    color: AppColors.text,
+                    color: AppColors.alert,
                     onPressed: _finish,
                     size: 96,
                   ),
@@ -199,7 +219,8 @@ class _RecordScreenState extends State<RecordScreen> {
                   RoundAction(
                     label: 'PAUSE',
                     icon: Icons.pause_rounded,
-                    color: AppColors.text,
+                    color: AppColors.darkRaised,
+                    border: AppColors.darkLine,
                     onPressed: rec.pause,
                   ),
                 ],

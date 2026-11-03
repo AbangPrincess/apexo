@@ -43,7 +43,7 @@ extension AlertTypeVisuals on AlertType {
 
 /// Rounded tinted square holding an icon, used as a list leading.
 class IconTile extends StatelessWidget {
-  const IconTile({super.key, required this.icon, this.color = AppColors.accent, this.size = 44});
+  const IconTile({super.key, required this.icon, this.color = AppColors.ink, this.size = 44});
 
   final IconData icon;
   final Color color;

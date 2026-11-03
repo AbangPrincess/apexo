@@ -29,7 +29,7 @@ class DemoSeed {
   late final AppUser you = AppUser(
     uid: DemoIds.you,
     displayName: 'You',
-    email: 'demo@pedaltrack.app',
+    email: 'demo@example.com',
     createdAt: now.subtract(const Duration(days: 42)),
   );
 

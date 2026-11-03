@@ -21,6 +21,12 @@ String formatClock(DateTime t) {
   return '$h12:$mm ${t.hour < 12 ? 'AM' : 'PM'}';
 }
 
+/// "6 AM", "12 PM"
+String formatHour(DateTime t) {
+  final h12 = t.hour % 12 == 0 ? 12 : t.hour % 12;
+  return '$h12 ${t.hour < 12 ? 'AM' : 'PM'}';
+}
+
 /// "Today at 6:05 AM", "Yesterday at ...", "Tue at ..." (this week) or "Oct 27, 2026".
 String formatRelativeDate(DateTime t, DateTime now) {
   final day = DateTime(t.year, t.month, t.day);

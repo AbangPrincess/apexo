@@ -61,7 +61,12 @@ class MemberTile extends StatelessWidget {
           Container(
             width: 8,
             height: 8,
-            decoration: BoxDecoration(color: m.status.color, shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: m.status.color,
+              shape: BoxShape.circle,
+              // Keeps the light volt dot visible on white.
+              border: Border.all(color: AppColors.ink, width: 0.75),
+            ),
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -122,7 +127,9 @@ class _Battery extends StatelessWidget {
       > 20 => Icons.battery_3_bar_rounded,
       _ => Icons.battery_alert_rounded,
     };
+    // Orange marks the icon only; small orange text would be hard to read.
     final color = low ? AppColors.caution : AppColors.textMuted;
+    final textColor = low ? AppColors.text : AppColors.textMuted;
     return Semantics(
       label: 'Battery $percent percent',
       excludeSemantics: true,
@@ -134,7 +141,7 @@ class _Battery extends StatelessWidget {
             '$percent%',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: color, fontFeatures: kTabular),
+            ).textTheme.bodySmall?.copyWith(color: textColor, fontFeatures: kTabular),
           ),
         ],
       ),

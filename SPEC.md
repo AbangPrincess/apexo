@@ -1,7 +1,7 @@
-# PedalTrack - spec
+# Apexo - spec
 
 ## G1 Product
-- PedalTrack = Strava-style activity tracking + Life360-style live circles + a theft guard for vehicles. Main users are cyclists (mountain, road, commute); motorcyclists and drivers can use it too. History: it started as an NDMU Android bike anti-theft GPS study; this is a new, more useful product, not a port of that app.
+- Apexo = Strava-style activity tracking + Life360-style live circles + a theft guard for vehicles. Main users are cyclists (mountain, road, commute); motorcyclists and drivers can use it too. History: it started as an NDMU Android bike anti-theft GPS study; this is a new, more useful product, not a port of that app.
 - Four pillars: (1) record and review activities, (2) live circles of people I chose, (3) vehicle guard with theft alerts to the circle, (4) weather for the ride.
 - Android first (real background location). A Chrome web build is used for fast preview and a GitHub Pages demo (web cannot track in the background). iOS is not configured.
 - Privacy non-negotiables: location is shared only inside circles the user joined after an explicit consent screen; a persistent indicator/notification shows while sharing; per-circle "Pause sharing"; leave a circle any time; no hidden tracking; the circle owner can remove a member; deleting the account deletes the data.
@@ -14,7 +14,7 @@
 - Geometry, units, stats and weather-verdict logic are pure Dart in lib/core and unit-tested.
 
 ## G3 Design (minimal but appealing)
-White surfaces, #F7F7F8 secondary, 1 px #E6E6E9 hairline borders, no shadows or textures, 8-pt spacing grid, 16 px card radius. One accent #2563EB. Status colors: tracking #16A34A, alert #DC2626, parked #9CA3AF, caution #F59E0B. Text #111111 / #6B6B76. Big numeric stats with tabular figures, one idea per screen, thumb-reachable actions, 48 px touch targets, subtle 150-200 ms transitions. Bottom nav, 5 items: Home, Circle, Record (center, prominent), Alerts, Me. Friendly, actionable empty states. Route thumbnails are painted with CustomPainter (no tile downloads). Light theme first, dark theme in P6.
+White surfaces, #F4F4F5 secondary, 1 px #E4E5E8 hairline borders, no shadows or textures, 8-pt spacing grid, 16 px card radius. Brand palette (roles live in `lib/core/theme.dart`; screens use roles, never raw colors): Apex Red #E10600 = brand, START, selected tab, links, alerts/stop; Asphalt Black #121316 = text, primary buttons, selected chips, dark hero surfaces; Stealth Charcoal #2A2D33 = raised dark panels, snackbars, default cover; Carbon Fiber Gray #6B7079 = muted text, inactive, parked/paused; Hyper Orange #FF6A13 = the rider's data (routes, charts, progress) and caution; Volt Yellow #D4FF00 = live/go (moving, recording, Resume, Great verdict, earned badges), always paired with ink. Small text is never orange or volt on white. While recording, Record becomes a dark cockpit. Big numeric stats with tabular figures, one idea per screen, thumb-reachable actions, 48 px touch targets, subtle 150-200 ms transitions. Bottom nav, 5 items: Home, Circle, Record (center, prominent), Alerts, Me. Friendly, actionable empty states. Route thumbnails are painted with CustomPainter (no tile downloads). Light theme first, dark theme in P6.
 
 ## G4 Data model (Firestore; FakeRepository mirrors it exactly)
 - users/{uid}: displayName, email, defaultActivity ('cycling'|'motorcycling'|'driving'), units ('km'|'mi'), createdAt
@@ -28,7 +28,7 @@ White surfaces, #F7F7F8 secondary, 1 px #E6E6E9 hairline borders, no shadows or 
 - Write budget (Spark = 20k writes/day): while moving write at most every 5 s and only after >=10 m; stationary heartbeat every 60 s; at most 3 circles per user.
 
 ## P1 Foundation + demo backend + app shell
-- Scaffold (`flutter create --org com.pedaltrack --platforms android,web .`), add packages, folder layout, theme, bottom-nav shell with 5 styled screens and friendly empty states, Me > settings (units, default activity).
+- Scaffold (`flutter create --org io.github.abangprincess --project-name apexo --platforms android,web .`), add packages, folder layout, theme, bottom-nav shell with 5 styled screens and friendly empty states, Me > settings (units, default activity).
 - Repository interfaces + FakeRepository seeded with: demo user "You", circle "Trail Buddies" (code TRAIL7), member Jero (rides a scripted loop around Koronadal City, 6.50, 124.85, and leaves his 50 m boundary after ~20 s so an alert fires), member Shane (parked), and 6 sample activities across cycling/motorcycling/driving. Everything must run with zero setup.
 - Auth screens: "Continue with demo account", plus email/password sign in and create account wired to the repository.
 - Pure libs + tests: haversine, path length, insideBoundary(lat,lng,boundary,accuracy), polyline encode/decode, path simplification (>=10 m), km/mi conversion, avg/max speed with GPS-jump filter.

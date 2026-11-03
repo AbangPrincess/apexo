@@ -44,6 +44,23 @@ class DeviceLocationSource implements LocationSource {
     };
   }
 
+  /// Rough position for the weather, only when access is already granted
+  /// (never shows the system dialog). Null when unavailable.
+  Future<GeoPoint?> positionIfAllowed() async {
+    try {
+      if (!await hasAccess()) return null;
+      final p = await geo.Geolocator.getCurrentPosition(
+        locationSettings: const geo.LocationSettings(
+          accuracy: geo.LocationAccuracy.low,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      return GeoPoint(p.latitude, p.longitude);
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Stream<Fix> fixes(ActivityType type) =>
       geo.Geolocator.getPositionStream(locationSettings: _settings(type)).map(
@@ -71,7 +88,7 @@ class DeviceLocationSource implements LocationSource {
         intervalDuration: const Duration(seconds: 1),
         foregroundNotificationConfig: const geo.ForegroundNotificationConfig(
           notificationTitle: 'Recording ride',
-          notificationText: 'PedalTrack is recording your route.',
+          notificationText: 'Apexo is recording your route.',
           notificationChannelName: 'Recording',
           enableWakeLock: true,
           setOngoing: true,

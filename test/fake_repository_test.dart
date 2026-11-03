@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/activity_type.dart';
-import 'package:pedaltrack/core/geo.dart';
-import 'package:pedaltrack/core/units.dart';
-import 'package:pedaltrack/data/fake/demo_seed.dart';
-import 'package:pedaltrack/data/fake/fake_repository.dart';
-import 'package:pedaltrack/data/models/circle.dart';
-import 'package:pedaltrack/data/models/circle_alert.dart';
-import 'package:pedaltrack/data/models/user.dart';
-import 'package:pedaltrack/data/repository.dart';
+import 'package:apexo/core/activity_type.dart';
+import 'package:apexo/core/geo.dart';
+import 'package:apexo/core/units.dart';
+import 'package:apexo/data/fake/demo_seed.dart';
+import 'package:apexo/data/fake/fake_repository.dart';
+import 'package:apexo/data/models/circle.dart';
+import 'package:apexo/data/models/circle_alert.dart';
+import 'package:apexo/data/models/user.dart';
+import 'package:apexo/data/repository.dart';
 
 void main() {
   late FakeRepository repo;

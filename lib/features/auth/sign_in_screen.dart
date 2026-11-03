@@ -140,7 +140,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text('New to PedalTrack?', style: t.bodyMedium),
+                  Text('New to Apexo?', style: t.bodyMedium),
                   TextButton(
                     onPressed: session.busy ? null : _openCreateAccount,
                     child: const Text('Create account'),

@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/geo.dart';
+import '../core/theme.dart';
 
 /// The only place that knows about the map package, so the provider can be
 /// swapped (e.g. Google Maps in P7) without touching screens.
@@ -51,7 +52,7 @@ class MapView extends StatelessWidget {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.pedaltrack.pedaltrack',
+          userAgentPackageName: 'io.github.abangprincess.apexo',
           maxNativeZoom: 19,
         ),
         if (polylines.isNotEmpty)
@@ -120,7 +121,7 @@ class _Attribution extends StatelessWidget {
             '© OpenStreetMap contributors',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: Color(0xFF6B6B76)),
+            style: TextStyle(fontSize: 11, color: AppColors.textMuted),
           ),
         ),
       ),

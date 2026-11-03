@@ -1,10 +1,11 @@
-# PedalTrack - development notes
+# Apexo - development notes
 Activity tracking + live circles + theft guard for bikes, motorbikes and cars. Flutter (Dart). Full scope is in SPEC.md. Read only the sections you need: `grep -n '^## ' SPEC.md`.
 
 ## Working rules
 - Read only files you will edit. Batch edits. Max 250 lines per file; split big widgets into their own files. Comment only non-obvious logic.
 - Add packages with `flutter pub add <pkg>` (never hand-edit versions), and only in the phase that first uses them. No code generators (build_runner, freezed, json_serializable, riverpod_generator): hand-write models with fromMap/toMap.
 - Verify with `flutter analyze` and `flutter test` (piped to `| tail -n 25`).
+- Format only the files you touched, at 100 columns: `dart format -l 100 <files>`. The default 80 columns reflows the whole codebase.
 - Blocked on something only the owner can do (Firebase project, keys)? Use the demo backend, keep going, and list it under "Needs you" in README.md.
 - Never commit passwords, keys, keystores or .env files. Never log or persist anything sensitive on the client (web localStorage and the console are visible in the browser's Inspect tools).
 - Commits: short messages ("first commit", "second commit", ...), and only when the owner asks. Never push unasked.
@@ -18,7 +19,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 ## Progress
 [x] P1 Foundation + demo backend + app shell
 [x] P2 Record + feed + activity detail (+ owner requests: email verification, sign-in lockout, password reset, profile photos and achievements)
-[ ] P3 Weather
+[x] P3 Weather
 [ ] P4 Circles
 [ ] P5 Vehicle guard + alerts
 [ ] P6 Firebase + polish + GitHub deploy
@@ -42,3 +43,13 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - P2: settings moved from the Me tab to a Settings screen (gear icon); Me is now a social-style profile with cover, photo, details, achievements, weekly chart and totals.
 - P2: recording uses `package:clock` time so tests can fake it. The demo backend defaults to simulated GPS (switchable) so recording can be tried at a desk.
 - P2: Android permissions for location, foreground service, wake lock and notifications are declared now (recording needs them); a short explanation dialog appears before the system permission request. Full rationale screens and the notification permission request remain in P6.
+- P3: weather comes from Open-Meteo through `OpenMeteoSource` (injectable `http.Client`; tests pass a fake `WeatherSource`). `current` and `hourly` also ask for `is_day`, so night hours rank lower and riders get a lights reminder after dark.
+- P3: hourly times are parsed as UTC instants using `utc_offset_seconds`; labels use the forecast location's clock, not the device's.
+- P3: `rideVerdict` uses the spec thresholds for cycling and motorcycling, plus thunderstorms (avoid) and rain falling now (caution). Driving is capped at Caution, and heat is ignored for driving. The worst factor sets the verdict and its reason.
+- P3: "Best time to ride" ranks the next 12 h by verdict, then a discomfort score (rain, wind, heat, night), then earliest.
+- P3: the 15-minute cache is in memory only; nothing about weather or location reaches shared_preferences or localStorage. Offline keeps the last result ("Offline · Updated X min ago"); a cold start offline shows a Retry card.
+- P3: weather uses the device position only when location access is already granted (it never asks for it) and sends it rounded to 0.01 deg; demo mode and denied access use Koronadal City (6.50, 124.85).
+- P3: each new activity stores a `WeatherSnapshot` for its start: current values when fetched within 30 min of the start, else that hour's forecast. Starting a recording refreshes a stale cache.
+- P3: on Record, the weather call replaces the all-zero stats card before a ride (live stats still appear once recording starts), so START stays within thumb reach. Screens under 900 px tall fold the hourly strip behind an "Hourly" toggle.
+- Rename: the app was renamed from PedalTrack to Apexo (2026-11-03). Dart package `apexo`, Android `applicationId`/namespace and iOS bundle ID `io.github.abangprincess.apexo` (a namespace the owner controls; it is permanent once published to a store, so change it before the first release if a domain is bought). Demo email is `demo@example.com` (reserved domain).
+- Colors: the six Apexo brand colors are in `Palette`; screens only use the roles in `AppColors` (see SPEC G3 and README "Design"). Red is reserved for brand, START and alerts; primary buttons are ink; input focus is ink so it never looks like an error. `AppColors.on(color)` picks ink or white text for solid fills.

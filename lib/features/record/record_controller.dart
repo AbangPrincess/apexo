@@ -12,12 +12,13 @@ import '../../core/stats.dart';
 import '../../data/models/activity.dart';
 import '../../data/models/user.dart';
 import '../../data/repository.dart';
+import '../weather/weather_controller.dart';
 import 'location_source.dart';
 
 /// Live recording. Lives above the tabs so a ride keeps recording while the
 /// rider looks at other screens.
 class RecordController extends ChangeNotifier {
-  RecordController(this._repo, {required this.device, required this.simulator})
+  RecordController(this._repo, {required this.device, required this.simulator, this.weather})
     : useSimulated = _repo.isDemo {
     _authSub = _repo.authStateChanges().listen((u) {
       if (u == null && isActive) discard();
@@ -27,6 +28,9 @@ class RecordController extends ChangeNotifier {
   final AppRepository _repo;
   final LocationSource device;
   final LocationSource simulator;
+
+  /// Supplies the weather snapshot saved with each activity.
+  final WeatherController? weather;
   late final StreamSubscription<AppUser?> _authSub;
 
   /// Demo backend defaults to simulated GPS; it can be switched off.
@@ -70,11 +74,13 @@ class RecordController extends ChangeNotifier {
         LocationAccess.serviceOff => 'Turn on location services to record.',
         LocationAccess.deniedForever =>
           'Location access is blocked. Allow it in Settings to record.',
-        _ => 'PedalTrack needs location access to record your route.',
+        _ => 'Apexo needs location access to record your route.',
       };
       notifyListeners();
       return false;
     }
+    // Warms the forecast so the snapshot reflects the start of the ride.
+    weather?.load();
     final tracker = _tracker = RideTracker(type)..start(clock.now());
     _fixes = source
         .fixes(type)
@@ -125,6 +131,7 @@ class RecordController extends ChangeNotifier {
       avgKmh: tracker.avgKmhAt(now),
       maxKmh: tracker.maxKmh,
       path: encodePolyline(simplifyPath(tracker.path)),
+      weather: weather?.snapshotAt(start),
     );
   }
 

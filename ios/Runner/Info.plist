@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>PedalTrack uses your location to record the route, distance and speed of your rides.</string>
+	<string>Apexo uses your location to record the route, distance and speed of your rides.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>PedalTrack keeps recording your ride while the screen is locked. Your location is shared only inside circles you join.</string>
+	<string>Apexo keeps recording your ride while the screen is locked. Your location is shared only inside circles you join.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Choose a profile or cover photo for your PedalTrack profile.</string>
+	<string>Choose a profile or cover photo for your Apexo profile.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Take a profile or cover photo for your PedalTrack profile.</string>
+	<string>Take a profile or cover photo for your Apexo profile.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
@@ -17,7 +17,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>PedalTrack</string>
+	<string>Apexo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -25,7 +25,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>PedalTrack</string>
+	<string>Apexo</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

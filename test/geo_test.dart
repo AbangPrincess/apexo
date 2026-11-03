@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/geo.dart';
-import 'package:pedaltrack/core/polyline.dart';
+import 'package:apexo/core/geo.dart';
+import 'package:apexo/core/polyline.dart';
 
 void main() {
   const center = GeoPoint(6.50, 124.85);

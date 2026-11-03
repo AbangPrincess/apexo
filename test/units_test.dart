@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/time_format.dart';
-import 'package:pedaltrack/core/units.dart';
-import 'package:pedaltrack/core/validators.dart';
+import 'package:apexo/core/time_format.dart';
+import 'package:apexo/core/units.dart';
+import 'package:apexo/core/validators.dart';
 
 void main() {
   group('units', () {

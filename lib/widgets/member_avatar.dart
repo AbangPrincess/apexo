@@ -11,6 +11,7 @@ class MemberAvatar extends StatelessWidget {
     this.size = 44,
     this.badge,
     this.highlight = false,
+    this.outline = false,
   });
 
   final String initial;
@@ -18,8 +19,11 @@ class MemberAvatar extends StatelessWidget {
   final double size;
   final IconData? badge;
 
-  /// Solid accent fill, used for the signed-in user.
+  /// Solid ink fill, used for the signed-in user.
   final bool highlight;
+
+  /// Thin dark edge so light rings (volt) stay visible on map tiles.
+  final bool outline;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +43,14 @@ class MemberAvatar extends StatelessWidget {
               color: AppColors.surface,
               shape: BoxShape.circle,
               border: Border.all(color: ringColor, width: size * 0.07),
+              boxShadow: outline
+                  ? const [BoxShadow(color: AppColors.ink, spreadRadius: 1.5)]
+                  : null,
             ),
             child: Container(
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: highlight ? AppColors.accent : AppColors.accentSoft,
+                color: highlight ? AppColors.ink : AppColors.surfaceAlt,
                 shape: BoxShape.circle,
               ),
               child: Text(
@@ -51,7 +58,7 @@ class MemberAvatar extends StatelessWidget {
                 style: TextStyle(
                   fontSize: size * 0.38,
                   fontWeight: FontWeight.w700,
-                  color: highlight ? Colors.white : AppColors.accent,
+                  color: highlight ? Colors.white : AppColors.ink,
                 ),
               ),
             ),

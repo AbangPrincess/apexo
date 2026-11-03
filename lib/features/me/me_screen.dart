@@ -69,9 +69,7 @@ class MeScreen extends StatelessWidget {
     void edit() => _push(context, EditProfileScreen(user: user));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: LayoutBuilder(
         builder: (context, c) {
           final wide = c.maxWidth >= 760;

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/app.dart';
-import 'package:pedaltrack/data/fake/fake_repository.dart';
+import 'package:apexo/app.dart';
+import 'package:apexo/data/fake/fake_repository.dart';
+import 'package:apexo/features/record/record_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'weather_fixtures.dart';
 
 // Phone (small Android), iPhone, tablet and desktop web widths. Any layout
 // overflow fails the test.
@@ -13,7 +16,7 @@ const sizes = {
   'desktop': Size(1366, 800),
 };
 
-Future<FakeRepository> pumpApp(WidgetTester tester, Size size) async {
+Future<FakeRepository> pumpApp(WidgetTester tester, Size size, {FakeWeatherSource? weather}) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
@@ -21,7 +24,9 @@ Future<FakeRepository> pumpApp(WidgetTester tester, Size size) async {
   final prefs = await SharedPreferences.getInstance();
   final repo = FakeRepository(simulate: false, latency: Duration.zero);
   addTearDown(repo.dispose);
-  await tester.pumpWidget(PedalTrackApp(repository: repo, prefs: prefs));
+  await tester.pumpWidget(
+    ApexoApp(repository: repo, prefs: prefs, weatherSource: weather ?? FakeWeatherSource()),
+  );
   await tester.pumpAndSettle();
   return repo;
 }
@@ -47,8 +52,16 @@ void main() {
     testWidgets('$name: demo account, every tab, units setting', (tester) async {
       await pumpApp(tester, size);
       await signInDemo(tester);
-      expect(find.text('Morning Ride'), findsOneWidget);
       expect(find.text('This week'), findsOneWidget);
+      final homeWeather = find.byKey(const ValueKey('home-weather'));
+      expect(find.descendant(of: homeWeather, matching: find.text('Great')), findsOneWidget);
+      expect(find.text('Dry and calm - enjoy the ride'), findsOneWidget);
+      expect(find.textContaining('Feels like 29°'), findsOneWidget);
+      expect(find.textContaining('Best time to ride'), findsOneWidget);
+      expect(find.descendant(of: homeWeather, matching: find.text('Now')), findsOneWidget);
+      expect(find.textContaining('Koronadal City · Updated'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Morning Ride'), 300);
+      expect(find.text('Morning Ride'), findsOneWidget);
 
       await tapVisible(tester, find.text('Morning Ride'));
       expect(find.text('Elapsed time'), findsOneWidget);
@@ -61,8 +74,24 @@ void main() {
 
       await goTo(tester, 'record');
       expect(find.text('START'), findsOneWidget);
-      // START stays in the lower part of the screen, within thumb reach.
+      // START stays in the lower part of the screen, within thumb reach, and
+      // fully on screen from iPhone height up. (The test font is wider than
+      // real fonts, so the shortest phone scrolls here.)
       expect(tester.getCenter(find.text('START')).dy, greaterThan(size.height * 0.55));
+      if (size.height >= 800) {
+        final page = find.descendant(
+          of: find.byType(RecordScreen),
+          matching: find.byType(SingleChildScrollView),
+        );
+        final button = tester.getRect(find.bySemanticsLabel('START').last);
+        expect(button.bottom, lessThanOrEqualTo(tester.getRect(page).bottom));
+      }
+      final recordWeather = find.byKey(const ValueKey('record-weather'));
+      expect(find.descendant(of: recordWeather, matching: find.text('Great')), findsOneWidget);
+      final hourly = find.descendant(of: recordWeather, matching: find.text('Hourly'));
+      // Short screens fold the hourly forecast behind a toggle.
+      if (hourly.evaluate().isNotEmpty) await tapVisible(tester, hourly);
+      expect(find.descendant(of: recordWeather, matching: find.text('Now')), findsOneWidget);
 
       await goTo(tester, 'alerts');
       expect(find.text("Shane's phone battery is at 15%"), findsOneWidget);
@@ -145,6 +174,9 @@ void main() {
     await tester.enterText(find.byType(TextField).last, 'Test loop');
     await tapVisible(tester, find.widgetWithText(FilledButton, 'Save activity'));
     expect(find.text('Test loop'), findsOneWidget);
+    // The weather at the start is saved with the activity.
+    await tapVisible(tester, find.text('Test loop'));
+    expect(find.text('Wind 9 km/h at the start'), findsOneWidget);
   });
 
   testWidgets('edit profile bio and hometown', (tester) async {
@@ -158,5 +190,22 @@ void main() {
     await tapVisible(tester, find.widgetWithText(FilledButton, 'Save profile'));
     expect(find.text('Weekend climber from the south.'), findsOneWidget);
     expect(find.text('From Koronadal City'), findsOneWidget);
+  });
+
+  testWidgets('weather offline: friendly retry, then the last result stays', (tester) async {
+    final weather = FakeWeatherSource()..offline = true;
+    await pumpApp(tester, sizes['small phone']!, weather: weather);
+    await signInDemo(tester);
+    expect(find.text('Weather unavailable. Check your connection.'), findsOneWidget);
+
+    weather.offline = false;
+    await tapVisible(tester, find.text('Retry'));
+    expect(find.text('Dry and calm - enjoy the ride'), findsOneWidget);
+
+    weather.offline = true;
+    await tester.pump(const Duration(minutes: 16));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Offline · Updated 16 min ago'), findsOneWidget);
+    expect(find.text('Dry and calm - enjoy the ride'), findsOneWidget);
   });
 }

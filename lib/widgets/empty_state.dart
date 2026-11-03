@@ -38,10 +38,10 @@ class EmptyState extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: const BoxDecoration(
-                  color: AppColors.accentSoft,
+                  color: AppColors.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 32, color: AppColors.accent),
+                child: Icon(icon, size: 32, color: AppColors.ink),
               ),
               const SizedBox(height: Space.l),
               Text(title, style: t.titleLarge, textAlign: TextAlign.center),

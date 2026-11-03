@@ -114,6 +114,7 @@ class _RecordButton extends StatelessWidget {
       excludeSemantics: true,
       child: Center(
         child: Material(
+          // Volt while a ride is live; Apex Red otherwise.
           color: recording ? AppColors.tracking : AppColors.accent,
           shape: CircleBorder(
             side: BorderSide(color: selected ? AppColors.accentSoft : AppColors.surface, width: 4),
@@ -121,10 +122,14 @@ class _RecordButton extends StatelessWidget {
           child: InkWell(
             customBorder: const CircleBorder(),
             onTap: onTap,
-            child: const SizedBox(
+            child: SizedBox(
               width: 60,
               height: 60,
-              child: Icon(Icons.radio_button_checked_rounded, color: Colors.white, size: 28),
+              child: Icon(
+                Icons.radio_button_checked_rounded,
+                color: recording ? AppColors.ink : Colors.white,
+                size: 28,
+              ),
             ),
           ),
         ),

@@ -115,7 +115,7 @@ class FakeAuth {
   void sendVerification(FakeAccount account) => _send(
     DemoEmailKind.verify,
     account.email,
-    'Verify your PedalTrack email',
+    'Verify your Apexo email',
     'Confirm this is your email to finish creating your account. The link works once.',
     'Verify email',
   );
@@ -129,7 +129,7 @@ class FakeAuth {
     _send(
       DemoEmailKind.reset,
       email.trim(),
-      'Reset your PedalTrack password',
+      'Reset your Apexo password',
       'Someone asked to reset the password for this account. If it was not you, ignore this email.',
       'Reset password',
     );

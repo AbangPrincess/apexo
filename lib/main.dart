@@ -7,5 +7,5 @@ import 'data/backend.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  runApp(PedalTrackApp(repository: createRepository(), prefs: prefs));
+  runApp(ApexoApp(repository: createRepository(), prefs: prefs));
 }

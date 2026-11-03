@@ -58,13 +58,13 @@ class _BrandPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     return Container(
-      color: AppColors.surfaceAlt,
+      color: AppColors.dark,
       padding: const EdgeInsets.all(Space.xxl),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const BrandMark(size: 40),
+            const BrandMark(size: 40, onDark: true),
             const Spacer(),
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 480),
@@ -73,7 +73,11 @@ class _BrandPanel extends StatelessWidget {
                 children: [
                   Text(
                     'Ride further.\nStay close.\nKeep it safe.',
-                    style: t.displaySmall?.copyWith(fontWeight: FontWeight.w800, height: 1.15),
+                    style: t.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(height: Space.l),
                   for (final (icon, label) in _pillars)
@@ -81,9 +85,11 @@ class _BrandPanel extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: Space.m),
                       child: Row(
                         children: [
-                          IconTile(icon: icon, size: 40),
+                          IconTile(icon: icon, size: 40, color: AppColors.tracking),
                           const SizedBox(width: Space.m),
-                          Expanded(child: Text(label, style: t.titleMedium)),
+                          Expanded(
+                            child: Text(label, style: t.titleMedium?.copyWith(color: Colors.white)),
+                          ),
                         ],
                       ),
                     ),
@@ -93,7 +99,7 @@ class _BrandPanel extends StatelessWidget {
             const Spacer(),
             Text(
               'Your location is shared only inside circles you join, and you can pause it any time.',
-              style: t.bodySmall?.copyWith(color: AppColors.textMuted),
+              style: t.bodySmall?.copyWith(color: AppColors.onDarkMuted),
             ),
           ],
         ),

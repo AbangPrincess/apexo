@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pedaltrack/core/activity_type.dart';
-import 'package:pedaltrack/core/geo.dart';
-import 'package:pedaltrack/core/ride_tracker.dart';
-import 'package:pedaltrack/core/stats.dart';
+import 'package:apexo/core/activity_type.dart';
+import 'package:apexo/core/geo.dart';
+import 'package:apexo/core/ride_tracker.dart';
+import 'package:apexo/core/stats.dart';
 
 void main() {
   const origin = GeoPoint(6.5, 124.85);
