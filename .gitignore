@@ -60,3 +60,5 @@ macos/Runner/GoogleService-Info.plist
 .firebaserc
 firebase-debug.log
 firestore-debug.log
+# Firebase deploy cache
+.firebase/

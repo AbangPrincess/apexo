@@ -65,6 +65,58 @@ flutter test
 
 Each color keeps one meaning on every screen. Volt and orange always sit on dark surfaces or next to black text, so they stay readable. While you record, the Record tab switches to a dark cockpit, which is easier to read in sunlight and uses less battery on OLED phones.
 
+## Testers on Android (no USB)
+
+Test builds go out through **Firebase App Distribution** to the group **Testers**. Version 1.0.0 is already there.
+
+**Add testers** (either way works):
+- **Invite link (easiest):** in the [Firebase console](https://console.firebase.google.com/project/apexo-497f5/appdistribution), open **App Distribution > Testers & Groups**, choose **Testers**, then **Invite links > Create invite link**. Send the link to your friends (Messenger, email, anything). Whoever signs up with it joins the group.
+- **By email:** run this once per person (they get an email right away):
+  ```bash
+  firebase appdistribution:testers:add friend@example.com --group-alias testers --project apexo-497f5
+  ```
+
+**What a tester does on their Android phone:**
+1. Open the invite link or email on the phone and sign in with a Google account.
+2. Tap **Download** for Apexo. When Android asks, allow the browser (or Firebase App Tester) to **install unknown apps**. If Play Protect warns about an unknown developer, choose **More details > Install anyway**.
+3. Open Apexo, create an account and verify the email.
+
+**Send a new version:** raise `version:` in `pubspec.yaml` (for example `1.0.0+2`), then:
+```bash
+flutter build apk --release
+```
+```bash
+firebase appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk --app 1:471434846199:android:5a4b4bf1e541628c1518f2 --project apexo-497f5 --groups testers --release-notes "What changed"
+```
+Testers get an email and can update in place.
+
+**Back up the signing key.** Release builds are signed with `android/app/upload-keystore.jks`, and its password is in `android/key.properties`. Both are kept out of Git on purpose. Copy both to a private place (for example a private Google Drive folder). Without them, a new version can't install over the old one, and Google Play will need the same key later.
+
+iPhones can't install test builds this way without a paid Apple Developer account. Until then, iPhone users use the web app below.
+
+## iPhone (and any browser): the web app
+
+The real app, with real accounts, runs at **https://apexo-497f5.web.app** (Firebase Hosting, free plan). It's the same accounts and circles as the Android app.
+
+On an iPhone:
+1. Open **https://apexo-497f5.web.app** in **Safari**.
+2. Tap **Share** (the square with the arrow), then **Add to Home Screen**, then **Add**.
+3. Open Apexo from the Home Screen, create an account and verify the email.
+
+Limits on iPhone: recording and location sharing pause while the screen is locked or Safari is in the background, and notifications need iOS 16.4 or newer and the Home Screen app.
+
+**Publish a new version of the web app:**
+```bash
+flutter clean
+```
+```bash
+flutter build web --release
+```
+```bash
+firebase deploy --only hosting --project apexo-497f5
+```
+(`flutter clean` matters: without it a web build can reuse an old plugin list and start without Firebase.) The GitHub Pages demo is separate and always stays in demo mode.
+
 ## Needs you
 
 - **Firebase**: connected to the project `apexo-497f5`. The web, Android and iPhone apps are registered, the Firestore database `default` (Enterprise edition, Singapore) is in place, and [`firestore.rules`](firestore.rules) is published. One step is left:
