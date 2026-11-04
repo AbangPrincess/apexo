@@ -67,24 +67,27 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 
 ## Needs you
 
-- **Firebase** (real accounts, emails and syncing). The code is ready; it needs your Google account:
-  1. In the [Firebase console](https://console.firebase.google.com), create a project (the free Spark plan is enough; Google Analytics is optional).
-  2. **Authentication > Sign-in method**: turn on **Email/Password**.
-  3. **Firestore Database > Create database**: pick a location near your users and start in **production mode**.
-  4. **Firestore Database > Rules**: replace everything with the contents of [`firestore.rules`](firestore.rules) and press **Publish**. (Or run `firebase deploy --only firestore:rules --project YOUR_PROJECT_ID`.)
-  5. In this folder, run these one at a time:
-     ```bash
-     dart pub global activate flutterfire_cli
-     firebase login
-     flutterfire configure --platforms=android,ios,web --no-apply-gradle-plugins
-     ```
-     Pick the project you made. It rewrites `lib/firebase_options.dart`. (If your FlutterFire version doesn't know `--no-apply-gradle-plugins`, run it without that flag.)
-  6. Keep the real options out of Git (the values are not passwords, but a public repo doesn't need them):
-     ```bash
-     git update-index --skip-worktree lib/firebase_options.dart
-     ```
-  7. Run **Apexo (phone over USB)** and create an account. The verification email comes from Firebase (check spam the first time).
-- **GitHub Pages**: on GitHub, open **Settings > Pages** and set **Source** to **GitHub Actions**. The next push publishes the demo at `https://abangprincess.github.io/apexo/`. (Pages on a private repository needs a paid GitHub plan.)
+- **Firebase**: connected to the project `apexo-497f5`. The web, Android and iPhone apps are registered, the Firestore database `default` (Enterprise edition, Singapore) is in place, and [`firestore.rules`](firestore.rules) is published. One step is left:
+  1. In the [Firebase console](https://console.firebase.google.com/project/apexo-497f5/authentication/providers), open **Authentication > Sign-in method**. If **Email/Password** is not "Enabled", click it, turn on the first switch (leave "Email link" off) and press **Save**.
+  2. Run **Apexo (phone over USB)** and create an account. The verification email comes from Firebase (check spam the first time).
+
+  After changing the rules, publish them with `firebase deploy --only firestore:rules --project apexo-497f5` (`firebase.json` points them at the `default` database).
+
+  On another computer, the real `lib/firebase_options.dart` is not in Git. Recreate it with:
+  ```bash
+  dart pub global activate flutterfire_cli
+  ```
+  ```bash
+  flutterfire configure --project=apexo-497f5 --platforms=android,ios,web --android-package-name=io.github.abangprincess.apexo --ios-bundle-id=io.github.abangprincess.apexo --yes
+  ```
+  ```bash
+  git checkout -- android/app/build.gradle.kts android/settings.gradle.kts firebase.json
+  ```
+  ```bash
+  git update-index --skip-worktree lib/firebase_options.dart
+  ```
+  The third command undoes FlutterFire's Gradle plugin changes; the app passes its Firebase options in code and doesn't need them.
+- **GitHub Pages**: done. The demo is live at `https://abangprincess.github.io/apexo/` and updates on every push to `main`.
 - **iPhone**: building needs a Mac with Xcode. The location and photo permission texts are already in place. Push notifications on iPhone also need an Apple Developer account.
 
 ## Known limits
