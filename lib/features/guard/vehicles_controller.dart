@@ -52,7 +52,7 @@ class VehiclesController extends ChangeNotifier {
           _loaded = true;
           _syncPins();
           notifyListeners();
-        });
+        }, onError: _keepLast);
       }
     }
     _syncPins();
@@ -122,4 +122,7 @@ class VehiclesController extends ChangeNotifier {
     myDocs.cancel();
     super.dispose();
   }
+
+  /// A failed listener (offline, or access removed) keeps the last data it had.
+  static void _keepLast(Object _) {}
 }

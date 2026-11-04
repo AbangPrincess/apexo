@@ -104,7 +104,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 onPressed: session.busy ? null : _create,
                 style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                 child: session.pending == SessionAction.createAccount
-                    ? const ButtonSpinner(color: Colors.white)
+                    ? ButtonSpinner(color: AppColors.onInk)
                     : const Text('Create account'),
               ),
               const SizedBox(height: Space.m),

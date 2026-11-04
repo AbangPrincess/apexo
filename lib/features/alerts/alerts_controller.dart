@@ -130,7 +130,7 @@ class AlertsController extends ChangeNotifier {
     _seenUntil = clock.now();
     _rebuild();
     final uid = _uid;
-    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles);
+    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles, onError: _keepLast);
   }
 
   void _onCircles(List<Circle> circles) {
@@ -141,7 +141,7 @@ class AlertsController extends ChangeNotifier {
       _byCircle.remove(id);
     }
     for (final id in ids) {
-      _subs[id] ??= _repo.watchAlerts(id).listen((list) => _onAlerts(id, list));
+      _subs[id] ??= _repo.watchAlerts(id).listen((list) => _onAlerts(id, list), onError: _keepLast);
     }
     _loaded = true;
     _rebuild();
@@ -193,4 +193,7 @@ class AlertsController extends ChangeNotifier {
     _incoming.close();
     super.dispose();
   }
+
+  /// A failed listener (offline, or access removed) keeps the last data it had.
+  static void _keepLast(Object _) {}
 }

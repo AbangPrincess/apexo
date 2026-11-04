@@ -29,7 +29,9 @@ What the demo shows:
 - **Me**: a profile with a cover photo, profile photo, bio and hometown, achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
 - **Create account**: you get a verification email before the account opens. In demo mode, emails appear in a "Demo inbox" because nothing is really sent.
 
-The phone layout uses a bottom bar with a center Record button that turns green while recording. Tablets and desktop browsers get a side rail with content capped at a readable width. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
+The phone layout uses a bottom bar with a center Record button that turns volt while recording. Tablets and desktop browsers get a side rail with content capped at a readable width. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
+
+The first launch shows three short welcome slides (Skip is always there). The app follows the system light or dark mode, works with large text, and shows an "offline" bar when there is no connection. Before Apexo asks for location or notifications, a short screen explains why.
 
 ## Account security
 

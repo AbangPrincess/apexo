@@ -24,7 +24,7 @@ class MyMemberDocs {
   void watch(String? uid) {
     cancel();
     _uid = uid;
-    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles);
+    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles, onError: _keepLast);
   }
 
   void _onCircles(List<Circle> circles) {
@@ -35,7 +35,9 @@ class MyMemberDocs {
       _mine.remove(id);
     }
     for (final id in ids) {
-      _subs[id] ??= _repo.watchMembers(id).listen((list) => _onMembers(id, list));
+      _subs[id] ??= _repo
+          .watchMembers(id)
+          .listen((list) => _onMembers(id, list), onError: _keepLast);
     }
     onChange();
   }
@@ -59,4 +61,7 @@ class MyMemberDocs {
     _subs.clear();
     _mine.clear();
   }
+
+  /// A failed listener (offline, or access removed) keeps the last data it had.
+  static void _keepLast(Object _) {}
 }

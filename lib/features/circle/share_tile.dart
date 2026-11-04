@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme.dart';
+import '../../widgets/permission_rationale.dart';
+import '../record/location_rationale.dart';
 import 'circle_controller.dart';
 import 'sharing_controller.dart';
 
 Future<void> toggleSharing(BuildContext context, String circleId, bool on) async {
   final messenger = ScaffoldMessenger.of(context);
-  final message = await context.read<SharingController>().setSharing(circleId, on);
+  final sharing = context.read<SharingController>();
+  if (on && !await explainLocationIfNeeded(context, PermissionNeed.shareLocation)) return;
+  final message = await sharing.setSharing(circleId, on);
   if (message == null) return;
   messenger
     ..hideCurrentSnackBar()

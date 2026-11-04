@@ -7,7 +7,7 @@ import '../../core/ride_tracker.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../shell/app_tab.dart';
-import '../../widgets/adaptive.dart';
+import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
 import '../../widgets/route_thumbnail.dart';
 import '../../widgets/visuals.dart';
@@ -16,6 +16,7 @@ import '../auth/session_controller.dart';
 import '../me/settings_controller.dart';
 import '../weather/weather_card.dart';
 import 'finish_sheet.dart';
+import 'location_rationale.dart';
 import 'record_controller.dart';
 import 'record_widgets.dart';
 
@@ -32,18 +33,7 @@ class _RecordScreenState extends State<RecordScreen> {
   Future<void> _start() async {
     final rec = context.read<RecordController>();
     // Explain why before the system asks for location.
-    if (!rec.source.simulated && !await rec.source.hasAccess()) {
-      if (!mounted) return;
-      final ok = await confirmAction(
-        context,
-        title: 'Use your location?',
-        message:
-            'Apexo uses your location while you record, to map your route, '
-            'distance and speed. It is not shared unless you post the activity to a circle.',
-        confirmLabel: 'Continue',
-      );
-      if (!ok) return;
-    }
+    if (!await explainLocationIfNeeded(context, PermissionNeed.recordLocation)) return;
     await rec.start(_type);
   }
 
@@ -108,7 +98,7 @@ class _RecordScreenState extends State<RecordScreen> {
                 avatar: Icon(
                   type.icon,
                   size: 18,
-                  color: type == _type ? Colors.white : AppColors.text,
+                  color: type == _type ? AppColors.onInk : AppColors.text,
                 ),
                 label: Text(type.label),
                 selected: type == _type,

@@ -191,11 +191,15 @@ class OrDivider extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     children: [
       const Expanded(child: Divider()),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+      Flexible(
+        flex: 3,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+          ),
         ),
       ),
       const Expanded(child: Divider()),

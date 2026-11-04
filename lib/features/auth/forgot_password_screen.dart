@@ -78,7 +78,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: session.busy || cooldown != null ? null : _send,
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
               child: session.pending == SessionAction.reset
-                  ? const ButtonSpinner(color: Colors.white)
+                  ? ButtonSpinner(color: AppColors.onInk)
                   : Text(
                       cooldown != null
                           ? 'Send again in ${formatWait(cooldown)}'

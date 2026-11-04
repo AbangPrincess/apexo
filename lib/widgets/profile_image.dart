@@ -43,13 +43,17 @@ class UserAvatar extends StatelessWidget {
       foregroundImage: image,
       child: Text(
         initial,
-        style: TextStyle(color: Colors.white, fontSize: radius * 0.8, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          color: AppColors.onInk,
+          fontSize: radius * 0.8,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
     if (ring <= 0) return avatar;
     return Container(
       padding: EdgeInsets.all(ring),
-      decoration: const BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: AppColors.surface, shape: BoxShape.circle),
       child: avatar,
     );
   }

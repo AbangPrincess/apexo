@@ -10,8 +10,8 @@ import '../../data/models/user.dart';
 import '../../data/repository.dart';
 
 /// Units and default activity. They live on the user profile (synced); only
-/// these two non-sensitive values are cached on the device so the UI starts
-/// with them.
+/// these two non-sensitive values (plus "onboarding seen") are kept on the
+/// device, so the UI starts with them.
 class SettingsController extends ChangeNotifier {
   SettingsController(this._prefs, this._repo) {
     _units = readEnum(Units.values, _prefs.getString(_kUnits), Units.km);
@@ -21,6 +21,7 @@ class SettingsController extends ChangeNotifier {
 
   static const _kUnits = 'units';
   static const _kActivity = 'defaultActivity';
+  static const _kOnboarded = 'onboarded';
 
   final SharedPreferences _prefs;
   final AppRepository _repo;
@@ -31,6 +32,14 @@ class SettingsController extends ChangeNotifier {
 
   Units get units => _units;
   ActivityType get defaultActivity => _activity;
+
+  /// The welcome slides were seen (or skipped) on this device.
+  bool get onboarded => _prefs.getBool(_kOnboarded) ?? false;
+
+  Future<void> finishOnboarding() async {
+    await _prefs.setBool(_kOnboarded, true);
+    notifyListeners();
+  }
 
   void _onUser(AppUser? user) {
     _uid = user?.uid;

@@ -171,7 +171,7 @@ class _PhotoButton extends StatelessWidget {
     final style = IconButton.styleFrom(
       backgroundColor: AppColors.surfaceAlt,
       foregroundColor: AppColors.text,
-      side: const BorderSide(color: AppColors.hairline),
+      side: BorderSide(color: AppColors.hairline),
     );
     if (label != null) {
       return FilledButton.tonalIcon(

@@ -146,8 +146,8 @@ class _MenuChip<T> extends StatelessWidget {
     onSelected: onSelected,
     itemBuilder: (_) => [for (final v in values) PopupMenuItem(value: v, child: Text(labelOf(v)))],
     child: Chip(
-      avatar: Icon(Icons.filter_list_rounded, size: 18, color: active ? Colors.white : null),
-      label: Text(label, style: TextStyle(color: active ? Colors.white : null)),
+      avatar: Icon(Icons.filter_list_rounded, size: 18, color: active ? AppColors.onInk : null),
+      label: Text(label, style: TextStyle(color: active ? AppColors.onInk : null)),
       backgroundColor: active ? AppColors.ink : null,
     ),
   );
@@ -166,7 +166,7 @@ class _NotificationsCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: Space.m),
       child: Card(
         child: ListTile(
-          leading: const Icon(Icons.notifications_active_outlined, color: AppColors.ink),
+          leading: Icon(Icons.notifications_active_outlined, color: AppColors.ink),
           title: const Text('Get alerts as notifications'),
           subtitle: const Text('With sound, while Apexo is open or in the background.'),
           trailing: TextButton(onPressed: notifier.requestPermission, child: const Text('Turn on')),

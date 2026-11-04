@@ -7,9 +7,11 @@ import '../../data/models/circle.dart';
 import '../../data/models/circle_alert.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/map_view.dart';
+import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
 import '../alerts/alerts_controller.dart';
 import '../guard/guard_screen.dart';
+import '../record/location_rationale.dart';
 import 'circle_controller.dart';
 import 'circle_pins.dart';
 import 'circle_switcher.dart';
@@ -47,7 +49,9 @@ class _CircleScreenState extends State<CircleScreen> {
       return;
     }
     final messenger = ScaffoldMessenger.of(context);
-    final p = await context.read<SharingController>().locate();
+    final sharing = context.read<SharingController>();
+    if (!await explainLocationIfNeeded(context, PermissionNeed.findMe)) return;
+    final p = await sharing.locate();
     if (!mounted) return;
     if (p == null) {
       messenger
@@ -95,6 +99,14 @@ class _CircleScreenState extends State<CircleScreen> {
       ),
       body: !ctrl.loaded
           ? const Center(child: CircularProgressIndicator.adaptive())
+          : ctrl.failed && ctrl.circles.isEmpty
+          ? EmptyState(
+              icon: Icons.cloud_off_rounded,
+              title: "Couldn't load your circles",
+              message: 'Check your connection, then try again.',
+              actionLabel: 'Try again',
+              onAction: ctrl.retry,
+            )
           : circle == null
           ? EmptyState(
               icon: Icons.people_outline_rounded,
@@ -147,7 +159,7 @@ class _CircleScreenState extends State<CircleScreen> {
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.ink,
       elevation: 0,
-      shape: const CircleBorder(side: BorderSide(color: AppColors.hairline)),
+      shape: CircleBorder(side: BorderSide(color: AppColors.hairline)),
       onPressed: () => _locate(me),
       child: const Icon(Icons.my_location_rounded),
     );
@@ -198,9 +210,9 @@ class _CircleScreenState extends State<CircleScreen> {
               snap: true,
               snapSizes: const [_sheetStart],
               builder: (context, scroll) => DecoratedBox(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                   border: Border(top: BorderSide(color: AppColors.hairline)),
                 ),
                 child: ClipRRect(

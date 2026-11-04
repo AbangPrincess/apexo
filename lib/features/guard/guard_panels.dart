@@ -60,7 +60,7 @@ class _Dot extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     margin: const EdgeInsets.all(4),
     decoration: BoxDecoration(
-      color: AppColors.ink,
+      color: AppColors.mapInk,
       shape: BoxShape.circle,
       border: Border.all(color: Colors.white, width: 3),
     ),

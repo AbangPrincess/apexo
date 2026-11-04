@@ -6,9 +6,11 @@ import '../../core/guard_logic.dart';
 import '../../core/theme.dart';
 import '../../data/models/user.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
 import '../../widgets/visuals.dart';
 import '../alerts/alert_notifier.dart';
+import '../record/location_rationale.dart';
 import 'guard_controller.dart';
 import 'guard_panels.dart';
 import 'vehicle_form.dart';
@@ -187,8 +189,17 @@ class _ArmButton extends StatelessWidget {
     final guard = context.read<GuardController>();
     final notifier = context.read<AlertNotifier>();
     final messenger = ScaffoldMessenger.of(context);
+    if (!await explainLocationIfNeeded(context, PermissionNeed.guardLocation)) return;
     // Android 13+ hides the "Guard mode on" notification without this.
-    if (!kIsWeb) await notifier.requestPermission();
+    // Saying no still arms; the alert just reaches the circle without it.
+    if (!kIsWeb) {
+      await notifier.refresh();
+      if (!notifier.enabled &&
+          context.mounted &&
+          await explainPermission(context, PermissionNeed.notifications)) {
+        await notifier.requestPermission();
+      }
+    }
     final message = await guard.arm();
     if (message != null) messenger.showSnackBar(SnackBar(content: Text(message)));
   }

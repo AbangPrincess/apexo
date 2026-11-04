@@ -37,10 +37,7 @@ class EmptyState extends StatelessWidget {
               Container(
                 width: 72,
                 height: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceAlt,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
                 child: Icon(icon, size: 32, color: AppColors.ink),
               ),
               const SizedBox(height: Space.l),

@@ -80,7 +80,9 @@ class SettingsScreen extends StatelessWidget {
                           avatar: Icon(
                             type.icon,
                             size: 18,
-                            color: settings.defaultActivity == type ? Colors.white : AppColors.text,
+                            color: settings.defaultActivity == type
+                                ? AppColors.onInk
+                                : AppColors.text,
                           ),
                           label: Text(type.label),
                           selected: settings.defaultActivity == type,
@@ -103,7 +105,7 @@ class SettingsScreen extends StatelessWidget {
                     title: Text(user.email, maxLines: 1, overflow: TextOverflow.ellipsis),
                     subtitle: Text(user.emailVerified ? 'Verified email' : 'Not verified yet'),
                     trailing: user.emailVerified
-                        ? const Icon(Icons.verified_rounded, color: AppColors.ink)
+                        ? Icon(Icons.verified_rounded, color: AppColors.ink)
                         : null,
                   ),
                 const Divider(),

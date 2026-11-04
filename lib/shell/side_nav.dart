@@ -94,8 +94,8 @@ class _RecordAction extends StatelessWidget {
           style: FilledButton.styleFrom(
             minimumSize: const Size(0, 52),
             backgroundColor: recording ? AppColors.tracking : AppColors.accent,
-            foregroundColor: recording ? AppColors.ink : Colors.white,
-            side: selected ? const BorderSide(color: AppColors.accentSoft, width: 3) : null,
+            foregroundColor: recording ? AppColors.on(AppColors.tracking) : Colors.white,
+            side: selected ? BorderSide(color: AppColors.accentSoft, width: 3) : null,
           ),
         ),
       );
@@ -109,8 +109,8 @@ class _RecordAction extends StatelessWidget {
         style: IconButton.styleFrom(
           minimumSize: const Size(56, 56),
           backgroundColor: recording ? AppColors.tracking : AppColors.accent,
-          foregroundColor: recording ? AppColors.ink : Colors.white,
-          side: selected ? const BorderSide(color: AppColors.accentSoft, width: 3) : null,
+          foregroundColor: recording ? AppColors.on(AppColors.tracking) : Colors.white,
+          side: selected ? BorderSide(color: AppColors.accentSoft, width: 3) : null,
         ),
       ),
     );

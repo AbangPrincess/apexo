@@ -25,10 +25,14 @@ class CircleController extends ChangeNotifier {
   String? _circleId;
   List<Member> _members = const [];
   bool _loaded = false;
+  bool _failed = false;
   GeoPoint? _focus;
 
   String? get uid => _uid;
   bool get loaded => _loaded;
+
+  /// The circle list could not be loaded (no connection, or no access).
+  bool get failed => _failed;
   bool get atLimit => _circles.length >= maxCirclesPerUser;
   bool get isOwner => circle != null && circle!.ownerUid == _uid;
 
@@ -63,19 +67,39 @@ class CircleController extends ChangeNotifier {
     _user = user;
     if (user?.uid == _uid) return;
     _uid = user?.uid;
-    _circlesSub?.cancel();
     _circles = const [];
-    _loaded = false;
     _focus = null;
     _select(null);
+    _watchCircles();
+  }
+
+  void _watchCircles() {
+    _circlesSub?.cancel();
+    _loaded = false;
+    _failed = false;
     final uid = _uid;
-    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles);
+    if (uid != null) {
+      _circlesSub = _repo
+          .watchCircles(uid)
+          .listen(
+            _onCircles,
+            onError: (Object _) {
+              _loaded = true;
+              _failed = true;
+              notifyListeners();
+            },
+          );
+    }
     notifyListeners();
   }
+
+  /// Try again after [failed].
+  void retry() => _watchCircles();
 
   void _onCircles(List<Circle> list) {
     _circles = list;
     _loaded = true;
+    _failed = false;
     final keep = list.any((c) => c.id == _circleId);
     if (!keep) _select(list.isEmpty ? null : list.first.id);
     notifyListeners();
@@ -115,10 +139,14 @@ class CircleController extends ChangeNotifier {
     _circleId = circleId;
     _members = const [];
     if (circleId == null) return;
-    _membersSub = _repo.watchMembers(circleId).listen((list) {
-      _members = list;
-      notifyListeners();
-    });
+    _membersSub = _repo.watchMembers(circleId).listen(
+      (list) {
+        _members = list;
+        notifyListeners();
+      },
+      // A failed listener keeps the last members it had.
+      onError: (Object _) {},
+    );
   }
 
   @override

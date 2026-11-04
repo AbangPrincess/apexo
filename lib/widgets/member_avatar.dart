@@ -44,7 +44,7 @@ class MemberAvatar extends StatelessWidget {
               shape: BoxShape.circle,
               border: Border.all(color: ringColor, width: size * 0.07),
               boxShadow: outline
-                  ? const [BoxShadow(color: AppColors.ink, spreadRadius: 1.5)]
+                  ? const [BoxShadow(color: AppColors.mapInk, spreadRadius: 1.5)]
                   : null,
             ),
             child: Container(
@@ -58,7 +58,7 @@ class MemberAvatar extends StatelessWidget {
                 style: TextStyle(
                   fontSize: size * 0.38,
                   fontWeight: FontWeight.w700,
-                  color: highlight ? Colors.white : AppColors.ink,
+                  color: highlight ? AppColors.onInk : AppColors.ink,
                 ),
               ),
             ),

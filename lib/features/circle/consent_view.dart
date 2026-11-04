@@ -46,7 +46,7 @@ class ConsentView extends StatelessWidget {
                 if (error != null) ...[ErrorBanner(error!), const SizedBox(height: Space.s)],
                 FilledButton(
                   onPressed: busy ? null : () => onChoose(true),
-                  child: busy ? const ButtonSpinner(color: Colors.white) : Text(shareLabel),
+                  child: busy ? ButtonSpinner(color: AppColors.onInk) : Text(shareLabel),
                 ),
                 const SizedBox(height: Space.xs),
                 TextButton(
@@ -70,8 +70,8 @@ class ConsentView extends StatelessWidget {
           child: Container(
             width: 72,
             height: 72,
-            decoration: const BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
-            child: const Icon(Icons.share_location_rounded, size: 32, color: AppColors.ink),
+            decoration: BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
+            child: Icon(Icons.share_location_rounded, size: 32, color: AppColors.ink),
           ),
         ),
         const SizedBox(height: Space.l),

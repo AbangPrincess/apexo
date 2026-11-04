@@ -153,7 +153,7 @@ class _JoinCircleScreenState extends State<JoinCircleScreen> {
           const SizedBox(height: Space.m),
           FilledButton(
             onPressed: _busy ? null : _find,
-            child: _busy ? const ButtonSpinner(color: Colors.white) : const Text('Find circle'),
+            child: _busy ? ButtonSpinner(color: AppColors.onInk) : const Text('Find circle'),
           ),
         ],
       ),

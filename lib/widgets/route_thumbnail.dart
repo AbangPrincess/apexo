@@ -12,13 +12,13 @@ class RouteThumbnail extends StatelessWidget {
     required this.points,
     this.height = 120,
     this.color = AppColors.data,
-    this.background = AppColors.surfaceAlt,
+    this.background,
   });
 
   final List<GeoPoint> points;
   final double height;
   final Color color;
-  final Color background;
+  final Color? background;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -27,7 +27,7 @@ class RouteThumbnail extends StatelessWidget {
     child: ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: ColoredBox(
-        color: background,
+        color: background ?? AppColors.surfaceAlt,
         child: SizedBox(
           height: height,
           width: double.infinity,

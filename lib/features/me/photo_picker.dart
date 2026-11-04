@@ -33,6 +33,7 @@ Future<String?> pickProfilePhoto(
             ListTile(
               leading: const Icon(Icons.photo_camera_outlined),
               title: const Text('Take a photo'),
+              subtitle: const Text('Apexo asks to use the camera for this photo only'),
               onTap: () => Navigator.pop(sheet, 'camera'),
             ),
           if (hasPhoto)

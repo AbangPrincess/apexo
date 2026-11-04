@@ -70,6 +70,15 @@ class _Feed extends StatelessWidget {
     if (!feed.loaded) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
+    if (feed.failed && feed.items.isEmpty && shared.isEmpty) {
+      return EmptyState(
+        icon: Icons.cloud_off_rounded,
+        title: "Couldn't load your activities",
+        message: 'Check your connection, then try again. Recording still works offline.',
+        actionLabel: 'Try again',
+        onAction: feed.refresh,
+      );
+    }
     if (feed.items.isEmpty && shared.isEmpty) {
       return LayoutBuilder(
         builder: (context, c) => ListView(

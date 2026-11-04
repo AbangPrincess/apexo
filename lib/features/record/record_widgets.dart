@@ -164,20 +164,27 @@ class RoundAction extends StatelessWidget {
           onTap: onPressed,
           child: SizedBox.square(
             dimension: size,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon != null) Icon(icon, color: fg, size: size * 0.28),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: fg,
-                    fontSize: size * (icon == null ? 0.17 : 0.13),
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                  ),
+            // Large system text shrinks to fit the circle instead of spilling out.
+            child: Padding(
+              padding: EdgeInsets.all(size * 0.14),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (icon != null) Icon(icon, color: fg, size: size * 0.28),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: fg,
+                        fontSize: size * (icon == null ? 0.17 : 0.13),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

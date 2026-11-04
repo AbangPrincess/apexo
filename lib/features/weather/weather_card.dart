@@ -73,7 +73,7 @@ class _WeatherCardState extends State<WeatherCard> {
       child: Row(
         children: [
           if (failed)
-            const Icon(Icons.cloud_off_outlined, color: AppColors.textMuted)
+            Icon(Icons.cloud_off_outlined, color: AppColors.textMuted)
           else
             const SizedBox.square(
               dimension: 20,
@@ -152,7 +152,14 @@ class _WeatherCardState extends State<WeatherCard> {
                           ),
                           WindArrow(fromDeg: c.windFromDeg),
                           const SizedBox(width: 2),
-                          Text(wind, style: muted?.copyWith(fontFeatures: kTabular)),
+                          Flexible(
+                            child: Text(
+                              wind,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: muted?.copyWith(fontFeatures: kTabular),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -170,7 +177,7 @@ class _WeatherCardState extends State<WeatherCard> {
           const SizedBox(height: Space.xs),
           Row(
             children: [
-              const Icon(Icons.schedule_rounded, size: 16, color: AppColors.textMuted),
+              Icon(Icons.schedule_rounded, size: 16, color: AppColors.textMuted),
               const SizedBox(width: 6),
               Expanded(child: Text(bestTimeHint(widget.type, w, best), style: muted)),
             ],
@@ -230,7 +237,7 @@ class _WeatherCardState extends State<WeatherCard> {
           IconButton(
             tooltip: 'Refresh weather',
             onPressed: () => wc.load(force: true),
-            icon: const Icon(Icons.refresh_rounded, size: 20, color: AppColors.textMuted),
+            icon: Icon(Icons.refresh_rounded, size: 20, color: AppColors.textMuted),
           ),
       ],
     );

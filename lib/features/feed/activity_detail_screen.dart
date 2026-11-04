@@ -42,9 +42,9 @@ class ActivityDetailScreen extends StatelessWidget {
     final units = context.select<SettingsController, Units>((s) => s.units);
     final points = activity.points;
     final map = points.length < 2
-        ? const ColoredBox(
+        ? ColoredBox(
             color: AppColors.surfaceAlt,
-            child: Center(child: Text('No route recorded')),
+            child: const Center(child: Text('No route recorded')),
           )
         : MapView(
             initialCenter: points.first,
@@ -55,9 +55,14 @@ class ActivityDetailScreen extends StatelessWidget {
                 id: 'start',
                 point: points.first,
                 size: 22,
-                child: const _Dot(AppColors.tracking, ring: AppColors.ink),
+                child: const _Dot(AppColors.tracking, ring: AppColors.mapInk),
               ),
-              MapMarker(id: 'end', point: points.last, size: 22, child: const _Dot(AppColors.ink)),
+              MapMarker(
+                id: 'end',
+                point: points.last,
+                size: 22,
+                child: const _Dot(AppColors.mapInk),
+              ),
             ],
           );
     final details = _Details(activity: activity, units: units, ownerName: ownerName);

@@ -18,9 +18,14 @@ class ActivitiesController extends ChangeNotifier {
   String? _uid;
   List<Activity> _items = const [];
   bool _loaded = false;
+  bool _failed = false;
 
   List<Activity> get items => _items;
   bool get loaded => _loaded;
+
+  /// The last load failed (no connection, or no access); [items] are the
+  /// last good copy.
+  bool get failed => _failed;
 
   void _onUser(AppUser? user) {
     // Profile edits re-emit the user; only a different account resubscribes.
@@ -29,29 +34,37 @@ class ActivitiesController extends ChangeNotifier {
     _sub?.cancel();
     _items = const [];
     _loaded = false;
+    _failed = false;
     final uid = _uid;
-    if (uid != null) {
-      _sub = _repo.watchActivities(uid).listen((list) {
-        _items = list;
-        _loaded = true;
-        notifyListeners();
-      });
-    }
+    if (uid != null) _sub = _watch(uid);
     notifyListeners();
   }
 
-  /// Re-subscribes and waits for fresh data (pull to refresh).
+  StreamSubscription<List<Activity>> _watch(String uid, [Completer<void>? first]) => _repo
+      .watchActivities(uid)
+      .listen(
+        (list) {
+          _items = list;
+          _loaded = true;
+          _failed = false;
+          notifyListeners();
+          if (first != null && !first.isCompleted) first.complete();
+        },
+        onError: (Object _) {
+          _loaded = true;
+          _failed = true;
+          notifyListeners();
+          if (first != null && !first.isCompleted) first.complete();
+        },
+      );
+
+  /// Re-subscribes and waits for fresh data (pull to refresh, Try again).
   Future<void> refresh() async {
     final uid = _uid;
     if (uid == null) return;
     await _sub?.cancel();
     final first = Completer<void>();
-    _sub = _repo.watchActivities(uid).listen((list) {
-      _items = list;
-      _loaded = true;
-      notifyListeners();
-      if (!first.isCompleted) first.complete();
-    });
+    _sub = _watch(uid, first);
     await first.future.timeout(const Duration(seconds: 10), onTimeout: () {});
   }
 

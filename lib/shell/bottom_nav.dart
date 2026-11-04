@@ -23,7 +23,7 @@ class BottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.hairline)),
       ),
@@ -68,6 +68,10 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected ? AppColors.accent : AppColors.textMuted;
+    // Small red text on asphalt is below 4.5:1, so in dark mode only the
+    // icon stays red.
+    final dark = AppColors.brightness == Brightness.dark;
+    final labelColor = selected && dark ? AppColors.text : color;
     final icon = Icon(selected ? tab.selectedIcon : tab.icon, color: color, size: 26);
     return Semantics(
       button: true,
@@ -87,7 +91,7 @@ class _NavItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: color,
+                color: labelColor,
               ),
               child: Text(tab.label, maxLines: 1),
             ),
@@ -127,7 +131,7 @@ class _RecordButton extends StatelessWidget {
               height: 60,
               child: Icon(
                 Icons.radio_button_checked_rounded,
-                color: recording ? AppColors.ink : Colors.white,
+                color: recording ? AppColors.on(AppColors.tracking) : Colors.white,
                 size: 28,
               ),
             ),

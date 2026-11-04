@@ -20,6 +20,7 @@ import '../widgets/responsive.dart';
 import '../widgets/visuals.dart';
 import 'app_tab.dart';
 import 'bottom_nav.dart';
+import 'offline_bar.dart';
 import 'sharing_banner.dart';
 import 'side_nav.dart';
 
@@ -133,6 +134,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
         ),
+        const OfflineBar(),
         SharingBanner(onSharing: () => _shell.go(AppTab.circle), onGuard: () => openGuard(context)),
       ],
     );

@@ -61,7 +61,7 @@ class WeatherGlyph extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: size,
     height: size,
-    decoration: const BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
+    decoration: BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
     child: Icon(
       weatherIcon(code, isDay: isDay),
       size: size * 0.55,

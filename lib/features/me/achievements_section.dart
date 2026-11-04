@@ -21,9 +21,12 @@ class AchievementsSection extends StatelessWidget {
         Row(
           children: [
             Expanded(child: Text('Achievements', style: t.titleLarge)),
-            Text(
-              '$earned of ${achievements.length} earned',
-              style: t.bodyMedium?.copyWith(color: AppColors.textMuted),
+            Flexible(
+              child: Text(
+                '$earned of ${achievements.length} earned',
+                textAlign: TextAlign.end,
+                style: t.bodyMedium?.copyWith(color: AppColors.textMuted),
+              ),
             ),
           ],
         ),
@@ -117,7 +120,11 @@ class _Badge extends StatelessWidget {
                   color: a.earned ? AppColors.tracking : AppColors.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(_icon, color: a.earned ? AppColors.ink : AppColors.parked, size: 26),
+                child: Icon(
+                  _icon,
+                  color: a.earned ? AppColors.on(AppColors.tracking) : AppColors.parked,
+                  size: 26,
+                ),
               ),
               const SizedBox(height: Space.s),
               Text(

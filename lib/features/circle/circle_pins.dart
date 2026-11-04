@@ -49,7 +49,7 @@ class _HereDot extends StatelessWidget {
     label: 'You are here (not shared)',
     child: Container(
       decoration: BoxDecoration(
-        color: AppColors.ink,
+        color: AppColors.mapInk,
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 3),
       ),

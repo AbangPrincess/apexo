@@ -32,7 +32,7 @@ class CircleFeedController extends ChangeNotifier {
     _cancelFeeds();
     _rebuild();
     final uid = _uid;
-    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles);
+    if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles, onError: _keepLast);
   }
 
   void _onCircles(List<Circle> circles) {
@@ -46,7 +46,7 @@ class CircleFeedController extends ChangeNotifier {
       _subs[id] ??= _repo.watchCircleFeed(id).listen((list) {
         _byCircle[id] = list;
         _rebuild();
-      });
+      }, onError: _keepLast);
     }
     _rebuild();
   }
@@ -77,4 +77,7 @@ class CircleFeedController extends ChangeNotifier {
     _cancelFeeds();
     super.dispose();
   }
+
+  /// A failed listener (offline, or access removed) keeps the last data it had.
+  static void _keepLast(Object _) {}
 }

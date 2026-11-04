@@ -84,7 +84,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 FilledButton.icon(
                   onPressed: session.busy ? null : session.signInDemo,
                   icon: pending == SessionAction.demo
-                      ? const ButtonSpinner(color: Colors.white)
+                      ? ButtonSpinner(color: AppColors.onInk)
                       : const Icon(Icons.play_arrow_rounded),
                   label: const Text('Continue with demo account'),
                   style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),

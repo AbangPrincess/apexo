@@ -48,9 +48,18 @@ class WeeklyHeader extends StatelessWidget {
           children: [
             Row(
               children: [
-                Text('This week', style: t.titleMedium?.copyWith(color: Colors.white)),
-                const Spacer(),
-                Text(range, style: t.bodySmall?.copyWith(color: AppColors.onDarkMuted)),
+                Expanded(
+                  child: Text('This week', style: t.titleMedium?.copyWith(color: Colors.white)),
+                ),
+                Flexible(
+                  child: Text(
+                    range,
+                    textAlign: TextAlign.end,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.bodySmall?.copyWith(color: AppColors.onDarkMuted),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 12),

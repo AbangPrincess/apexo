@@ -43,20 +43,23 @@ extension AlertTypeVisuals on AlertType {
 
 /// Rounded tinted square holding an icon, used as a list leading.
 class IconTile extends StatelessWidget {
-  const IconTile({super.key, required this.icon, this.color = AppColors.ink, this.size = 44});
+  const IconTile({super.key, required this.icon, this.color, this.size = 44});
 
   final IconData icon;
-  final Color color;
+  final Color? color;
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(
-      color: color.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(size * 0.3),
-    ),
-    child: Icon(icon, color: color, size: size * 0.5),
-  );
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.ink;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(icon, color: c, size: size * 0.5),
+    );
+  }
 }

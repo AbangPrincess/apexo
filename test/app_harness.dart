@@ -1,5 +1,7 @@
 import 'package:apexo/app.dart';
 import 'package:apexo/data/fake/fake_repository.dart';
+import 'package:apexo/data/models/circle_alert.dart';
+import 'package:apexo/features/alerts/alert_notifier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -15,16 +17,27 @@ const sizes = {
   'desktop': Size(1366, 800),
 };
 
-Future<FakeRepository> pumpApp(WidgetTester tester, Size size, {FakeWeatherSource? weather}) async {
+/// [onboarded] skips the welcome slides, as on a returning device.
+Future<FakeRepository> pumpApp(
+  WidgetTester tester,
+  Size size, {
+  FakeWeatherSource? weather,
+  bool onboarded = true,
+}) async {
   tester.view.physicalSize = size * 2;
   tester.view.devicePixelRatio = 2;
   addTearDown(tester.view.reset);
-  SharedPreferences.setMockInitialValues({});
+  SharedPreferences.setMockInitialValues({if (onboarded) 'onboarded': true});
   final prefs = await SharedPreferences.getInstance();
   final repo = FakeRepository(simulate: false, latency: Duration.zero);
   addTearDown(repo.dispose);
   await tester.pumpWidget(
-    ApexoApp(repository: repo, prefs: prefs, weatherSource: weather ?? FakeWeatherSource()),
+    ApexoApp(
+      repository: repo,
+      prefs: prefs,
+      weatherSource: weather ?? FakeWeatherSource(),
+      alertNotifier: QuietNotifier(),
+    ),
   );
   await tester.pumpAndSettle();
   return repo;
@@ -56,4 +69,21 @@ Future<void> signUpAna(WidgetTester tester) async {
   await tapVisible(tester, find.widgetWithText(FilledButton, 'Create account'));
   await tapVisible(tester, find.text('Open demo inbox'));
   await tapVisible(tester, find.widgetWithText(FilledButton, 'Verify email'));
+}
+
+/// Notifications that are already on and never touch the platform plugin.
+class QuietNotifier extends AlertNotifier {
+  final shown = <CircleAlert>[];
+
+  @override
+  bool get enabled => true;
+
+  @override
+  Future<void> refresh() async {}
+
+  @override
+  Future<bool> requestPermission() async => true;
+
+  @override
+  Future<void> show(CircleAlert alert, String detail) async => shown.add(alert);
 }

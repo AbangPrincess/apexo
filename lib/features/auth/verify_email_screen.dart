@@ -44,7 +44,7 @@ class VerifyEmailScreen extends StatelessWidget {
                 const TextSpan(text: 'We sent a verification link to '),
                 TextSpan(
                   text: email,
-                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.text),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.text),
                 ),
                 const TextSpan(text: '. Open it to activate your account.'),
               ],
@@ -60,7 +60,7 @@ class VerifyEmailScreen extends StatelessWidget {
             onPressed: session.busy ? null : session.checkVerified,
             style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             child: session.pending == SessionAction.reload
-                ? const ButtonSpinner(color: Colors.white)
+                ? ButtonSpinner(color: AppColors.onInk)
                 : const Text("I've verified my email"),
           ),
           const SizedBox(height: 12),

@@ -23,7 +23,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 [x] P4 Circles
 [x] P5 Vehicle guard + alerts
 [x] P6 Firebase backend + rules + GitHub deploy
-[ ] P6b Polish: permission rationale screens, dark theme, accessibility pass, error and offline states, 3-slide onboarding, placeholder app icon
+[x] P6b Polish: permission rationale screens, dark theme, accessibility pass, error and offline states, 3-slide onboarding, placeholder app icon
 [ ] P7 Optional extras (ONLY if the owner asks)
 
 ## Decisions
@@ -31,7 +31,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - Packages are added in the phase that first uses them (P1: provider, shared_preferences, flutter_map, latlong2) so Android builds never break on unused native plugins.
 - lib/core uses its own `GeoPoint` (pure Dart); conversion to latlong2 happens only inside `MapView`.
 - Tabs are built lazily (first visit), so the map and its tiles load only when Circle is opened.
-- Units and default activity live on the user profile (synced) and are cached in shared_preferences so the UI starts with them. Only these two settings are stored locally; no email, password or location is persisted on the device.
+- Units and default activity live on the user profile (synced) and are cached in shared_preferences so the UI starts with them. Only these two settings (and, since P6b, an "onboarding seen" flag) are stored locally; no email, password or location is persisted on the device.
 - Demo mode is in-memory: new accounts and changes reset on reload. The demo password check never logs or persists anything.
 - Demo alert: Jero's 50 m boundary uses the real `GeofenceWatch`; the alert fires after 2 consecutive outside fixes (~20 s after sign-in) and, in the demo only, once per session so later laps stay quiet.
 - Demo invite code TRAIL7 is kept as specified even though it contains I and L; generated codes (P4) exclude look-alikes and joining normalizes case and spaces.
@@ -86,3 +86,10 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - P6: the real `lib/firebase_options.dart` stays out of Git with `git update-index --skip-worktree`; google-services files and .firebaserc are ignored. The Pages build is always the demo (`APEXO_DEMO`), analyzes and tests first, and uses Flutter 3.38.7.
 - P6: a profile with both photos at their caps is ~960 KB of base64, just under Firestore's 1 MiB doc limit. If photo caps grow, move photos to their own docs.
 - P6: firebase-auth's Android SDK is compiled with Kotlin 2.4 metadata, so the Kotlin Gradle plugin moved from 2.2.20 to 2.3.21 (android/settings.gradle.kts) and `kotlinOptions.jvmTarget` became the `kotlin { compilerOptions }` block. Debug APK and the Pages web build both pass. Locally in Git Bash, prefix web builds with `MSYS_NO_PATHCONV=1` or the base href turns into a Windows path.
+- P6b dark theme: follows the system setting. Brand and signal colors are constants; the neutral roles (`ink`, `onInk`, `text`, `textMuted`, `surface`, `surfaceAlt`, `hairline`, `accentSoft`, `dark`) are getters backed by `Neutrals.day` / `Neutrals.night` (lib/core/theme.dart); `AppTheme` (lib/core/app_theme.dart) builds both ThemeData from them. `PaletteSync` (MaterialApp builder) switches the roles and, on a runtime change, rebuilds the tree in place with `reassembleApplication()` so tabs, scroll and maps keep their state. Put text on ink fills in `onInk`, dark marks on volt/orange with `AppColors.on()`, and dots or outlines drawn on map tiles (always light) in `mapInk`.
+- P6b dark theme: small red text on asphalt is below 4.5:1, so in dark mode the selected tab's label is light and only its icon stays red; text buttons use light ink. OSM tiles stay light.
+- P6b permissions: every system request is preceded by a sheet saying why (`explainPermission` / `explainLocationIfNeeded`): recording, sharing, locate-me, guard mode (location, then notifications). The join and create consent screens already explain sharing. Saying "Not now" to notifications still arms guard mode. The camera option says it is for one photo. No background-location permission is requested; the foreground services cover a locked screen.
+- P6b onboarding: 3 slides (record, circles, guard) once per device before sign-in, with Skip; the "seen" flag is the third and last value kept in shared_preferences.
+- P6b errors and offline: Home and Circle show "Couldn't load ... Try again" when their listener fails; other listeners keep their last data (`_keepLast`). An offline bar (connectivity_plus) shows on every tab; saved data keeps working from Firestore's cache on phones.
+- P6b accessibility: test/accessibility_test.dart runs Flutter's tap-target (48 dp), labelled-tap-target and WCAG text-contrast guidelines on every tab in light and dark, and every tab at 2x text on two phone sizes. Fixed: rows that could not shrink (sign-in divider, weekly header, weather wind, achievements count) and the round record buttons (label scales down inside the circle).
+- P6b icon: the brand mark (white chevron, volt apex dot, Apex Red) drawn by a PowerShell System.Drawing script for Android mipmaps, iOS AppIcon (opaque, no alpha, as the App Store requires) and web (rounded, maskable with the mark in the safe zone, 32 px favicon). Replace it with a designed icon before a store release.

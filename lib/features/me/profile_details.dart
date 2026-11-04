@@ -43,7 +43,7 @@ class ProfileActions extends StatelessWidget {
       tooltip: 'Settings',
       onPressed: onSettings,
       icon: const Icon(Icons.settings_outlined),
-      style: IconButton.styleFrom(side: const BorderSide(color: AppColors.hairline)),
+      style: IconButton.styleFrom(side: BorderSide(color: AppColors.hairline)),
     );
     return Row(
       mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,

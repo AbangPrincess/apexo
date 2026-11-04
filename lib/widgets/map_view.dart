@@ -121,7 +121,7 @@ class _Attribution extends StatelessWidget {
             '© OpenStreetMap contributors',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+            style: TextStyle(fontSize: 11, color: AppColors.mapInk),
           ),
         ),
       ),
