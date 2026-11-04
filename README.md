@@ -2,7 +2,7 @@
 
 Ride tracking, live circles and theft alerts for bikes, motorbikes and cars. Built with Flutter for Android, iPhone and the web.
 
-- **Record** rides, commutes and drives and review them later.
+- **Record** rides, runs, commutes and drives and review them later.
 - **Circle**: see the people you chose on a live map. Sharing only starts after you agree to it.
 - **Guard**: if a parked vehicle leaves its boundary, everyone in the circle gets an alert.
 - **Weather**: a quick go/no-go call before you head out.
@@ -19,17 +19,19 @@ The public demo is published to GitHub Pages on every push to `main` (`.github/w
 
 What the demo shows:
 - **Home**: a weather card (temperature, feels-like, wind and its direction, the next 6 hours with rain chance), a Great / OK / Caution / Avoid ride call with the reason, and the best time to ride in the next 12 hours. Below it are this week's totals and 6 sample activities around Koronadal City, each with its route drawn. Pull down to refresh. Tap an activity to see it on a map with all its stats, or delete it.
-- **Record**: pick Cycling, Motorcycling or Driving, check the ride call for that activity, and press START. In the demo, simulated GPS rides a loop so you can try it at your desk (switch it off to use real GPS). The time, distance and speed update live. The ride auto-pauses when you stop. Finish to name it, choose who sees it, and save. The weather at the start is saved with it.
+- **Record**: pick Cycling, Running (also for jogging), Motorcycling or Driving, check the call for that activity, and press START. A big live street map follows you, with your route so far and a ring showing how sure the GPS is; pan it and a button brings you back. Moving time, distance and speed (pace for runs) count only real movement: standing still adds nothing and the clock stops. In the demo, simulated GPS rides a loop so you can try it at your desk (switch it off to use real GPS). Finish to name it, choose who sees it, and save. The weather at the start is saved with it.
 - **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane riding on the map. Drag the member sheet up or down and tap a member to focus them. The locate button finds you. Turn on **Share my location** to show yourself to the circle. A "Sharing live" bar then stays on every tab until you pause. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. A dialog pops up ("Jero's Blue MTB is on the move", how far it moved and the limit) with **View on map**, **Navigate** and **It's me**. His ring turns red, a red pin marks the bike's last spot (it follows the bike) and the Alerts tab gets a badge.
+- **Walkie-talkie** (Circle tab and the live ride map): hold the round Talk button (it turns red while you talk) and let go to send, or tap it, talk, and tap again. Messages from your circle play by themselves (turn off Auto-play under the member list) and can be replayed for 24 hours. It needs an internet connection.
+- **Profiles in a circle**: tap a member's photo (or long-press their row) to see their cover, photo, hometown, bio and the rides they shared. Your own shows "How your circle sees you". Emails are never shown.
 - **Guard mode**: the shield icon in Circle (or Vehicles on Me) opens it. Pick the alert distance (20-500 m), optionally turn on movement detection, and press **ARM GUARD**. The boundary is set where the phone is and drawn on the map. A "Guard mode on" bar stays on every tab. In the demo, **Test the alarm** carries the bike out of its boundary, so you can see the whole flow, then **Mark recovered**.
 - **Alerts**: everything from all your circles, newest first. Filter by All / Mine / This circle, by type and by date. Tap a theft alert to see it on the map. "Get alerts as notifications" turns on system notifications with sound.
 - **Vehicles**: add or edit your bike, motorbike or car and choose the active one. It shows on your pin and is the one guard mode protects.
 - **Circles**: tap the circle name to switch circles, create one (you get a 6-character code to share) or join with a code. Joining always shows a consent screen first, where you choose to share or start paused. The people icon opens Members, where you can pause sharing, leave, or (as owner) remove someone. You can be in up to 3 circles. To try joining, create a new account and enter `TRAIL7`.
 - **Shared rides**: activities saved as "Circles" appear on members' Home feeds with the rider's name. Jero's and Shane's rides already show on yours.
-- **Me**: a profile with a cover photo, profile photo, bio and hometown, achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
+- **Me**: a profile with a cover photo, profile photo, bio and hometown, where a new photo opens an editor first (drag and zoom to choose the part to keep; covers are 3:1 like X), achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
 - **Create account**: you get a verification email before the account opens. In demo mode, emails appear in a "Demo inbox" because nothing is really sent.
 
-The phone layout uses a bottom bar with a center Record button that turns volt while recording. Tablets and desktop browsers get a side rail with content capped at a readable width. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
+The phone layout uses a bottom bar with a center Record button that turns volt while recording. Tablets and desktop browsers get a side rail with content capped at a readable width. Tap the Apexo logo at the top of the rail to fold it to icons only, and tap it again to open it. On iPhone, the app follows safe areas and uses native-style dialogs and page transitions.
 
 The first launch shows three short welcome slides (Skip is always there). The app follows the system light or dark mode, works with large text, and shows an "offline" bar when there is no connection. Before Apexo asks for location or notifications, a short screen explains why.
 
@@ -155,9 +157,12 @@ firebase deploy --only hosting --project apexo-497f5
 - Live sharing runs while the app is open (or recording). On the web it stops when the tab closes. Members see your last update with its age.
 - Battery level comes from the device. Some browsers can't report it, so your circle sees the last known value.
 - Demo mode keeps everything in memory, so it resets when you reload.
+- Recording needs only GPS, so it works without internet. A ride saved offline uploads by itself when the connection is back. The phone apps keep it even if you close the app. The web app keeps it only while the page stays open.
 - On the web, the real backend keeps nothing on disk: no offline copy of the data, and you are signed out when the tab closes. The phone apps keep an offline copy and stay signed in.
+- Offline, maps show only areas the phone has loaded before (phone apps). Your route and position still draw.
 - The free Firebase plan allows 20,000 writes and 50,000 reads a day. Live sharing is limited to one write every 5 s while moving, so a few friends are fine. Many daily users would need the Blaze plan.
 - Weather needs an internet connection. It refreshes every 15 minutes. Offline, it keeps showing the last result with its age until the app restarts.
+- Weather is for your location only after you allow location access; until then it is for Koronadal City, and the card says which. It comes from Open-Meteo forecast models, not a nearby weather station, so a short local shower can be missed.
 
 ## Assumptions
 

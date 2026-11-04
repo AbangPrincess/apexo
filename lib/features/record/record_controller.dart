@@ -56,6 +56,13 @@ class RecordController extends ChangeNotifier {
   double get avgKmh => _tracker?.avgKmhAt(clock.now()) ?? 0;
   List<GeoPoint> get path => _tracker?.path ?? const [];
 
+  /// Where the phone is now, moving or not, and how sure the GPS is.
+  GeoPoint? get position => _tracker?.position;
+  double? get accuracyM => _tracker?.accuracyM;
+
+  /// Recording, but no real movement yet.
+  bool get waiting => _tracker?.waiting ?? false;
+
   void setSimulated(bool value) {
     if (isActive || value == useSimulated) return;
     useSimulated = value;
@@ -80,7 +87,7 @@ class RecordController extends ChangeNotifier {
       return false;
     }
     // Warms the forecast so the snapshot reflects the start of the ride.
-    weather?.load();
+    weather?.refreshForDevice();
     final tracker = _tracker = RideTracker(type)..start(clock.now());
     _fixes = source
         .fixes(type)
@@ -135,16 +142,23 @@ class RecordController extends ChangeNotifier {
     );
   }
 
-  Future<void> save(
+  /// Saves the ride. True once it is uploaded; false when it is kept on
+  /// this device (no connection) and uploads by itself later. Throws when
+  /// saving fails, keeping the ride so it can be tried again.
+  Future<bool> save(
     Activity draft, {
     required String title,
     required ActivityVisibility visibility,
   }) async {
     final uid = _repo.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) throw StateError('Signed out');
     final cleanTitle = title.trim().isEmpty ? draft.title : title.trim();
-    await _repo.saveActivity(uid, draft.copyWith(title: cleanTitle, visibility: visibility));
+    final uploaded = await _repo.saveActivity(
+      uid,
+      draft.copyWith(title: cleanTitle, visibility: visibility),
+    );
     _reset();
+    return uploaded;
   }
 
   void discard() {

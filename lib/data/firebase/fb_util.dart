@@ -38,8 +38,12 @@ Map<String, Object?> changedFields(Map<String, dynamic>? before, Map<String, dyn
 
 /// Waits briefly for the server. Offline, the write is already in the local
 /// cache and syncs later, so the app carries on instead of hanging.
-Future<void> settle(Future<void> write) =>
-    write.timeout(const Duration(seconds: 4), onTimeout: () {});
+Future<void> settle(Future<void> write) => settled(write);
+
+/// Like [settle], and says whether the server confirmed the write (true)
+/// or it is waiting in the local copy to upload (false).
+Future<bool> settled(Future<void> write) =>
+    write.then((_) => true).timeout(const Duration(seconds: 4), onTimeout: () => false);
 
 /// Runs a circle operation and turns backend errors into messages that are
 /// safe to show.

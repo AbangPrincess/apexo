@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/image_check.dart';
 import '../../core/theme.dart';
+import 'photo_editor.dart';
 
 enum PhotoSlot { avatar, cover }
 
@@ -55,13 +56,19 @@ Future<String?> pickProfilePhoto(
     final file = await ImagePicker().pickImage(
       source: choice == 'camera' ? ImageSource.camera : ImageSource.gallery,
       // Resized on the device so the photo fits in the profile document.
-      maxWidth: avatar ? 512 : 1600,
-      maxHeight: avatar ? 512 : 900,
-      imageQuality: avatar ? 82 : 78,
+      // Room to zoom in the editor, which saves the final smaller size.
+      maxWidth: avatar ? 1400 : 2400,
+      maxHeight: avatar ? 1400 : 2400,
+      imageQuality: 90,
       requestFullMetadata: false,
     );
     if (file == null) return null;
-    final bytes = removeJpegLocation(await file.readAsBytes());
+    final picked = await file.readAsBytes();
+    if (!context.mounted) return null;
+    // Placed and cropped first; the saved JPEG has no location or metadata.
+    final edited = await editPhoto(context, picked, avatar: avatar);
+    if (edited == null) return null;
+    final bytes = removeJpegLocation(edited);
     final problem = imageProblem(bytes, maxBytes: avatar ? maxAvatarBytes : maxCoverBytes);
     if (problem != null) {
       messenger.showSnackBar(SnackBar(content: Text(problem)));

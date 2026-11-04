@@ -78,6 +78,10 @@ class WeatherController extends ChangeNotifier {
     _notify();
   }
 
+  /// Like [load], but a forecast for the default place is fetched again when
+  /// the device position may now be known (location access was just given).
+  Future<void> refreshForDevice() => load(force: _place.isDefault && devicePosition != null);
+
   /// Snapshot stored with an activity that started at [t].
   WeatherSnapshot? snapshotAt(DateTime t) {
     final c = _weather?.conditionsAt(t);

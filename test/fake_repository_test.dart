@@ -22,7 +22,12 @@ void main() {
 
     final activities = await repo.watchActivities(user.uid).first;
     expect(activities, hasLength(6));
-    expect(activities.map((a) => a.type).toSet(), ActivityType.values.toSet());
+    // The demo user's own activities: rides, a commute and a drive (no runs yet).
+    expect(activities.map((a) => a.type).toSet(), {
+      ActivityType.cycling,
+      ActivityType.motorcycling,
+      ActivityType.driving,
+    });
 
     final circles = await repo.watchCircles(user.uid).first;
     expect(circles.single.name, 'Trail Buddies');

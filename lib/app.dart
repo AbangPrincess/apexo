@@ -23,6 +23,8 @@ import 'features/guard/vehicles_controller.dart';
 import 'features/me/settings_controller.dart';
 import 'features/record/location_source.dart';
 import 'features/record/record_controller.dart';
+import 'features/walkie/voice_io.dart';
+import 'features/walkie/walkie_controller.dart';
 import 'features/weather/weather_controller.dart';
 import 'shell/app_shell.dart';
 import 'widgets/brand_mark.dart';
@@ -36,6 +38,7 @@ class ApexoApp extends StatelessWidget {
     this.weatherSource,
     this.alertNotifier,
     this.motionSource,
+    this.voice,
   });
 
   final AppRepository repository;
@@ -47,6 +50,9 @@ class ApexoApp extends StatelessWidget {
   /// The device's notifications and accelerometer unless a test passes fakes.
   final AlertNotifier? alertNotifier;
   final MotionSource? motionSource;
+
+  /// Microphone and speaker for the walkie-talkie unless a test passes a fake.
+  final VoiceIO? voice;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +84,12 @@ class ApexoApp extends StatelessWidget {
             context.read<RecordController>(),
             readBattery: readBatteryLevel,
           ),
+        ),
+        // Not lazy: new walkie-talkie messages play on any tab.
+        ChangeNotifierProvider(
+          lazy: false,
+          create: (context) =>
+              WalkieController(repository, context.read<CircleController>(), voice: voice),
         ),
         ChangeNotifierProvider(create: (_) => VehiclesController(repository)),
         ChangeNotifierProvider(create: (_) => AlertsController(repository)),
@@ -117,7 +129,8 @@ class AuthGate extends StatelessWidget {
     final verify = context.select<SessionController, bool>((s) => s.needsVerification);
     final onboarded = context.select<SettingsController, bool>((s) => s.onboarded);
     final Widget child = !ready
-        ? const Scaffold(body: Center(child: BrandMark(size: 40)))
+        // Same mark and size as the web page's splash, so the handover is seamless.
+        ? const Scaffold(body: Center(child: BrandMark(size: 96, showName: false)))
         : !signedIn && !onboarded
         ? const OnboardingScreen(key: ValueKey('onboarding'))
         : !signedIn

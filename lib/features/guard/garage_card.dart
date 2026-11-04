@@ -44,7 +44,15 @@ class GarageCard extends StatelessWidget {
                       Icon(v.type.icon, size: 20, color: AppColors.ink),
                       const SizedBox(width: Space.s),
                       Expanded(child: Text(v.name, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                      Text(vehicleStatusLabel(v.status), style: muted),
+                      const SizedBox(width: Space.s),
+                      Flexible(
+                        child: Text(
+                          vehicleStatusLabel(v.status),
+                          style: muted,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 ),

@@ -17,6 +17,7 @@ class MapView extends StatelessWidget {
     this.circles = const [],
     this.polylines = const [],
     this.controller,
+    this.onUserMove,
   });
 
   final GeoPoint initialCenter;
@@ -28,6 +29,9 @@ class MapView extends StatelessWidget {
   final List<MapCircle> circles;
   final List<MapPolyline> polylines;
   final MapViewController? controller;
+
+  /// Called when the person pans or zooms the map themselves.
+  final VoidCallback? onUserMove;
 
   static LatLng _ll(GeoPoint p) => LatLng(p.lat, p.lng);
 
@@ -45,6 +49,11 @@ class MapView extends StatelessWidget {
                 padding: const EdgeInsets.all(64),
                 maxZoom: 16,
               ),
+        onPositionChanged: onUserMove == null
+            ? null
+            : (_, hasGesture) {
+                if (hasGesture) onUserMove!();
+              },
         interactionOptions: const InteractionOptions(
           flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
         ),
@@ -159,6 +168,9 @@ class MapViewController {
   final MapController _map = MapController();
 
   void focus(GeoPoint p, {double zoom = 16}) => _map.move(LatLng(p.lat, p.lng), zoom);
+
+  /// Moves to [p] but keeps the zoom the person chose (live follow).
+  void follow(GeoPoint p) => _map.move(LatLng(p.lat, p.lng), _map.camera.zoom);
 
   void dispose() => _map.dispose();
 }

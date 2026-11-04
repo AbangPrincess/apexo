@@ -96,6 +96,7 @@ class Member {
     this.status = MemberStatus.parked,
     this.sharing = true,
     this.vehicle,
+    this.profileRev = '',
   });
 
   final String uid;
@@ -111,6 +112,10 @@ class Member {
   final bool sharing;
   final DateTime ts;
   final MemberVehicle? vehicle;
+
+  /// [PublicProfile.rev] of the profile copy this member last published to
+  /// the circle. Written only by the profile sync, never by [toMap].
+  final String profileRev;
 
   GeoPoint get point => GeoPoint(lat, lng);
 
@@ -136,6 +141,7 @@ class Member {
       sharing: m['sharing'] == true,
       ts: readDate(m['ts']),
       vehicle: v == null ? null : MemberVehicle.fromMap(v),
+      profileRev: readString(m['profileRev']),
     );
   }
 
@@ -162,6 +168,7 @@ class Member {
     bool? sharing,
     DateTime? ts,
     MemberVehicle? vehicle,
+    String? profileRev,
   }) => Member(
     uid: uid,
     displayName: displayName,
@@ -174,5 +181,6 @@ class Member {
     sharing: sharing ?? this.sharing,
     ts: ts ?? this.ts,
     vehicle: vehicle ?? this.vehicle,
+    profileRev: profileRev ?? this.profileRev,
   );
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:apexo/features/record/record_screen.dart';
+import 'package:apexo/widgets/map_view.dart';
 
 import 'app_harness.dart';
 import 'weather_fixtures.dart';
@@ -37,10 +38,9 @@ void main() {
       // real fonts, so the shortest phone scrolls here.)
       expect(tester.getCenter(find.text('START')).dy, greaterThan(size.height * 0.55));
       if (size.height >= 800) {
-        final page = find.descendant(
-          of: find.byType(RecordScreen),
-          matching: find.byType(SingleChildScrollView),
-        );
+        final page = find
+            .descendant(of: find.byType(RecordScreen), matching: find.byType(SingleChildScrollView))
+            .first; // the page, not the activity picker
         final button = tester.getRect(find.bySemanticsLabel('START').last);
         expect(button.bottom, lessThanOrEqualTo(tester.getRect(page).bottom));
       }
@@ -117,15 +117,18 @@ void main() {
     await pumpApp(tester, sizes['iPhone']!);
     await signInDemo(tester);
     await goTo(tester, 'record');
+    expect(find.text('Running'), findsOneWidget, reason: 'running is offered');
     await tapVisible(tester, find.text('START'));
     for (var i = 0; i < 30; i++) {
       await tester.pump(const Duration(seconds: 1));
     }
-    expect(find.text('Recording'), findsOneWidget);
-    expect(find.text('0:30'), findsOneWidget);
+    expect(find.textContaining('Recording'), findsOneWidget);
+    expect(find.byType(MapView), findsOneWidget, reason: 'the live map shows while recording');
+    // The clock starts once real movement is confirmed (about a second in).
+    expect(find.textContaining(RegExp(r'^0:(29|30)$')), findsOneWidget);
 
     await tapVisible(tester, find.bySemanticsLabel('PAUSE'));
-    expect(find.text('Paused'), findsOneWidget);
+    expect(find.textContaining('Paused'), findsOneWidget);
     await tapVisible(tester, find.bySemanticsLabel('FINISH'));
     expect(find.text('Save activity'), findsWidgets);
 

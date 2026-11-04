@@ -47,8 +47,11 @@ void main() {
       expect(formatAgo(now.subtract(const Duration(seconds: 3)), now), 'just now');
       expect(formatAgo(now.subtract(const Duration(minutes: 5)), now), '5 min ago');
       expect(formatAgo(now.subtract(const Duration(hours: 3)), now), '3 h ago');
-      expect(greeting(DateTime(2026, 1, 1, 7)), 'Good morning');
-      expect(greeting(DateTime(2026, 1, 1, 20)), 'Good evening');
+      expect(greeting(DateTime(2026, 1, 1, 7)), 'Good Morning');
+      expect(greeting(DateTime(2026, 1, 1, 20)), 'Good Evening');
+      expect(formatPace(12, Units.km), '5:00');
+      expect(formatPace(9.656064, Units.mi), '10:00'); // 6 mph
+      expect(formatPace(1, Units.km), '-:--', reason: 'slower than walking means nothing');
       expect(formatLongDate(now), 'Tuesday, November 3');
     });
   });

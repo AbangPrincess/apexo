@@ -4,7 +4,7 @@ import '../../core/geo.dart';
 import '../../core/theme.dart';
 import '../../data/models/user.dart';
 import '../../widgets/profile_image.dart';
-import '../../widgets/route_thumbnail.dart';
+import '../../widgets/cover_photo.dart';
 
 /// Cover photo with the profile photo overlapping it, then name and stats.
 /// Phones stack everything; wide screens put the name beside the photo.
@@ -31,10 +31,14 @@ class ProfileHeader extends StatelessWidget {
   final Widget actions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      LayoutBuilder(builder: (context, c) => _build(context, c.maxWidth));
+
+  Widget _build(BuildContext context, double width) {
     final t = Theme.of(context).textTheme;
-    final r = wide ? 80.0 : 62.0;
-    final coverH = wide ? 290.0 : 190.0;
+    // A 3:1 cover like X, with the photo overlapping its lower edge.
+    final r = wide ? 72.0 : 48.0;
+    final coverH = coverHeightFor(width);
     final left = wide ? Space.xl : Space.m;
     final name = Text(
       user.displayName,
@@ -57,11 +61,11 @@ class ProfileHeader extends StatelessWidget {
                 left: 0,
                 right: 0,
                 height: coverH,
-                child: _Cover(url: user.coverUrl, route: coverRoute, rounded: wide),
+                child: CoverPhoto(url: user.coverUrl, route: coverRoute, rounded: wide),
               ),
               Positioned(
                 right: Space.m,
-                top: coverH - 52,
+                top: coverH - 48,
                 child: _PhotoButton(
                   icon: Icons.photo_camera_outlined,
                   label: wide ? 'Edit cover photo' : null,
@@ -123,38 +127,6 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _Cover extends StatelessWidget {
-  const _Cover({required this.url, required this.route, required this.rounded});
-
-  final String url;
-  final List<GeoPoint> route;
-  final bool rounded;
-
-  @override
-  Widget build(BuildContext context) {
-    final image = profileImage(url);
-    final radius = rounded
-        ? const BorderRadius.vertical(bottom: Radius.circular(kRadius))
-        : BorderRadius.zero;
-    return Semantics(
-      label: 'Cover photo',
-      image: true,
-      child: ClipRRect(
-        borderRadius: radius,
-        child: image != null
-            ? Image(image: image, fit: BoxFit.cover, gaplessPlayback: true)
-            : ColoredBox(
-                color: AppColors.darkRaised,
-                // No cover yet: the rider's longest route on stealth charcoal.
-                child: CustomPaint(
-                  painter: RoutePainter(route, AppColors.data.withValues(alpha: 0.9), padding: 28),
-                ),
-              ),
-      ),
     );
   }
 }

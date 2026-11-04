@@ -11,6 +11,16 @@ double kmhToMps(double kmh) => kmh / 3.6;
 extension UnitsLabels on Units {
   String get distanceLabel => this == Units.km ? 'km' : 'mi';
   String get speedLabel => this == Units.km ? 'km/h' : 'mph';
+  String get paceLabel => this == Units.km ? '/km' : '/mi';
+}
+
+/// Running pace, e.g. "5:42" minutes per km (or mile). Slower than walking
+/// pace it means nothing, so it shows "-:--".
+String formatPace(double kmh, Units units) {
+  final perHour = units == Units.km ? kmh : kmToMi(kmh);
+  if (perHour < 2) return '-:--';
+  final secs = (3600 / perHour).round();
+  return '${secs ~/ 60}:${(secs % 60).toString().padLeft(2, '0')}';
 }
 
 /// Distance number only, e.g. "12.34" (2 decimals below 100, else 1).

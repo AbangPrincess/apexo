@@ -18,7 +18,7 @@ const _slides = [
     Icons.route_rounded,
     AppColors.data,
     'Record every ride',
-    'Rides, commutes and drives with their route, distance, speed and the weather at '
+    'Rides, runs, commutes and drives with their route, distance, speed and the weather at '
         'the start. Check the ride call before you head out.',
   ),
   _Slide(

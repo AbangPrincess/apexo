@@ -6,17 +6,7 @@ import '../../core/ride_verdict.dart';
 import '../../core/theme.dart';
 import '../../core/time_format.dart';
 import '../../core/weather.dart';
-
-IconData weatherIcon(int code, {bool isDay = true}) => switch (code) {
-  0 || 1 => isDay ? Icons.wb_sunny_outlined : Icons.nightlight_outlined,
-  2 => isDay ? Icons.wb_cloudy_outlined : Icons.cloud_queue_outlined,
-  45 || 48 => Icons.foggy,
-  >= 51 && <= 57 => Icons.grain,
-  >= 61 && <= 67 || >= 80 && <= 82 => Icons.water_drop_outlined,
-  >= 71 && <= 77 || 85 || 86 => Icons.ac_unit,
-  >= 95 => Icons.thunderstorm_outlined,
-  _ => Icons.cloud_outlined,
-};
+import '../../widgets/weather_art.dart';
 
 Color verdictColor(Verdict v) => switch (v) {
   Verdict.great => AppColors.tracking,
@@ -49,7 +39,7 @@ class VerdictPill extends StatelessWidget {
   }
 }
 
-/// Weather icon in a soft circle.
+/// The current-conditions icon: line art only, no backdrop.
 class WeatherGlyph extends StatelessWidget {
   const WeatherGlyph({super.key, required this.code, this.isDay = true, this.size = 44});
 
@@ -58,16 +48,7 @@ class WeatherGlyph extends StatelessWidget {
   final double size;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    decoration: BoxDecoration(color: AppColors.surfaceAlt, shape: BoxShape.circle),
-    child: Icon(
-      weatherIcon(code, isDay: isDay),
-      size: size * 0.55,
-      color: AppColors.ink,
-    ),
-  );
+  Widget build(BuildContext context) => WeatherArt(code: code, isDay: isDay, size: size);
 }
 
 /// Arrow pointing where the wind blows to (the API gives where it comes from).
@@ -110,7 +91,7 @@ class HourlyStrip extends StatelessWidget {
                   children: [
                     Text(i == 0 ? 'Now' : formatHour(weather.localTime(h.time)), style: muted),
                     const SizedBox(height: 6),
-                    Icon(weatherIcon(h.code, isDay: h.isDay), size: 20, color: AppColors.text),
+                    WeatherArt(code: h.code, isDay: h.isDay, size: 26),
                     const SizedBox(height: 6),
                     Text(
                       '${h.tempC.round()}°',
@@ -120,11 +101,7 @@ class HourlyStrip extends StatelessWidget {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.water_drop_rounded,
-                          size: 10,
-                          color: h.rainPct > rainCautionPct ? AppColors.caution : AppColors.parked,
-                        ),
+                        Icon(Icons.water_drop_outlined, size: 10, color: AppColors.text),
                         const SizedBox(width: 2),
                         Text(
                           '${h.rainPct}%',

@@ -1,87 +1,113 @@
 import 'package:flutter/material.dart';
 
+import '../../core/activity_type.dart';
 import '../../core/ride_tracker.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../widgets/stat_value.dart';
 
-/// Time on top, then distance, speed and average speed. [dark] is the
+/// Moving time, distance, speed and average (pace for runs). [oneRow] puts
+/// all four in a slim strip so the live map can take nearly the whole
+/// screen; otherwise a 2x2 with time and distance large. [dark] is the
 /// recording cockpit: a stealth charcoal panel with white figures.
 class RecordStats extends StatelessWidget {
   const RecordStats({
     super.key,
     required this.units,
+    required this.type,
     required this.movingTime,
     required this.distanceM,
     required this.speedKmh,
     required this.avgKmh,
     this.dark = false,
+    this.oneRow = false,
   });
 
   final Units units;
+  final ActivityType type;
   final Duration movingTime;
   final double distanceM;
   final double speedKmh;
   final double avgKmh;
   final bool dark;
+  final bool oneRow;
 
   @override
   Widget build(BuildContext context) {
+    final pace = type.usesPace;
+    Widget cell(String label, String value, String? unit, {bool big = false, Color? color}) {
+      final stat = StatValue(
+        label: label,
+        value: value,
+        unit: unit,
+        size: big && !oneRow ? StatSize.large : StatSize.medium,
+        align: CrossAxisAlignment.center,
+        onDark: dark,
+        valueColor: color,
+      );
+      // In the strip a long figure shrinks a little instead of being cut.
+      return Expanded(
+        child: oneRow ? FittedBox(fit: BoxFit.scaleDown, child: stat) : stat,
+      );
+    }
+
+    final time = cell('Moving time', formatDuration(movingTime.inSeconds), null, big: true);
+    // Live distance is the headline number: volt on dark.
+    final distance = cell(
+      'Distance',
+      formatDistance(distanceM, units),
+      units.distanceLabel,
+      big: true,
+      color: dark ? AppColors.tracking : null,
+    );
+    final speeds = pace
+        ? [
+            cell('Pace', formatPace(speedKmh, units), units.paceLabel),
+            cell('Avg pace', formatPace(avgKmh, units), units.paceLabel),
+          ]
+        : [
+            cell('Speed', formatSpeed(speedKmh, units), units.speedLabel),
+            cell('Avg speed', formatSpeed(avgKmh, units), units.speedLabel),
+          ];
     return Card(
       color: dark ? AppColors.darkRaised : null,
       shape: dark ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(kRadius)) : null,
       child: Padding(
-        padding: const EdgeInsets.all(Space.l),
-        child: Column(
-          children: [
-            StatValue(
-              label: 'Moving time',
-              value: formatDuration(movingTime.inSeconds),
-              size: StatSize.large,
-              align: CrossAxisAlignment.center,
-              onDark: dark,
-            ),
-            const SizedBox(height: Space.l),
-            Divider(color: dark ? AppColors.darkLine : null),
-            const SizedBox(height: Space.m),
-            Row(
-              children: [
-                for (final (label, value, unit) in [
-                  ('Distance', formatDistance(distanceM, units), units.distanceLabel),
-                  ('Speed', formatSpeed(speedKmh, units), units.speedLabel),
-                  ('Avg speed', formatSpeed(avgKmh, units), units.speedLabel),
-                ])
-                  Expanded(
-                    child: StatValue(
-                      label: label,
-                      value: value,
-                      unit: unit,
-                      align: CrossAxisAlignment.center,
-                      onDark: dark,
-                      // Live distance is the headline number: volt on dark.
-                      valueColor: dark && label == 'Distance' ? AppColors.tracking : null,
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ),
+        padding: EdgeInsets.symmetric(horizontal: Space.s, vertical: oneRow ? 12 : Space.m),
+        child: oneRow
+            ? Row(children: [time, distance, ...speeds])
+            : Column(
+                children: [
+                  Row(children: [time, distance]),
+                  const SizedBox(height: Space.m),
+                  Row(children: speeds),
+                ],
+              ),
       ),
     );
   }
 }
 
-/// "Recording", "Paused" or "Auto-paused" with a colored dot, on the dark
-/// cockpit background.
+/// "Recording", "Paused", "Auto-paused" or "GPS ready" with a colored dot.
+/// Solid, so it stays readable over the map.
 class RecordStatusPill extends StatelessWidget {
-  const RecordStatusPill({super.key, required this.state, required this.simulated});
+  const RecordStatusPill({
+    super.key,
+    required this.state,
+    required this.simulated,
+    this.waiting = false,
+  });
 
   final RideState state;
   final bool simulated;
 
+  /// Recording, but no real movement yet: nothing is counted.
+  final bool waiting;
+
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (state) {
+      _ when waiting => ('GPS ready · start moving', AppColors.onDarkMuted),
       RideState.recording => ('Recording', AppColors.tracking),
       RideState.autoPaused => ('Auto-paused · start moving to resume', AppColors.caution),
       _ => ('Paused', AppColors.onDarkMuted),
@@ -89,35 +115,32 @@ class RecordStatusPill extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     return Semantics(
       liveRegion: true,
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        spacing: Space.s,
-        runSpacing: Space.xs,
-        children: [
-          AnimatedContainer(
-            duration: kMotion,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: kMotion,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(color.withValues(alpha: 0.18), AppColors.darkRaised),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                ),
-                const SizedBox(width: 6),
-                Text(label, style: t.labelLarge?.copyWith(color: Colors.white)),
-              ],
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                simulated ? '$label · simulated GPS' : label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: t.labelLarge?.copyWith(color: Colors.white),
+              ),
             ),
-          ),
-          if (simulated)
-            Text('Simulated GPS', style: t.labelMedium?.copyWith(color: AppColors.onDarkMuted)),
-        ],
+          ],
+        ),
       ),
     );
   }

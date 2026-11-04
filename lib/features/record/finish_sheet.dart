@@ -7,13 +7,22 @@ import '../../data/models/activity.dart';
 import '../../widgets/adaptive.dart';
 import '../../widgets/route_thumbnail.dart';
 import '../../widgets/stat_value.dart';
+import '../auth/auth_widgets.dart';
 import '../me/settings_controller.dart';
 import 'record_controller.dart';
 
+/// How the finish sheet closed. [savedOffline]: kept on this device with no
+/// connection; it uploads by itself once the connection is back.
+enum SaveOutcome { discarded, uploaded, savedOffline }
+
 /// Review a finished recording: edit the title, choose who sees it, then
-/// save or discard. Returns true when saved.
-Future<bool> showFinishSheet(BuildContext context, RecordController rec, Activity draft) async {
-  final saved = await showModalBottomSheet<bool>(
+/// save or discard.
+Future<SaveOutcome> showFinishSheet(
+  BuildContext context,
+  RecordController rec,
+  Activity draft,
+) async {
+  final outcome = await showModalBottomSheet<SaveOutcome>(
     context: context,
     isScrollControlled: true,
     isDismissible: false,
@@ -22,7 +31,7 @@ Future<bool> showFinishSheet(BuildContext context, RecordController rec, Activit
     constraints: const BoxConstraints(maxWidth: 560),
     builder: (_) => _FinishSheet(rec: rec, draft: draft),
   );
-  return saved ?? false;
+  return outcome ?? SaveOutcome.discarded;
 }
 
 class _FinishSheet extends StatefulWidget {
@@ -39,6 +48,7 @@ class _FinishSheetState extends State<_FinishSheet> {
   late final _title = TextEditingController(text: widget.draft.title);
   ActivityVisibility _visibility = ActivityVisibility.private;
   bool _saving = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -47,9 +57,27 @@ class _FinishSheetState extends State<_FinishSheet> {
   }
 
   Future<void> _save() async {
-    setState(() => _saving = true);
-    await widget.rec.save(widget.draft, title: _title.text, visibility: _visibility);
-    if (mounted) Navigator.of(context).pop(true);
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      final uploaded = await widget.rec.save(
+        widget.draft,
+        title: _title.text,
+        visibility: _visibility,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(uploaded ? SaveOutcome.uploaded : SaveOutcome.savedOffline);
+    } catch (_) {
+      // The ride stays here, so nothing is lost: try again.
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _error = "Couldn't save it. Check your connection and try again.";
+        });
+      }
+    }
   }
 
   Future<void> _discard() async {
@@ -62,7 +90,7 @@ class _FinishSheetState extends State<_FinishSheet> {
     );
     if (!ok || !mounted) return;
     widget.rec.discard();
-    Navigator.of(context).pop(false);
+    Navigator.of(context).pop(SaveOutcome.discarded);
   }
 
   @override
@@ -94,11 +122,17 @@ class _FinishSheetState extends State<_FinishSheet> {
                   child: StatValue(label: 'Moving time', value: formatDuration(d.movingSec)),
                 ),
                 Expanded(
-                  child: StatValue(
-                    label: 'Avg speed',
-                    value: formatSpeed(d.avgKmh, units),
-                    unit: units.speedLabel,
-                  ),
+                  child: d.type.usesPace
+                      ? StatValue(
+                          label: 'Avg pace',
+                          value: formatPace(d.avgKmh, units),
+                          unit: units.paceLabel,
+                        )
+                      : StatValue(
+                          label: 'Avg speed',
+                          value: formatSpeed(d.avgKmh, units),
+                          unit: units.speedLabel,
+                        ),
                 ),
               ],
             ),
@@ -138,6 +172,7 @@ class _FinishSheetState extends State<_FinishSheet> {
                 style: t.bodySmall?.copyWith(color: AppColors.textMuted),
               ),
             ],
+            if (_error != null) ...[const SizedBox(height: Space.m), ErrorBanner(_error!)],
             const SizedBox(height: Space.l),
             FilledButton(
               onPressed: _saving || !canSave ? null : _save,

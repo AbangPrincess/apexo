@@ -51,9 +51,9 @@ String formatAgo(DateTime t, DateTime now) {
 
 /// "Good morning" / "Good afternoon" / "Good evening".
 String greeting(DateTime now) {
-  if (now.hour < 12) return 'Good morning';
-  if (now.hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (now.hour < 12) return 'Good Morning';
+  if (now.hour < 18) return 'Good Afternoon';
+  return 'Good Evening';
 }
 
 /// "Tuesday, November 3"

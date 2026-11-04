@@ -4,13 +4,15 @@ import '../core/theme.dart';
 import '../widgets/brand_mark.dart';
 import 'app_tab.dart';
 
-/// Tablet and web navigation: a rail with a Record action on top.
+/// Tablet and web navigation: a rail with a Record action on top. Tap the
+/// Apexo mark to fold it to icons only, and again to open it.
 class SideNav extends StatelessWidget {
   const SideNav({
     super.key,
     required this.current,
     required this.onSelect,
     required this.extended,
+    required this.onToggle,
     this.alertCount = 0,
     this.recording = false,
   });
@@ -18,10 +20,14 @@ class SideNav extends StatelessWidget {
   final AppTab current;
   final ValueChanged<AppTab> onSelect;
   final bool extended;
+  final VoidCallback onToggle;
   final int alertCount;
   final bool recording;
 
   static const _railTabs = [AppTab.home, AppTab.circle, AppTab.alerts, AppTab.me];
+
+  /// Folded, the icons have no label beside them, so they get a tooltip.
+  Widget _tip(String label, Widget icon) => extended ? icon : Tooltip(message: label, child: icon);
 
   @override
   Widget build(BuildContext context) {
@@ -29,40 +35,89 @@ class SideNav extends StatelessWidget {
     return NavigationRail(
       extended: extended,
       minExtendedWidth: 232,
-      labelType: extended ? NavigationRailLabelType.none : NavigationRailLabelType.all,
+      // Folded: icons only (each has a tooltip and keeps its label for
+      // screen readers).
+      labelType: NavigationRailLabelType.none,
       selectedIndex: index < 0 ? null : index,
       onDestinationSelected: (i) => onSelect(_railTabs[i]),
       groupAlignment: -1,
-      leading: Padding(
-        padding: const EdgeInsets.only(top: Space.m, bottom: Space.l),
-        child: Column(
-          crossAxisAlignment: extended ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-          children: [
-            BrandMark(showName: extended),
-            const SizedBox(height: Space.l),
-            _RecordAction(
-              key: const ValueKey('nav-record'),
-              extended: extended,
-              selected: current == AppTab.record,
-              recording: recording,
-              onTap: () => onSelect(AppTab.record),
-            ),
-          ],
+      leading: _RailTop(
+        extended: extended,
+        onToggle: onToggle,
+        record: (wide) => _RecordAction(
+          key: const ValueKey('nav-record'),
+          extended: wide,
+          selected: current == AppTab.record,
+          recording: recording,
+          onTap: () => onSelect(AppTab.record),
         ),
       ),
       destinations: [
         for (final tab in _railTabs)
           NavigationRailDestination(
-            icon: Badge(
-              key: ValueKey('nav-${tab.name}'),
-              isLabelVisible: tab == AppTab.alerts && alertCount > 0,
-              label: Text('$alertCount'),
-              child: Icon(tab.icon),
+            icon: _tip(
+              tab.label,
+              Badge(
+                key: ValueKey('nav-${tab.name}'),
+                isLabelVisible: tab == AppTab.alerts && alertCount > 0,
+                label: Text('$alertCount'),
+                child: Icon(tab.icon),
+              ),
             ),
-            selectedIcon: Icon(tab.selectedIcon, key: ValueKey('nav-${tab.name}')),
+            selectedIcon: _tip(tab.label, Icon(tab.selectedIcon, key: ValueKey('nav-${tab.name}'))),
             label: Text(tab.label),
           ),
       ],
+    );
+  }
+}
+
+/// The mark (a fold/unfold button) and the Record action. They switch to
+/// their wide look only once the rail has finished opening, so nothing
+/// overflows while it animates.
+class _RailTop extends StatelessWidget {
+  const _RailTop({required this.extended, required this.onToggle, required this.record});
+
+  final bool extended;
+  final VoidCallback onToggle;
+  final Widget Function(bool wide) record;
+
+  @override
+  Widget build(BuildContext context) {
+    final anim = NavigationRail.extendedAnimation(context);
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (context, _) {
+        final wide = extended && anim.value > 0.99;
+        final hint = extended ? 'Collapse menu' : 'Expand menu';
+        return Padding(
+          padding: const EdgeInsets.only(top: Space.m, bottom: Space.l),
+          child: Column(
+            crossAxisAlignment: wide ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+            children: [
+              Tooltip(
+                message: hint,
+                child: Semantics(
+                  button: true,
+                  label: 'Apexo. $hint',
+                  excludeSemantics: true,
+                  child: InkWell(
+                    key: const ValueKey('nav-toggle'),
+                    onTap: onToggle,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: BrandMark(showName: wide),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: Space.l),
+              record(wide),
+            ],
+          ),
+        );
+      },
     );
   }
 }

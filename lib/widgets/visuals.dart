@@ -9,6 +9,7 @@ import '../data/models/user.dart';
 extension ActivityTypeVisuals on ActivityType {
   IconData get icon => switch (this) {
     ActivityType.cycling => Icons.directions_bike_rounded,
+    ActivityType.running => Icons.directions_run_rounded,
     ActivityType.motorcycling => Icons.two_wheeler_rounded,
     ActivityType.driving => Icons.directions_car_rounded,
   };

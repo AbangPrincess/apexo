@@ -51,6 +51,8 @@ class VerifyEmailScreen extends StatelessWidget {
             ),
             style: muted,
           ),
+          const SizedBox(height: Space.m),
+          const _SpamTip(),
           if (session.error != null) ...[
             const SizedBox(height: Space.m),
             ErrorBanner(session.error!),
@@ -79,15 +81,53 @@ class VerifyEmailScreen extends StatelessWidget {
               label: const Text('Open demo inbox'),
             ),
           ],
-          const SizedBox(height: Space.l),
-          Text(
-            "Can't find it? Check your spam folder, or make sure the address is right.",
-            style: t.bodySmall?.copyWith(color: AppColors.textMuted),
-            textAlign: TextAlign.center,
-          ),
+          const SizedBox(height: Space.m),
           TextButton(
             onPressed: session.busy ? null : session.signOut,
             child: const Text('Use a different email'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Most "it never came" reports are a link sitting in Spam, so say where
+/// to look before anything else.
+class _SpamTip extends StatelessWidget {
+  const _SpamTip();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final line = t.bodyMedium?.copyWith(height: 1.35);
+    return Container(
+      padding: const EdgeInsets.all(Space.m),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.hairline),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.report_outlined, color: AppColors.text),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Not in your inbox?', style: t.titleSmall),
+                const SizedBox(height: 4),
+                Text(
+                  'Look in Spam or Junk (Gmail: also Promotions), or search your mail for '
+                  '"Apexo". It can take a minute to arrive.',
+                  style: line,
+                ),
+                const SizedBox(height: 4),
+                Text('Found it in Spam? Mark it "Not spam", then open the link.', style: line),
+              ],
+            ),
           ),
         ],
       ),

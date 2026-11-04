@@ -6,8 +6,10 @@ import '../../core/units.dart';
 import '../../data/models/circle.dart';
 import '../me/settings_controller.dart';
 import 'invite_card.dart';
+import 'member_profile_screen.dart';
 import 'member_tile.dart';
 import 'share_tile.dart';
+import '../walkie/walkie_card.dart';
 
 String memberCount(int n) => n == 1 ? '1 member' : '$n members';
 
@@ -76,7 +78,16 @@ class MemberPanel extends StatelessWidget {
             isMe: m.uid == myUid,
             isOwner: m.uid == circle.ownerUid,
             onTap: m.onMap ? () => onFocus(m) : null,
+            onOpenProfile: () => openMemberProfile(
+              context,
+              m,
+              isMe: m.uid == myUid,
+              isOwner: m.uid == circle.ownerUid,
+              onShowOnMap: () => onFocus(m),
+            ),
           ),
+        // Messages and auto-play; the Talk button also floats on the map.
+        const WalkieCard(),
       ],
     );
   }

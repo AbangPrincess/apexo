@@ -18,13 +18,20 @@ class AchievementsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The count sits flush right, on the title's baseline; with very
+        // large text both shrink to fit instead of spilling over.
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
-            Expanded(child: Text('Achievements', style: t.titleLarge)),
+            Flexible(child: Text('Achievements', style: t.titleLarge)),
+            const SizedBox(width: Space.s),
             Flexible(
               child: Text(
                 '$earned of ${achievements.length} earned',
-                textAlign: TextAlign.end,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: t.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             ),
@@ -98,6 +105,8 @@ class _Badge extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = achievement;
     final t = Theme.of(context).textTheme;
+    final title = t.labelLarge?.copyWith(color: a.earned ? Colors.white : null, height: 1.25);
+    final twoLines = MediaQuery.textScalerOf(context).scale(title?.fontSize ?? 15) * 1.25 * 2;
     return Tooltip(
       message: _goal,
       triggerMode: TooltipTriggerMode.tap,
@@ -127,12 +136,19 @@ class _Badge extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: Space.s),
-              Text(
-                a.title,
-                style: t.labelLarge?.copyWith(color: a.earned ? Colors.white : null),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              // Two title lines are always reserved, so every tile (earned
+              // or not, short title or long) is the same height.
+              SizedBox(
+                height: twoLines,
+                child: Center(
+                  child: Text(
+                    a.title,
+                    style: title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
               const SizedBox(height: 2),
               Text(
@@ -145,18 +161,17 @@ class _Badge extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (!a.earned) ...[
-                const SizedBox(height: 6),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(99),
-                  child: LinearProgressIndicator(
-                    value: a.progress,
-                    minHeight: 4,
-                    color: AppColors.data,
-                    backgroundColor: AppColors.surfaceAlt,
-                  ),
+              const SizedBox(height: 6),
+              // Earned tiles keep the bar too (full, in volt): same shape.
+              ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: LinearProgressIndicator(
+                  value: a.earned ? 1 : a.progress,
+                  minHeight: 4,
+                  color: a.earned ? AppColors.tracking : AppColors.data,
+                  backgroundColor: a.earned ? AppColors.darkLine : AppColors.surfaceAlt,
                 ),
-              ],
+              ),
             ],
           ),
         ),

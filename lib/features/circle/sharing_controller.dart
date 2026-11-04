@@ -164,10 +164,12 @@ class SharingController extends ChangeNotifier {
   void _onRecord() {
     if (_sharingIds.isEmpty) return;
     if (_record.isActive != _fromRecording) _listen();
-    final path = _record.path;
-    if (!_record.isActive || path.isEmpty) return;
-    if (path.last == _point && _record.currentKmh == _kmh) return;
-    _point = path.last;
+    // The live position, also while standing still (the route only grows
+    // with real movement).
+    final here = _record.position;
+    if (!_record.isActive || here == null) return;
+    if (here == _point && _record.currentKmh == _kmh) return;
+    _point = here;
     _kmh = _record.currentKmh;
     _publish();
   }

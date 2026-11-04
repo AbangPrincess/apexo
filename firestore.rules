@@ -27,7 +27,7 @@ service cloud.firestore {
     }
 
     function validActivity(d) {
-      return d.type in ['cycling', 'motorcycling', 'driving']
+      return d.type in ['cycling', 'running', 'motorcycling', 'driving']
         && str(d.title, 120)
         && d.distanceM is number && d.movingSec is number
         && str(d.path, 900000)
@@ -42,7 +42,8 @@ service cloud.firestore {
     }
     function validMember(d) {
       return d.keys().hasOnly(['displayName', 'lat', 'lng', 'speedKmh', 'heading', 'battery',
-          'status', 'sharing', 'ts', 'vehicle'])
+          'status', 'sharing', 'ts', 'vehicle', 'profileRev'])
+        && (!('profileRev' in d) || str(d.profileRev, 16))
         && str(d.displayName, 60)
         && d.lat is number && d.lat >= -90 && d.lat <= 90
         && d.lng is number && d.lng >= -180 && d.lng <= 180
@@ -61,7 +62,7 @@ service cloud.firestore {
       allow create, update: if mine()
         && str(request.resource.data.displayName, 60) && request.resource.data.displayName.size() > 0
         && request.resource.data.units in ['km', 'mi']
-        && request.resource.data.defaultActivity in ['cycling', 'motorcycling', 'driving']
+        && request.resource.data.defaultActivity in ['cycling', 'running', 'motorcycling', 'driving']
         && str(request.resource.data.bio, 500) && str(request.resource.data.hometown, 100)
         // Photos are small data URIs (avatar 200 KB, cover 500 KB before base64).
         && str(request.resource.data.photoUrl, 280000) && str(request.resource.data.coverUrl, 700000);
@@ -142,6 +143,45 @@ service cloud.firestore {
           && validActivity(request.resource.data);
         allow delete: if verified()
           && (resource == null || resource.data.ownerUid == me() || ownerBefore(cid));
+      }
+
+      // Each member's own profile copy (no email), readable by the circle.
+      match /profiles/{uid} {
+        allow read: if memberBefore(cid);
+        allow create, update: if me() == uid && memberBefore(cid)
+          && request.resource.data.keys().hasOnly(['displayName', 'bio', 'hometown',
+              'photoUrl', 'coverUrl'])
+          && str(request.resource.data.displayName, 60)
+          && str(request.resource.data.bio, 500) && str(request.resource.data.hometown, 100)
+          && str(request.resource.data.photoUrl, 280000)
+          && str(request.resource.data.coverUrl, 700000);
+        allow delete: if verified() && (me() == uid || ownerBefore(cid));
+      }
+
+      // Walkie-talkie: message details here, the audio in voiceAudio. Only
+      // the sender (or the owner) deletes; nobody edits a sent message.
+      match /voice/{vid} {
+        allow read: if memberBefore(cid);
+        allow create: if memberBefore(cid)
+          && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'durationMs',
+              'mime', 'sentAt'])
+          && request.resource.data.fromUid == me()
+          && str(request.resource.data.fromName, 60)
+          && request.resource.data.sentAt == request.time
+          && request.resource.data.durationMs is int
+          && request.resource.data.durationMs > 0 && request.resource.data.durationMs <= 31000
+          && request.resource.data.mime in ['audio/mp4', 'audio/webm', 'audio/ogg'];
+        allow delete: if verified()
+          && (resource == null || resource.data.fromUid == me() || ownerBefore(cid));
+      }
+      match /voiceAudio/{vid} {
+        allow read: if memberBefore(cid);
+        allow create: if memberBefore(cid)
+          && request.resource.data.keys().hasOnly(['fromUid', 'audio'])
+          && request.resource.data.fromUid == me()
+          && request.resource.data.audio is bytes && request.resource.data.audio.size() <= 400000;
+        allow delete: if verified()
+          && (resource == null || resource.data.fromUid == me() || ownerBefore(cid));
       }
 
       // Members raise their own alerts; the owner moves or closes them;

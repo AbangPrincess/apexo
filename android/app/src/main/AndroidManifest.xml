@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Walkie-talkie: only while the Talk button is held or tapped on. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application
         android:label="Apexo"
         android:name="${applicationName}"

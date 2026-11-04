@@ -27,9 +27,17 @@ mixin FbProfile on AppRepository {
     'activityId': a.id,
   };
 
+  /// From the server when it answers quickly, else from the local copy, so
+  /// saving a ride works offline.
   Future<List<String>> myCircleIds(String uid) async {
-    final q = await db.collection('circles').where('memberUids', arrayContains: uid).get();
-    return [for (final d in q.docs) d.id];
+    final q = db.collection('circles').where('memberUids', arrayContains: uid);
+    QuerySnapshot<Map<String, dynamic>> snap;
+    try {
+      snap = await q.get().timeout(const Duration(seconds: 5));
+    } catch (_) {
+      snap = await q.get(const GetOptions(source: Source.cache));
+    }
+    return [for (final d in snap.docs) d.id];
   }
 
   @override
@@ -84,7 +92,7 @@ mixin FbProfile on AppRepository {
       .map((q) => [for (final d in q.docs) Activity.fromMap(d.id, d.data())]);
 
   @override
-  Future<void> saveActivity(String uid, Activity activity) async {
+  Future<bool> saveActivity(String uid, Activity activity) async {
     final owner = currentUser;
     final circles = await myCircleIds(uid);
     final batch = db.batch()
@@ -97,7 +105,7 @@ mixin FbProfile on AppRepository {
         batch.delete(ref);
       }
     }
-    await settle(batch.commit());
+    return settled(batch.commit());
   }
 
   @override

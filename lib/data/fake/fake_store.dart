@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import '../models/activity.dart';
 import '../models/circle.dart';
 import '../models/circle_alert.dart';
+import '../models/public_profile.dart';
 import '../models/shared_activity.dart';
 import '../models/user.dart';
+import '../models/voice_clip.dart';
 import 'demo_simulator.dart';
 import 'live_value.dart';
 
@@ -16,6 +20,11 @@ class FakeStore {
   final _members = <String, LiveValue<List<Member>>>{};
   final _alerts = <String, LiveValue<List<CircleAlert>>>{};
   final _feeds = <String, LiveValue<List<SharedActivity>>>{};
+  final _voice = <String, LiveValue<List<VoiceClip>>>{};
+
+  /// Profile copies and voice audio, keyed "circleId/uid" and "circleId/clipId".
+  final memberProfiles = <String, PublicProfile>{};
+  final voiceAudio = <String, Uint8List>{};
 
   LiveValue<List<Vehicle>> vehiclesOf(String uid) =>
       _vehicles.putIfAbsent(uid, () => LiveValue(const []));
@@ -27,6 +36,8 @@ class FakeStore {
       _alerts.putIfAbsent(cid, () => LiveValue(const []));
   LiveValue<List<SharedActivity>> feedOf(String cid) =>
       _feeds.putIfAbsent(cid, () => LiveValue(const []));
+  LiveValue<List<VoiceClip>> voiceOf(String cid) =>
+      _voice.putIfAbsent(cid, () => LiveValue(const []));
 
   void close() {
     auth.close();
@@ -34,7 +45,7 @@ class FakeStore {
     for (final v in [..._vehicles.values, ..._activities.values]) {
       v.close();
     }
-    for (final v in [..._members.values, ..._alerts.values, ..._feeds.values]) {
+    for (final v in [..._members.values, ..._alerts.values, ..._feeds.values, ..._voice.values]) {
       v.close();
     }
   }

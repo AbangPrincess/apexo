@@ -1,10 +1,14 @@
+import 'dart:typed_data';
+
 import '../core/activity_type.dart';
 import '../core/units.dart';
 import 'models/activity.dart';
 import 'models/circle.dart';
 import 'models/circle_alert.dart';
+import 'models/public_profile.dart';
 import 'models/shared_activity.dart';
 import 'models/user.dart';
+import 'models/voice_clip.dart';
 
 /// User-facing auth failure with a message that is safe to show.
 class AuthException implements Exception {
@@ -69,7 +73,10 @@ abstract interface class ProfileRepository {
 abstract interface class ActivityRepository {
   /// Newest first.
   Stream<List<Activity>> watchActivities(String uid);
-  Future<void> saveActivity(String uid, Activity activity);
+
+  /// True once the server has it; false when it is kept on this device
+  /// (offline) and uploads by itself when the connection is back.
+  Future<bool> saveActivity(String uid, Activity activity);
   Future<void> deleteActivity(String uid, String activityId);
 }
 
@@ -125,8 +132,39 @@ abstract interface class CircleRepository {
   Future<void> ackAlert(String circleId, String alertId, String uid);
 }
 
+/// What circle members may see of each other (never the email).
+abstract interface class MemberProfileRepository {
+  /// Null when that member has not published one yet.
+  Future<PublicProfile?> memberProfile(String circleId, String uid);
+
+  /// Writes [profile] as the caller's copy in [circleId] and stamps their
+  /// member doc with its [PublicProfile.rev].
+  Future<void> publishProfile(String circleId, PublicProfile profile);
+}
+
+/// The circle walkie-talkie: short voice messages.
+abstract interface class WalkieRepository {
+  /// The latest messages, newest first.
+  Stream<List<VoiceClip>> watchVoice(String circleId);
+
+  /// Sends [clip] with its [audio]; offline it waits and sends later.
+  Future<void> sendVoice(String circleId, VoiceClip clip, Uint8List audio);
+
+  /// Null when the message is gone.
+  Future<Uint8List?> voiceAudio(String circleId, String clipId);
+
+  /// The sender (or the circle owner) only.
+  Future<void> deleteVoice(String circleId, String clipId);
+}
+
 /// Everything the app needs from a backend.
 abstract class AppRepository
-    implements AuthRepository, ProfileRepository, ActivityRepository, CircleRepository {
+    implements
+        AuthRepository,
+        ProfileRepository,
+        ActivityRepository,
+        CircleRepository,
+        MemberProfileRepository,
+        WalkieRepository {
   void dispose();
 }

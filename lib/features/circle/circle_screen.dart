@@ -9,6 +9,7 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/map_view.dart';
 import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
+import '../walkie/talk_button.dart';
 import '../alerts/alerts_controller.dart';
 import '../guard/guard_screen.dart';
 import '../record/location_rationale.dart';
@@ -182,6 +183,7 @@ class _CircleScreenState extends State<CircleScreen> {
                   children: [
                     Positioned.fill(child: map),
                     Positioned(right: Space.m, bottom: Space.xl, child: locate),
+                    const Positioned(left: Space.m, bottom: Space.xl, child: TalkButton()),
                   ],
                 ),
               ),
@@ -199,7 +201,16 @@ class _CircleScreenState extends State<CircleScreen> {
               builder: (context, _) {
                 final size = _sheet.isAttached ? _sheet.size : _sheetStart;
                 if (size > 0.75) return const SizedBox.shrink();
-                return Positioned(right: Space.m, bottom: size * c.maxHeight + 12, child: locate);
+                final bottom = size * c.maxHeight + 12;
+                return Positioned.fill(
+                  child: Stack(
+                    children: [
+                      Positioned(right: Space.m, bottom: bottom, child: locate),
+                      // Push to talk, one tap from the map.
+                      Positioned(left: Space.m, bottom: bottom, child: const TalkButton(size: 56)),
+                    ],
+                  ),
+                );
               },
             ),
             DraggableScrollableSheet(

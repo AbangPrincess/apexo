@@ -46,15 +46,20 @@ class WeeklyHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // The dates sit flush right, on the title's baseline; with very
+            // large text both shrink to fit instead of spilling over.
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Expanded(
+                Flexible(
                   child: Text('This week', style: t.titleMedium?.copyWith(color: Colors.white)),
                 ),
+                const SizedBox(width: Space.s),
                 Flexible(
                   child: Text(
                     range,
-                    textAlign: TextAlign.end,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: t.bodySmall?.copyWith(color: AppColors.onDarkMuted),
@@ -63,6 +68,8 @@ class WeeklyHeader extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
+            // Spread over the card: left, centered and right, so the right
+            // edge keeps the same padding as the left.
             Row(
               children: [
                 Expanded(
@@ -79,10 +86,16 @@ class WeeklyHeader extends StatelessWidget {
                     label: 'Moving time',
                     value: formatDurationShort(week.movingSec),
                     onDark: true,
+                    align: CrossAxisAlignment.center,
                   ),
                 ),
                 Expanded(
-                  child: StatValue(label: 'Activities', value: '${week.count}', onDark: true),
+                  child: StatValue(
+                    label: 'Activities',
+                    value: '${week.count}',
+                    onDark: true,
+                    align: CrossAxisAlignment.end,
+                  ),
                 ),
               ],
             ),

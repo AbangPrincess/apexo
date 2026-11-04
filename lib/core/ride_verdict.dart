@@ -98,15 +98,31 @@ RideCall _judge(
     _rain(car, rainPct, rainInH, rainingNow),
     _wind(type, windKmh),
     _temperature(type, tempC),
-    if (!isDay && !car) const RideCall(Verdict.ok, 'After dark - use front and rear lights'),
+    if (!isDay && !car)
+      RideCall(
+        Verdict.ok,
+        type == ActivityType.running
+            ? 'After dark - wear something bright'
+            : 'After dark - use front and rear lights',
+      ),
   ];
   RideCall? worst;
   for (final call in calls.nonNulls) {
     if (worst == null || call.verdict.index > worst.verdict.index) worst = call;
   }
   return worst ??
-      RideCall(Verdict.great, car ? 'Clear, calm conditions' : 'Dry and calm - enjoy the ride');
+      RideCall(
+        Verdict.great,
+        car ? 'Clear, calm conditions' : 'Dry and calm - enjoy the ${activityVerb(type)}',
+      );
 }
+
+/// "ride", "run" or "drive", for messages like "Best time to run".
+String activityVerb(ActivityType type) => switch (type) {
+  ActivityType.driving => 'drive',
+  ActivityType.running => 'run',
+  _ => 'ride',
+};
 
 String _when(int inH) => inH == 0 ? 'within the hour' : 'in $inH h';
 
@@ -134,6 +150,16 @@ RideCall? _wind(ActivityType type, double kmh) => switch (type) {
     'Very strong wind - watch for debris',
   ),
   ActivityType.driving => null,
+  // On foot wind is mostly a nuisance, not a danger.
+  ActivityType.running when kmh > windAvoidKmh => const RideCall(
+    Verdict.caution,
+    'Very strong wind - watch for falling branches',
+  ),
+  ActivityType.running when kmh > windCautionKmh => const RideCall(
+    Verdict.ok,
+    'Windy - expect a headwind',
+  ),
+  ActivityType.running => null,
   _ when kmh > windAvoidKmh => const RideCall(Verdict.avoid, 'Very strong wind - risky to ride'),
   ActivityType.cycling when kmh > windCautionKmh => const RideCall(
     Verdict.caution,
@@ -191,7 +217,7 @@ BestHour? bestHourToRide(ActivityType type, Weather weather, {DateTime? now, int
 
 /// "Best time to ride: 6 AM", "Best time to ride: now" or no window at all.
 String bestTimeHint(ActivityType type, Weather weather, BestHour best, {int within = 12}) {
-  final verb = type == ActivityType.driving ? 'drive' : 'ride';
+  final verb = activityVerb(type);
   if (best.call.verdict == Verdict.avoid) return 'No good time to $verb in the next $within h';
   if (best.isNow) return 'Best time to $verb: now';
   return 'Best time to $verb: ${formatHour(weather.localTime(best.hour.time))}';

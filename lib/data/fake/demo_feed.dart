@@ -67,6 +67,20 @@ List<SharedActivity> demoCircleFeed(DemoSeed seed) {
       ),
       now,
     ),
+    SharedActivity.of(
+      shane,
+      DemoSeed.buildActivity(
+        'shane-2',
+        ActivityType.running,
+        'Morning Jog',
+        at(3, 5, 40),
+        demoLoop(offsetM(koronadal, northM: -300, eastM: 200), northM: 450, eastM: 650, phase: 0.7),
+        avgKmh: 8.6,
+        elev: 12,
+        vis: ActivityVisibility.circles,
+      ),
+      now,
+    ),
     for (final a in seed.activities)
       if (a.visibility == ActivityVisibility.circles) SharedActivity.of(seed.you, a, now),
   ];

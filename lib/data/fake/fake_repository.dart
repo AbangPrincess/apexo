@@ -11,11 +11,14 @@ import 'demo_simulator.dart';
 import 'fake_alerts.dart';
 import 'fake_auth.dart';
 import 'fake_circles.dart';
+import 'fake_social.dart';
 import 'fake_store.dart';
 
 /// In-memory demo backend that mirrors the Firestore layout. Nothing is
 /// persisted or logged; everything resets when the app reloads.
-class FakeRepository extends AppRepository with FakeCircles, FakeAlerts implements DemoMailbox {
+class FakeRepository extends AppRepository
+    with FakeCircles, FakeAlerts, FakeMemberProfiles, FakeWalkie
+    implements DemoMailbox {
   FakeRepository({
     this.simulate = true,
     this.latency = const Duration(milliseconds: 350),
@@ -30,6 +33,7 @@ class FakeRepository extends AppRepository with FakeCircles, FakeAlerts implemen
     _store.membersOf(seed.circle.id).value = seed.members;
     _store.alertsOf(seed.circle.id).value = seed.alerts;
     _store.feedOf(seed.circle.id).value = demoCircleFeed(seed);
+    seedDemoProfiles(_store, seed.circle.id);
     simulator = DemoSimulator(
       CircleWorld(_store, seed.circle.id),
       loop: seed.jeroLoop,
@@ -46,6 +50,11 @@ class FakeRepository extends AppRepository with FakeCircles, FakeAlerts implemen
   final Duration latency;
   final DemoSeed seed;
   late final DemoSimulator simulator;
+
+  /// Tests: saved rides stay on the device as if there were no connection,
+  /// or saving fails outright with [failSaves].
+  bool offline = false;
+  Object? failSaves;
 
   /// Accounts, lockout and the demo outbox (the "auth server").
   final FakeAuth accounts;
@@ -214,11 +223,13 @@ class FakeRepository extends AppRepository with FakeCircles, FakeAlerts implemen
   Stream<List<Activity>> watchActivities(String uid) => _store.activitiesOf(uid).stream;
 
   @override
-  Future<void> saveActivity(String uid, Activity activity) async {
+  Future<bool> saveActivity(String uid, Activity activity) async {
+    if (failSaves case final e?) throw e;
     final store = _store.activitiesOf(uid);
     store.value = [activity, ...store.value.where((a) => a.id != activity.id)]
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
     syncFeeds(uid, activity.id, activity);
+    return !offline;
   }
 
   @override

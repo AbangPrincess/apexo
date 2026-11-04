@@ -1,13 +1,14 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import '../core/theme.dart';
 
-/// "You're offline" on every tab while the device has no network. Saved
-/// data keeps working from the local copy and syncs later; maps and the
-/// weather wait for the connection.
+/// "You're offline" on every tab while the device has no network. Recording
+/// needs only GPS, saved data works from the local copy and uploads later;
+/// new map areas and the weather wait for the connection.
 class OfflineBar extends StatefulWidget {
   const OfflineBar({super.key, this.online});
 
@@ -65,7 +66,11 @@ class _OfflineBarState extends State<OfflineBar> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          "You're offline. Changes sync when you're back.",
+                          kIsWeb
+                              ? "You're offline. Recording still works. Keep Apexo open and "
+                                    "changes upload when you're back."
+                              : "You're offline. Recording still works, and changes upload "
+                                    "when you're back.",
                           maxLines: 2,
                           style: t.bodyMedium?.copyWith(color: Colors.white),
                         ),

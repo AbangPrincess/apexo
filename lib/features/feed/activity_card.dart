@@ -99,6 +99,7 @@ class ActivityCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   RouteThumbnail(points: a.points, height: 140),
                   const SizedBox(height: 12),
+                  // Left, centered and right, like the This week card.
                   Row(
                     children: [
                       Expanded(
@@ -114,14 +115,18 @@ class ActivityCard extends StatelessWidget {
                           label: 'Moving time',
                           value: formatDurationShort(a.movingSec),
                           size: statSize,
+                          align: CrossAxisAlignment.center,
                         ),
                       ),
                       Expanded(
                         child: StatValue(
-                          label: 'Avg speed',
-                          value: formatSpeed(a.avgKmh, units),
-                          unit: units.speedLabel,
+                          label: a.type.usesPace ? 'Avg pace' : 'Avg speed',
+                          value: a.type.usesPace
+                              ? formatPace(a.avgKmh, units)
+                              : formatSpeed(a.avgKmh, units),
+                          unit: a.type.usesPace ? units.paceLabel : units.speedLabel,
                           size: statSize,
+                          align: CrossAxisAlignment.end,
                         ),
                       ),
                     ],

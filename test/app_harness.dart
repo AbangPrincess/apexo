@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'voice_fixtures.dart';
 import 'weather_fixtures.dart';
 
 // Phone (small Android), iPhone, tablet and desktop web widths. Any layout
@@ -22,6 +23,7 @@ Future<FakeRepository> pumpApp(
   WidgetTester tester,
   Size size, {
   FakeWeatherSource? weather,
+  FakeVoiceIO? voice,
   bool onboarded = true,
 }) async {
   tester.view.physicalSize = size * 2;
@@ -37,6 +39,7 @@ Future<FakeRepository> pumpApp(
       prefs: prefs,
       weatherSource: weather ?? FakeWeatherSource(),
       alertNotifier: QuietNotifier(),
+      voice: voice ?? FakeVoiceIO(),
     ),
   );
   await tester.pumpAndSettle();

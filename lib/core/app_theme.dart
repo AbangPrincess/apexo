@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'theme.dart';
@@ -36,32 +37,49 @@ abstract final class AppTheme {
           error: AppColors.alert,
           surfaceTint: Colors.transparent,
         );
-    final base = ThemeData(useMaterial3: true, colorScheme: scheme);
-    final text = base.textTheme.apply(bodyColor: n.text, displayColor: n.text);
+    // The iPhone app uses the phone's own font (San Francisco), like most
+    // iOS apps. Everywhere else Inter, bundled in assets/fonts: the closest
+    // free match, soft and round, with tabular digits. Sizes follow iOS
+    // (17 body, 15 subhead, 13 footnote) with iOS-tight letter spacing
+    // instead of Material's wide tracking.
+    final iosApp = !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS;
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      fontFamily: iosApp ? null : 'Inter',
+    );
+    final m = base.textTheme.apply(bodyColor: n.text, displayColor: n.text);
+    TextStyle? w(TextStyle? s, FontWeight weight, {double? size, double spacing = 0}) =>
+        s?.copyWith(fontWeight: weight, fontSize: size, letterSpacing: spacing);
+    final text = m.copyWith(
+      displayLarge: w(m.displayLarge, FontWeight.w700, spacing: -1),
+      displayMedium: w(m.displayMedium, FontWeight.w700, spacing: -0.8),
+      displaySmall: w(m.displaySmall, FontWeight.w700, spacing: -0.6),
+      headlineLarge: w(m.headlineLarge, FontWeight.w700, spacing: -0.6),
+      headlineMedium: w(m.headlineMedium, FontWeight.w700, spacing: -0.5),
+      headlineSmall: w(m.headlineSmall, FontWeight.w700, spacing: -0.4),
+      titleLarge: w(m.titleLarge, FontWeight.w700, spacing: -0.3),
+      titleMedium: w(m.titleMedium, FontWeight.w600, size: 17, spacing: -0.2),
+      titleSmall: w(m.titleSmall, FontWeight.w600, size: 15, spacing: -0.1),
+      bodyLarge: w(m.bodyLarge, FontWeight.w400, size: 17, spacing: -0.2),
+      bodyMedium: w(m.bodyMedium, FontWeight.w400, size: 15, spacing: -0.1),
+      bodySmall: w(m.bodySmall, FontWeight.w400, size: 13),
+      labelLarge: w(m.labelLarge, FontWeight.w600, size: 15, spacing: -0.1),
+      labelMedium: w(m.labelMedium, FontWeight.w500, size: 13),
+      labelSmall: w(m.labelSmall, FontWeight.w500, size: 12),
+    );
     final rounded12 = RoundedRectangleBorder(borderRadius: BorderRadius.circular(12));
 
     return base.copyWith(
       scaffoldBackgroundColor: n.surface,
-      textTheme: text.copyWith(
-        headlineMedium: text.headlineMedium?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.5,
-        ),
-        headlineSmall: text.headlineSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.3,
-        ),
-        titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        titleMedium: text.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        labelLarge: text.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-      ),
+      textTheme: text,
       appBarTheme: AppBarTheme(
         backgroundColor: n.surface,
         foregroundColor: n.text,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: text.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+        titleTextStyle: text.titleLarge,
         shape: Border(bottom: BorderSide(color: n.hairline)),
       ),
       cardTheme: CardThemeData(

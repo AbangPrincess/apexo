@@ -15,6 +15,7 @@ class MemberTile extends StatelessWidget {
     required this.isMe,
     required this.isOwner,
     this.onTap,
+    this.onOpenProfile,
   });
 
   final Member member;
@@ -22,6 +23,9 @@ class MemberTile extends StatelessWidget {
   final bool isMe;
   final bool isOwner;
   final VoidCallback? onTap;
+
+  /// Tapping the photo (or a long press) opens their profile.
+  final VoidCallback? onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -35,14 +39,31 @@ class MemberTile extends StatelessWidget {
         ? muted?.copyWith(color: AppColors.alert, fontWeight: FontWeight.w600)
         : muted;
 
+    final avatar = MemberAvatar(
+      initial: m.initial,
+      ringColor: m.status.color,
+      badge: m.vehicle?.type.icon,
+      highlight: isMe,
+    );
     return ListTile(
       onTap: onTap,
-      leading: MemberAvatar(
-        initial: m.initial,
-        ringColor: m.status.color,
-        badge: m.vehicle?.type.icon,
-        highlight: isMe,
-      ),
+      onLongPress: onOpenProfile,
+      leading: onOpenProfile == null
+          ? avatar
+          : Semantics(
+              button: true,
+              label: isMe ? 'Your profile' : 'Profile of ${m.displayName}',
+              excludeSemantics: true,
+              child: Tooltip(
+                message: 'View profile',
+                child: InkResponse(
+                  key: ValueKey('profile-${m.uid}'),
+                  onTap: onOpenProfile,
+                  radius: 28,
+                  child: avatar,
+                ),
+              ),
+            ),
       title: Row(
         children: [
           Flexible(

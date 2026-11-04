@@ -140,27 +140,22 @@ class _WeatherCardState extends State<WeatherCard> {
                           'Feels like ${c.feelsLikeC.round()} degrees. '
                           'Wind $wind from ${compassPoint(c.windFromDeg)}',
                       excludeSemantics: true,
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'Feels like ${c.feelsLikeC.round()}°  ·  ',
-                              style: muted?.copyWith(fontFeatures: kTabular),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                      // One line that only cuts at its end, so "Feels like"
+                      // always keeps its number.
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(text: 'Feels like ${c.feelsLikeC.round()}° · '),
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: WindArrow(fromDeg: c.windFromDeg),
                             ),
-                          ),
-                          WindArrow(fromDeg: c.windFromDeg),
-                          const SizedBox(width: 2),
-                          Flexible(
-                            child: Text(
-                              wind,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: muted?.copyWith(fontFeatures: kTabular),
-                            ),
-                          ),
-                        ],
+                            TextSpan(text: ' $wind'),
+                          ],
+                        ),
+                        style: muted?.copyWith(fontFeatures: kTabular),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

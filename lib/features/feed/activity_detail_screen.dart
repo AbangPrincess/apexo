@@ -11,6 +11,7 @@ import '../../widgets/map_view.dart';
 import '../../widgets/responsive.dart';
 import '../../widgets/stat_value.dart';
 import '../../widgets/visuals.dart';
+import '../../widgets/weather_art.dart';
 import '../me/settings_controller.dart';
 import 'activities_controller.dart';
 
@@ -121,8 +122,13 @@ class _Details extends StatelessWidget {
       ('Distance', formatDistance(a.distanceM, units), units.distanceLabel),
       ('Moving time', formatDuration(a.movingSec), null),
       ('Elapsed time', formatDuration(elapsed), null),
-      ('Avg speed', formatSpeed(a.avgKmh, units), units.speedLabel),
-      ('Max speed', formatSpeed(a.maxKmh, units), units.speedLabel),
+      if (a.type.usesPace) ...[
+        ('Avg pace', formatPace(a.avgKmh, units), units.paceLabel),
+        ('Best pace', formatPace(a.maxKmh, units), units.paceLabel),
+      ] else ...[
+        ('Avg speed', formatSpeed(a.avgKmh, units), units.speedLabel),
+        ('Max speed', formatSpeed(a.maxKmh, units), units.speedLabel),
+      ],
       if (a.elevGainM != null) ('Elevation gain', '${a.elevGainM!.round()}', 'm'),
     ];
     final w = a.weather;
@@ -173,7 +179,12 @@ class _Details extends StatelessWidget {
         if (w != null)
           Card(
             child: ListTile(
-              leading: const Icon(Icons.wb_sunny_outlined),
+              // The snapshot has no day flag; daylight hours are close enough.
+              leading: WeatherArt(
+                code: w.code,
+                isDay: a.startedAt.hour >= 6 && a.startedAt.hour < 18,
+                size: 34,
+              ),
               title: Text('${w.tempC.round()}°C · ${weatherLabel(w.code)}'),
               subtitle: Text('Wind ${w.windKmh.round()} km/h at the start'),
             ),

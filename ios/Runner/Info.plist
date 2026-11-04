@@ -10,6 +10,8 @@
 	<string>Choose a profile or cover photo for your Apexo profile.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take a profile or cover photo for your Apexo profile.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Apexo records your voice only while you hold the walkie-talkie Talk button, and sends it to your circle.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>

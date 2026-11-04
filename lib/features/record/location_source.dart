@@ -163,7 +163,7 @@ class DeviceLocationSource implements LocationSource {
       TargetPlatform.iOS || TargetPlatform.macOS => geo.AppleSettings(
         accuracy: accuracy,
         distanceFilter: 5,
-        activityType: type == ActivityType.cycling
+        activityType: type == ActivityType.cycling || type == ActivityType.running
             ? geo.ActivityType.fitness
             : geo.ActivityType.automotiveNavigation,
         showBackgroundLocationIndicator: true,
@@ -212,6 +212,7 @@ class SimulatedLocationSource implements LocationSource {
   Stream<Fix> fixes(ActivityType type) {
     final cruise = switch (type) {
       ActivityType.cycling => 6.0,
+      ActivityType.running => 2.9,
       ActivityType.motorcycling => 11.0,
       ActivityType.driving => 13.0,
     };

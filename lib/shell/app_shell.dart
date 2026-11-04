@@ -41,6 +41,9 @@ class _AppShellState extends State<AppShell> {
 
   bool _dialogOpen = false;
 
+  /// The rail is open on wide screens unless folded with the Apexo mark.
+  bool? _railExtended;
+
   @override
   void initState() {
     super.initState();
@@ -154,6 +157,7 @@ class _AppShellState extends State<AppShell> {
               ),
             );
           }
+          final extended = _railExtended ?? c.maxWidth >= Breakpoints.large;
           return Scaffold(
             body: SafeArea(
               child: Row(
@@ -161,7 +165,8 @@ class _AppShellState extends State<AppShell> {
                   SideNav(
                     current: tab,
                     onSelect: _shell.go,
-                    extended: c.maxWidth >= Breakpoints.large,
+                    extended: extended,
+                    onToggle: () => setState(() => _railExtended = !extended),
                     alertCount: badge,
                     recording: recording,
                   ),

@@ -3,19 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/activity_type.dart';
-import '../../core/ride_tracker.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../shell/app_tab.dart';
 import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
-import '../../widgets/route_thumbnail.dart';
-import '../../widgets/visuals.dart';
 import '../auth/auth_widgets.dart';
 import '../auth/session_controller.dart';
 import '../me/settings_controller.dart';
 import '../weather/weather_card.dart';
+import 'activity_picker.dart';
 import 'finish_sheet.dart';
+import 'live_ride_view.dart';
 import 'location_rationale.dart';
 import 'record_controller.dart';
 import 'record_widgets.dart';
@@ -43,10 +42,17 @@ class _RecordScreenState extends State<RecordScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final draft = rec.finish();
     if (draft == null) return;
-    final saved = await showFinishSheet(context, rec, draft);
-    if (!saved) return;
+    final outcome = await showFinishSheet(context, rec, draft);
+    if (outcome == SaveOutcome.discarded) return;
     shell.go(AppTab.home);
-    messenger.showSnackBar(const SnackBar(content: Text('Activity saved')));
+    // With no connection the ride waits on this device and uploads by
+    // itself. A web page keeps it only while it stays open.
+    final message = outcome == SaveOutcome.uploaded
+        ? 'Activity saved'
+        : kIsWeb
+        ? "Saved. It uploads when you're back online, so keep Apexo open until then."
+        : "Saved on this phone. It uploads when you're back online.";
+    messenger.showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -65,21 +71,23 @@ class _RecordScreenState extends State<RecordScreen> {
         foregroundColor: cockpit ? Colors.white : null,
         shape: cockpit ? const Border() : null,
       ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, c) {
-            return SingleChildScrollView(
-              // Side padding caps the width. The min height plus spaceBetween
-              // keeps the controls at thumb reach, and short screens scroll.
-              padding: pageInsets(c.maxWidth, maxWidth: 560, bottom: Space.m),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: c.maxHeight - Space.xl),
-                child: rec.isActive ? _live(rec, units) : _idle(rec, roomy: c.maxHeight >= 900),
+      body: rec.isActive
+          ? LiveRideView(units: units, onFinish: _finish)
+          : SafeArea(
+              child: LayoutBuilder(
+                builder: (context, c) {
+                  return SingleChildScrollView(
+                    // Side padding caps the width. The min height plus
+                    // spaceBetween keeps START at thumb reach; short screens scroll.
+                    padding: pageInsets(c.maxWidth, maxWidth: 560, bottom: Space.m),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: c.maxHeight - Space.xl),
+                      child: _idle(rec, roomy: c.maxHeight >= 900),
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
-      ),
+            ),
     );
   }
 
@@ -88,24 +96,7 @@ class _RecordScreenState extends State<RecordScreen> {
     final muted = t.bodySmall?.copyWith(color: AppColors.textMuted);
     return _TwoPart(
       top: [
-        Wrap(
-          spacing: Space.s,
-          runSpacing: Space.s,
-          alignment: WrapAlignment.center,
-          children: [
-            for (final type in ActivityType.values)
-              ChoiceChip(
-                avatar: Icon(
-                  type.icon,
-                  size: 18,
-                  color: type == _type ? AppColors.onInk : AppColors.text,
-                ),
-                label: Text(type.label),
-                selected: type == _type,
-                onSelected: (_) => setState(() => _type = type),
-              ),
-          ],
-        ),
+        ActivityPicker(value: _type, onChanged: (type) => setState(() => _type = type)),
         const SizedBox(height: Space.l),
         // Before a ride the weather call takes the place of the stats, which
         // appear once recording starts. Short screens fold the hourly part.
@@ -123,8 +114,8 @@ class _RecordScreenState extends State<RecordScreen> {
           rec.useSimulated
               ? 'Using simulated GPS.'
               : kIsWeb
-              ? 'On the web, keep this tab open while recording.'
-              : 'GPS starts when you press Start.',
+              ? "Keep this tab open while recording. It records without internet once it's open."
+              : 'GPS starts when you press Start. No internet needed.',
           textAlign: TextAlign.center,
           style: muted,
         ),
@@ -142,78 +133,10 @@ class _RecordScreenState extends State<RecordScreen> {
         ),
         const SizedBox(height: Space.s),
         Text(
-          'Records your ${_type.label.toLowerCase()} route, time and speed',
+          'Records your ${_type.label.toLowerCase()} route, time and '
+          '${_type.usesPace ? 'pace' : 'speed'}',
           textAlign: TextAlign.center,
           style: muted,
-        ),
-      ],
-    );
-  }
-
-  Widget _live(RecordController rec, Units units) {
-    final paused = rec.state == RideState.paused;
-    final path = rec.path;
-    return _TwoPart(
-      top: [
-        Center(
-          child: RecordStatusPill(state: rec.state, simulated: rec.source.simulated),
-        ),
-        const SizedBox(height: Space.m),
-        RecordStats(
-          units: units,
-          movingTime: rec.movingTime,
-          distanceM: rec.distanceM,
-          speedKmh: rec.currentKmh,
-          avgKmh: rec.avgKmh,
-          dark: true,
-        ),
-        const SizedBox(height: Space.m),
-        if (path.length >= 2)
-          RouteThumbnail(
-            points: path,
-            height: 150,
-            color: AppColors.tracking,
-            background: AppColors.darkRaised,
-          )
-        else
-          SizedBox(
-            height: 150,
-            child: Center(
-              child: Text('Waiting for GPS…', style: TextStyle(color: AppColors.onDarkMuted)),
-            ),
-          ),
-        if (rec.error != null) ...[const SizedBox(height: Space.m), ErrorBanner(rec.error!)],
-      ],
-      bottom: [
-        const SizedBox(height: Space.l),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: paused
-              ? [
-                  RoundAction(
-                    label: 'RESUME',
-                    icon: Icons.play_arrow_rounded,
-                    color: AppColors.tracking,
-                    onPressed: rec.resume,
-                    size: 96,
-                  ),
-                  RoundAction(
-                    label: 'FINISH',
-                    icon: Icons.stop_rounded,
-                    color: AppColors.alert,
-                    onPressed: _finish,
-                    size: 96,
-                  ),
-                ]
-              : [
-                  RoundAction(
-                    label: 'PAUSE',
-                    icon: Icons.pause_rounded,
-                    color: AppColors.darkRaised,
-                    border: AppColors.darkLine,
-                    onPressed: rec.pause,
-                  ),
-                ],
         ),
       ],
     );

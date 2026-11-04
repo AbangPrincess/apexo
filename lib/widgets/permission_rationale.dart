@@ -28,6 +28,12 @@ enum PermissionNeed {
     'Guard mode checks this phone\'s location to know if the vehicle moves, and tells '
         'your circle if it leaves its boundary.',
   ),
+  microphone(
+    Icons.mic_none_rounded,
+    'Use the microphone for the walkie-talkie?',
+    'Apexo listens only while you hold (or have tapped) the Talk button, and sends that '
+        'message to your circle. Nothing is recorded at any other time.',
+  ),
   notifications(
     Icons.notifications_active_outlined,
     'Get theft alerts as notifications?',
