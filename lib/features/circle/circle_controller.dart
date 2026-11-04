@@ -21,6 +21,7 @@ class CircleController extends ChangeNotifier {
   final _incoming = StreamController<CircleAlert>.broadcast();
 
   String? _uid;
+  AppUser? _user;
   List<Circle> _circles = const [];
   String? _circleId;
   List<Member> _members = const [];
@@ -32,6 +33,11 @@ class CircleController extends ChangeNotifier {
 
   String? get uid => _uid;
   bool get loaded => _loaded;
+  bool get atLimit => _circles.length >= maxCirclesPerUser;
+  bool get isOwner => circle != null && circle!.ownerUid == _uid;
+
+  /// My member doc in the active circle.
+  Member? get me => _members.where((m) => m.uid == _uid).firstOrNull;
   List<Circle> get circles => _circles;
   Circle? get circle {
     for (final c in _circles) {
@@ -55,6 +61,7 @@ class CircleController extends ChangeNotifier {
   }
 
   void _onUser(AppUser? user) {
+    _user = user;
     if (user?.uid == _uid) return;
     _uid = user?.uid;
     _circlesSub?.cancel();
@@ -74,6 +81,29 @@ class CircleController extends ChangeNotifier {
     if (!keep) _select(list.isEmpty ? null : list.first.id);
     notifyListeners();
   }
+
+  // Actions. Each throws CircleException with a message safe to show.
+
+  Future<Circle> create(String name, {required bool sharing}) async {
+    final c = await _repo.createCircle(_requireUser(), name, sharing: sharing);
+    select(c.id);
+    return c;
+  }
+
+  Future<CirclePreview?> find(String code) => _repo.findCircle(code);
+
+  Future<void> join(String circleId, {required bool sharing}) async {
+    await _repo.joinCircle(circleId, _requireUser(), sharing: sharing);
+    select(circleId);
+  }
+
+  Future<void> leave(String circleId) => _repo.leaveCircle(circleId, _requireUser().uid);
+
+  Future<void> remove(String circleId, String memberUid) =>
+      _repo.removeMember(circleId, _requireUser().uid, memberUid);
+
+  AppUser _requireUser() =>
+      _user ?? (throw const CircleException('Sign in again to manage circles.'));
 
   void select(String circleId) {
     if (circleId == _circleId) return;

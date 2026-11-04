@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/geo.dart';
 import '../../core/theme.dart';
-import '../../core/units.dart';
 import '../../data/models/circle.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/map_view.dart';
 import '../../widgets/member_avatar.dart';
 import '../../widgets/responsive.dart';
 import '../../widgets/visuals.dart';
-import '../me/settings_controller.dart';
 import 'circle_controller.dart';
-import 'member_tile.dart';
+import 'circle_switcher.dart';
+import 'invite_card.dart';
+import 'member_panel.dart';
+import 'members_screen.dart';
+import 'sharing_controller.dart';
 
 class CircleScreen extends StatefulWidget {
   const CircleScreen({super.key});
@@ -24,12 +25,42 @@ class CircleScreen extends StatefulWidget {
 
 class _CircleScreenState extends State<CircleScreen> {
   final _map = MapViewController();
+  final _sheet = DraggableScrollableController();
+
+  /// Where locate-me found me while I am not sharing (shown only to me).
+  GeoPoint? _here;
+
+  static const _sheetStart = 0.45;
 
   @override
   void dispose() {
     _map.dispose();
+    _sheet.dispose();
     super.dispose();
   }
+
+  Future<void> _locate(Member? me) async {
+    if (me != null && me.onMap) {
+      _map.focus(me.point);
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    final p = await context.read<SharingController>().locate();
+    if (!mounted) return;
+    if (p == null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(content: Text('Allow location access to see where you are.')),
+        );
+      return;
+    }
+    setState(() => _here = p);
+    _map.focus(p);
+  }
+
+  void _openMembers() =>
+      Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MembersScreen()));
 
   @override
   Widget build(BuildContext context) {
@@ -38,14 +69,20 @@ class _CircleScreenState extends State<CircleScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(circle?.name ?? 'Circle'),
+        title: circle == null ? const Text('Circle') : const CircleSwitcher(),
         actions: [
-          if (circle != null)
+          if (circle != null) ...[
             IconButton(
               tooltip: 'Invite people',
               icon: const Icon(Icons.person_add_alt_1_outlined),
-              onPressed: () => showComingSoon(context, 'Sharing invites'),
+              onPressed: () => showInviteSheet(context, circle),
             ),
+            IconButton(
+              tooltip: 'Members and sharing',
+              icon: const Icon(Icons.manage_accounts_outlined),
+              onPressed: _openMembers,
+            ),
+          ],
           const SizedBox(width: Space.s),
         ],
       ),
@@ -59,23 +96,25 @@ class _CircleScreenState extends State<CircleScreen> {
                   'Create a circle or join one with an invite code. Members see each '
                   'other live on the map, and only after they agree to share.',
               actionLabel: 'Create a circle',
-              onAction: () => showComingSoon(context, 'Creating circles'),
+              onAction: () => openCreateCircle(context),
               secondaryLabel: 'Join with a code',
-              onSecondary: () => showComingSoon(context, 'Joining circles'),
+              onSecondary: () => openJoinCircle(context),
             )
           : _body(context, ctrl, circle),
     );
   }
 
   Widget _body(BuildContext context, CircleController ctrl, Circle circle) {
-    final sharing = ctrl.members.where((m) => m.sharing).toList();
+    final me = ctrl.me;
+    final onMap = ctrl.members.where((m) => m.onMap).toList();
+    final here = me != null && me.onMap ? null : _here;
     final map = RepaintBoundary(
       child: MapView(
         controller: _map,
-        initialCenter: sharing.isEmpty ? _fallbackCenter : sharing.first.point,
-        fitPoints: [for (final m in sharing) m.point],
+        initialCenter: onMap.isEmpty ? (here ?? _fallbackCenter) : onMap.first.point,
+        fitPoints: [for (final m in onMap) m.point],
         markers: [
-          for (final m in sharing)
+          for (final m in onMap)
             MapMarker(
               id: m.uid,
               point: m.point,
@@ -89,14 +128,27 @@ class _CircleScreenState extends State<CircleScreen> {
                 size: 48,
               ),
             ),
+          if (here != null) MapMarker(id: 'here', point: here, size: 22, child: const _HereDot()),
         ],
       ),
     );
-    final panel = _MemberPanel(
+    final locate = FloatingActionButton.small(
+      heroTag: null,
+      tooltip: 'Show my location',
+      backgroundColor: AppColors.surface,
+      foregroundColor: AppColors.ink,
+      elevation: 0,
+      shape: const CircleBorder(side: BorderSide(color: AppColors.hairline)),
+      onPressed: () => _locate(me),
+      child: const Icon(Icons.my_location_rounded),
+    );
+    MemberPanel panel({ScrollController? scroll}) => MemberPanel(
       circle: circle,
       members: ctrl.members,
       myUid: ctrl.uid,
       onFocus: (m) => _map.focus(m.point),
+      scrollController: scroll,
+      handle: scroll != null,
     );
 
     return LayoutBuilder(
@@ -104,17 +156,53 @@ class _CircleScreenState extends State<CircleScreen> {
         if (c.maxWidth >= Breakpoints.expanded) {
           return Row(
             children: [
-              Expanded(child: map),
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(child: map),
+                    Positioned(right: Space.m, bottom: Space.xl, child: locate),
+                  ],
+                ),
+              ),
               const VerticalDivider(width: 1),
-              SizedBox(width: 380, child: panel),
+              SizedBox(width: 380, child: panel()),
             ],
           );
         }
-        return Column(
+        return Stack(
           children: [
-            Expanded(flex: 11, child: map),
-            const Divider(),
-            Expanded(flex: 10, child: panel),
+            Positioned.fill(child: map),
+            // Rides just above the sheet; hidden once the sheet covers the map.
+            AnimatedBuilder(
+              animation: _sheet,
+              builder: (context, _) {
+                final size = _sheet.isAttached ? _sheet.size : _sheetStart;
+                if (size > 0.75) return const SizedBox.shrink();
+                return Positioned(right: Space.m, bottom: size * c.maxHeight + 12, child: locate);
+              },
+            ),
+            DraggableScrollableSheet(
+              controller: _sheet,
+              initialChildSize: _sheetStart,
+              minChildSize: 0.16,
+              maxChildSize: 0.92,
+              snap: true,
+              snapSizes: const [_sheetStart],
+              builder: (context, scroll) => DecoratedBox(
+                decoration: const BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                  border: Border(top: BorderSide(color: AppColors.hairline)),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: panel(scroll: scroll),
+                  ),
+                ),
+              ),
+            ),
           ],
         );
       },
@@ -125,69 +213,18 @@ class _CircleScreenState extends State<CircleScreen> {
 /// Map center used only when nobody in the circle is sharing.
 const _fallbackCenter = GeoPoint(6.50, 124.85);
 
-class _MemberPanel extends StatelessWidget {
-  const _MemberPanel({
-    required this.circle,
-    required this.members,
-    required this.myUid,
-    required this.onFocus,
-  });
-
-  final Circle circle;
-  final List<Member> members;
-  final String? myUid;
-  final ValueChanged<Member> onFocus;
+class _HereDot extends StatelessWidget {
+  const _HereDot();
 
   @override
-  Widget build(BuildContext context) {
-    final units = context.select<SettingsController, Units>((s) => s.units);
-    final t = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.s, Space.s),
-          child: Row(
-            children: [
-              Expanded(child: Text('${members.length} members', style: t.titleMedium)),
-              Tooltip(
-                message: 'Copy invite code',
-                child: TextButton.icon(
-                  onPressed: () async {
-                    final messenger = ScaffoldMessenger.of(context);
-                    await Clipboard.setData(ClipboardData(text: circle.inviteCode));
-                    messenger
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(const SnackBar(content: Text('Invite code copied')));
-                  },
-                  icon: const Icon(Icons.copy_rounded, size: 18),
-                  label: Text(
-                    circle.inviteCode,
-                    style: const TextStyle(letterSpacing: 1.5, fontFeatures: kTabular),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(bottom: Space.m),
-            itemCount: members.length,
-            itemBuilder: (context, i) {
-              final m = members[i];
-              return MemberTile(
-                key: ValueKey(m.uid),
-                member: m,
-                units: units,
-                isMe: m.uid == myUid,
-                isOwner: m.uid == circle.ownerUid,
-                onTap: m.sharing ? () => onFocus(m) : null,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Semantics(
+    label: 'You are here (not shared)',
+    child: Container(
+      decoration: BoxDecoration(
+        color: AppColors.ink,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+      ),
+    ),
+  );
 }

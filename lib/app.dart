@@ -8,8 +8,11 @@ import 'data/weather_source.dart';
 import 'features/auth/session_controller.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/verify_email_screen.dart';
+import 'features/circle/battery_level.dart';
 import 'features/circle/circle_controller.dart';
+import 'features/circle/sharing_controller.dart';
 import 'features/feed/activities_controller.dart';
+import 'features/feed/circle_feed_controller.dart';
 import 'features/me/settings_controller.dart';
 import 'features/record/location_source.dart';
 import 'features/record/record_controller.dart';
@@ -47,6 +50,14 @@ class ApexoApp extends StatelessWidget {
             device: DeviceLocationSource(),
             simulator: SimulatedLocationSource(),
             weather: context.read<WeatherController>(),
+          ),
+        ),
+        ChangeNotifierProvider(create: (_) => CircleFeedController(repository)),
+        ChangeNotifierProvider(
+          create: (context) => SharingController(
+            repository,
+            context.read<RecordController>(),
+            readBattery: readBatteryLevel,
           ),
         ),
       ],

@@ -65,6 +65,16 @@ class DemoSeed {
 
   late final GeoPoint _shaneSpot = offsetM(koronadal, northM: -420, eastM: -380);
 
+  /// Shane's scooter loop; starts (and ends) at his parking spot.
+  late final List<GeoPoint> shaneLoop = demoLoop(
+    offsetM(_shaneSpot, eastM: -520),
+    northM: 380,
+    eastM: 520,
+    wobble: 0.1,
+    lobes: 4,
+    n: 200,
+  );
+
   late final List<Member> members = [
     Member(
       uid: DemoIds.you,
@@ -119,7 +129,7 @@ class DemoSeed {
   ];
 
   late final List<Activity> activities = [
-    _activity(
+    buildActivity(
       'a1',
       ActivityType.cycling,
       'Morning Ride',
@@ -131,7 +141,7 @@ class DemoSeed {
       vehicleId: 'v-bike',
       weather: const WeatherSnapshot(tempC: 26.5, windKmh: 8, code: 1),
     ),
-    _activity(
+    buildActivity(
       'a2',
       ActivityType.motorcycling,
       'Lunch Commute',
@@ -141,7 +151,7 @@ class DemoSeed {
       vehicleId: 'v-moto',
       weather: const WeatherSnapshot(tempC: 31.2, windKmh: 12, code: 2),
     ),
-    _activity(
+    buildActivity(
       'a3',
       ActivityType.driving,
       'Market Run',
@@ -150,7 +160,7 @@ class DemoSeed {
       avgKmh: 27.0,
       weather: const WeatherSnapshot(tempC: 30.1, windKmh: 14, code: 3),
     ),
-    _activity(
+    buildActivity(
       'a4',
       ActivityType.cycling,
       'Sunday Hill Loop',
@@ -168,7 +178,7 @@ class DemoSeed {
       vehicleId: 'v-bike',
       weather: const WeatherSnapshot(tempC: 24.8, windKmh: 6, code: 0),
     ),
-    _activity(
+    buildActivity(
       'a5',
       ActivityType.cycling,
       'Evening Spin',
@@ -180,7 +190,7 @@ class DemoSeed {
       vehicleId: 'v-bike',
       weather: const WeatherSnapshot(tempC: 28.4, windKmh: 10, code: 2),
     ),
-    _activity(
+    buildActivity(
       'a6',
       ActivityType.motorcycling,
       'Night Ride to Town',
@@ -197,7 +207,7 @@ class DemoSeed {
   DateTime _at(int daysAgo, int hour, int minute) =>
       DateTime(now.year, now.month, now.day - daysAgo, hour, minute);
 
-  static Activity _activity(
+  static Activity buildActivity(
     String id,
     ActivityType type,
     String title,

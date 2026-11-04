@@ -1,6 +1,7 @@
 import '../models/activity.dart';
 import '../models/circle.dart';
 import '../models/circle_alert.dart';
+import '../models/shared_activity.dart';
 import '../models/user.dart';
 import 'demo_simulator.dart';
 import 'live_value.dart';
@@ -14,6 +15,7 @@ class FakeStore {
   final _activities = <String, LiveValue<List<Activity>>>{};
   final _members = <String, LiveValue<List<Member>>>{};
   final _alerts = <String, LiveValue<List<CircleAlert>>>{};
+  final _feeds = <String, LiveValue<List<SharedActivity>>>{};
 
   LiveValue<List<Vehicle>> vehiclesOf(String uid) =>
       _vehicles.putIfAbsent(uid, () => LiveValue(const []));
@@ -23,6 +25,8 @@ class FakeStore {
       _members.putIfAbsent(cid, () => LiveValue(const []));
   LiveValue<List<CircleAlert>> alertsOf(String cid) =>
       _alerts.putIfAbsent(cid, () => LiveValue(const []));
+  LiveValue<List<SharedActivity>> feedOf(String cid) =>
+      _feeds.putIfAbsent(cid, () => LiveValue(const []));
 
   void close() {
     auth.close();
@@ -30,7 +34,7 @@ class FakeStore {
     for (final v in [..._vehicles.values, ..._activities.values]) {
       v.close();
     }
-    for (final v in [..._members.values, ..._alerts.values]) {
+    for (final v in [..._members.values, ..._alerts.values, ..._feeds.values]) {
       v.close();
     }
   }

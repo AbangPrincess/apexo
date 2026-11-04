@@ -38,6 +38,21 @@ class Circle {
   };
 }
 
+/// What someone sees on the consent screen before joining with a code.
+class CirclePreview {
+  const CirclePreview({
+    required this.id,
+    required this.name,
+    required this.memberCount,
+    required this.ownerName,
+  });
+
+  final String id;
+  final String name;
+  final int memberCount;
+  final String ownerName;
+}
+
 enum MemberStatus {
   tracking('Moving'),
   parked('Parked'),
@@ -98,6 +113,9 @@ class Member {
   final MemberVehicle? vehicle;
 
   GeoPoint get point => GeoPoint(lat, lng);
+
+  /// Pausing blanks the stored position to 0,0, so it is never shown.
+  bool get onMap => sharing && (lat != 0 || lng != 0);
 
   String get initial {
     final n = displayName.trim();

@@ -20,7 +20,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 [x] P1 Foundation + demo backend + app shell
 [x] P2 Record + feed + activity detail (+ owner requests: email verification, sign-in lockout, password reset, profile photos and achievements)
 [x] P3 Weather
-[ ] P4 Circles
+[x] P4 Circles
 [ ] P5 Vehicle guard + alerts
 [ ] P6 Firebase + polish + GitHub deploy
 [ ] P7 Optional extras (ONLY if the owner asks)
@@ -53,3 +53,14 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - P3: on Record, the weather call replaces the all-zero stats card before a ride (live stats still appear once recording starts), so START stays within thumb reach. Screens under 900 px tall fold the hourly strip behind an "Hourly" toggle.
 - Rename: the app was renamed from PedalTrack to Apexo (2026-11-03). Dart package `apexo`, Android `applicationId`/namespace and iOS bundle ID `io.github.abangprincess.apexo` (a namespace the owner controls; it is permanent once published to a store, so change it before the first release if a domain is bought). Demo email is `demo@example.com` (reserved domain).
 - Colors: the six Apexo brand colors are in `Palette`; screens only use the roles in `AppColors` (see SPEC G3 and README "Design"). Red is reserved for brand, START and alerts; primary buttons are ink; input focus is ink so it never looks like an error. `AppColors.on(color)` picks ink or white text for solid fills.
+- P4: circle operations live in `FakeCircles` (lib/data/fake/fake_circles.dart), written like the P6 Firestore client: a user writes only their own uid and member doc; the owner may also remove members. Limit: `maxCirclesPerUser` = 3, enforced in the backend and checked in the UI.
+- P4: invite codes use `inviteAlphabet` (no 0/O/1/I/L) from `Random.secure()` and are retried until unique. P6 needs an `inviteCodes/{code}` lookup doc readable by signed-in users, because circle docs are readable only by members. P6 should also rate-limit lookups.
+- P4: joining and creating always pass the consent screen. Both choices complete the action; only "share" turns sharing on. If location access is refused, the circle is still joined, with sharing paused.
+- P4: one sharing switch per circle (the member doc's `sharing` field, synced). The device location stream runs while any circle is shared. While recording, the recording's fixes are reused, so only one GPS stream runs. Demo (simulated GPS) shares a parked spot until a recording starts.
+- P4: `ShareGate` enforces the G4 write budget: at most one write per 5 s, only after 10 m, plus a 60 s heartbeat when still. A status change skips the distance check but not the 5 s floor.
+- P4: pausing writes position 0,0 so members cannot read where you paused. `Member.onMap` (sharing and a real position) decides who gets a pin. A new member has no pin until their first fix.
+- P4: a persistent "Sharing live" bar shows on every tab while sharing; Android also shows the geolocator "Sharing location" foreground notification. The sharing state is not persisted on the device; it comes back from the member docs at sign-in.
+- P4: the owner leaving passes ownership to the next member; the last member leaving deletes the circle and its members, alerts and feed.
+- P4: "Circles" activities are copied to `circles/{cid}/feed/{aid}` in every circle of the owner (client fan-out, no Cloud Functions). The copy drops the vehicle link and thins the path to 25 m. Joining backfills your 20 latest; leaving or removal deletes your entries. Others' activities open read-only (no delete).
+- P4: packages share_plus (invite sharing; copies to the clipboard where sharing fails) and battery_plus (member battery; null where unsupported).
+- P4: create/join flows clear any open snackbar so it never covers their buttons; consent buttons are pinned at the bottom (thumb reach on small phones).

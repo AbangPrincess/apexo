@@ -4,6 +4,7 @@ import '../../core/theme.dart';
 import '../../core/time_format.dart';
 import '../../core/units.dart';
 import '../../data/models/activity.dart';
+import '../../widgets/profile_image.dart';
 import '../../widgets/route_thumbnail.dart';
 import '../../widgets/stat_value.dart';
 import '../../widgets/visuals.dart';
@@ -14,18 +15,23 @@ class ActivityCard extends StatelessWidget {
     required this.activity,
     required this.units,
     required this.now,
+    this.ownerName,
     this.onTap,
   });
 
   final Activity activity;
   final Units units;
   final DateTime now;
+
+  /// Set for activities other circle members shared.
+  final String? ownerName;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final a = activity;
+    final owner = ownerName;
     final private = a.visibility == ActivityVisibility.private;
     final muted = t.bodySmall?.copyWith(color: AppColors.textMuted);
 
@@ -42,7 +48,10 @@ class ActivityCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      IconTile(icon: a.type.icon),
+                      if (owner == null)
+                        IconTile(icon: a.type.icon)
+                      else
+                        UserAvatar(photoUrl: '', initial: _initial(owner), radius: 22),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -59,21 +68,27 @@ class ActivityCard extends StatelessWidget {
                               children: [
                                 Flexible(
                                   child: Text(
-                                    '${a.type.label} · ${formatRelativeDate(a.startedAt, now)}',
+                                    [
+                                      ?owner,
+                                      a.type.label,
+                                      formatRelativeDate(a.startedAt, now),
+                                    ].join(' · '),
                                     style: muted,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Icon(
-                                  private
-                                      ? Icons.lock_outline_rounded
-                                      : Icons.people_outline_rounded,
-                                  size: 14,
-                                  color: AppColors.textMuted,
-                                  semanticLabel: private ? 'Private' : 'Shared with circles',
-                                ),
+                                if (owner == null) ...[
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    private
+                                        ? Icons.lock_outline_rounded
+                                        : Icons.people_outline_rounded,
+                                    size: 14,
+                                    color: AppColors.textMuted,
+                                    semanticLabel: private ? 'Private' : 'Shared with circles',
+                                  ),
+                                ],
                               ],
                             ),
                           ],
@@ -119,4 +134,9 @@ class ActivityCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _initial(String name) {
+  final n = name.trim();
+  return n.isEmpty ? '?' : n[0].toUpperCase();
 }

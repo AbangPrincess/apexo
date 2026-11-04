@@ -16,6 +16,7 @@ import '../widgets/responsive.dart';
 import '../widgets/visuals.dart';
 import 'app_tab.dart';
 import 'bottom_nav.dart';
+import 'sharing_banner.dart';
 import 'side_nav.dart';
 
 /// Signed-in frame: bottom bar on phones, side rail on tablets and the web.
@@ -89,10 +90,18 @@ class _AppShellState extends State<AppShell> {
     final recording = context.select<RecordController, bool>((r) => r.isActive);
     final tab = _shell.tab;
     final badge = tab == AppTab.alerts ? 0 : unseen;
-    final body = IndexedStack(
-      index: tab.index,
+    final body = Column(
       children: [
-        for (final t in AppTab.values) _visited.contains(t) ? _page(t) : const SizedBox.shrink(),
+        Expanded(
+          child: IndexedStack(
+            index: tab.index,
+            children: [
+              for (final t in AppTab.values)
+                _visited.contains(t) ? _page(t) : const SizedBox.shrink(),
+            ],
+          ),
+        ),
+        SharingBanner(onTap: () => _shell.go(AppTab.circle)),
       ],
     );
 

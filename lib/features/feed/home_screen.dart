@@ -19,6 +19,7 @@ import '../weather/weather_controller.dart';
 import 'activities_controller.dart';
 import 'activity_card.dart';
 import 'activity_detail_screen.dart';
+import 'circle_feed_controller.dart';
 import 'weekly_header.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -49,13 +50,16 @@ class HomeScreen extends StatelessWidget {
 class _Feed extends StatelessWidget {
   const _Feed();
 
-  void _open(BuildContext context, Activity a) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute<void>(builder: (_) => ActivityDetailScreen(activity: a)));
+  void _open(BuildContext context, Activity a, String? owner) => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => ActivityDetailScreen(activity: a, ownerName: owner),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final feed = context.watch<ActivitiesController>();
+    final shared = context.watch<CircleFeedController>().items;
     final units = context.select<SettingsController, Units>((s) => s.units);
     final type = context.select<SettingsController, ActivityType>((s) => s.defaultActivity);
     final name = context.select<SessionController, String>((s) => s.user?.displayName ?? '');
@@ -66,7 +70,7 @@ class _Feed extends StatelessWidget {
     if (!feed.loaded) {
       return const Center(child: CircularProgressIndicator.adaptive());
     }
-    if (feed.items.isEmpty) {
+    if (feed.items.isEmpty && shared.isEmpty) {
       return LayoutBuilder(
         builder: (context, c) => ListView(
           padding: pageInsets(c.maxWidth),
@@ -87,6 +91,12 @@ class _Feed extends StatelessWidget {
     }
 
     final hello = name.isEmpty || name == 'You' ? greeting(now) : '${greeting(now)}, $name';
+    // Mine and my circles' activities, newest first; owner is null for mine.
+    final entries = <({Activity activity, String key, String? owner})>[
+      for (final a in feed.items) (activity: a, key: a.id, owner: null),
+      for (final s in shared)
+        (activity: s.activity, key: '${s.ownerUid}/${s.id}', owner: s.ownerName),
+    ]..sort((a, b) => b.activity.startedAt.compareTo(a.activity.startedAt));
     return RefreshIndicator.adaptive(
       onRefresh: () =>
           Future.wait([feed.refresh(), context.read<WeatherController>().load(force: true)]),
@@ -105,13 +115,14 @@ class _Feed extends StatelessWidget {
             const SizedBox(height: Space.l),
             Text('Recent activities', style: t.titleMedium),
             const SizedBox(height: 12),
-            for (final a in feed.items) ...[
+            for (final e in entries) ...[
               ActivityCard(
-                key: ValueKey(a.id),
-                activity: a,
+                key: ValueKey(e.key),
+                activity: e.activity,
                 units: units,
                 now: now,
-                onTap: () => _open(context, a),
+                ownerName: e.owner,
+                onTap: () => _open(context, e.activity, e.owner),
               ),
               const SizedBox(height: 12),
             ],

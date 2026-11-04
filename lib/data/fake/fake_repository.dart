@@ -3,18 +3,18 @@ import 'dart:async';
 import '../../core/activity_type.dart';
 import '../../core/units.dart';
 import '../models/activity.dart';
-import '../models/circle.dart';
-import '../models/circle_alert.dart';
 import '../models/user.dart';
 import '../repository.dart';
+import 'demo_feed.dart';
 import 'demo_seed.dart';
-import 'fake_auth.dart';
 import 'demo_simulator.dart';
+import 'fake_auth.dart';
+import 'fake_circles.dart';
 import 'fake_store.dart';
 
 /// In-memory demo backend that mirrors the Firestore layout. Nothing is
 /// persisted or logged; everything resets when the app reloads.
-class FakeRepository extends AppRepository implements DemoMailbox {
+class FakeRepository extends AppRepository with FakeCircles implements DemoMailbox {
   FakeRepository({
     this.simulate = true,
     this.latency = const Duration(milliseconds: 350),
@@ -28,17 +28,20 @@ class FakeRepository extends AppRepository implements DemoMailbox {
     _store.circles.value = [seed.circle];
     _store.membersOf(seed.circle.id).value = seed.members;
     _store.alertsOf(seed.circle.id).value = seed.alerts;
+    _store.feedOf(seed.circle.id).value = demoCircleFeed(seed);
     simulator = DemoSimulator(
       CircleWorld(_store, seed.circle.id),
       loop: seed.jeroLoop,
       boundary: seed.jeroBoundary,
+      shaneLoop: seed.shaneLoop,
     );
   }
 
-  /// Animate demo members while the demo account is signed in.
+  /// Animate demo members while signed in.
   final bool simulate;
 
-  /// Fake network delay for auth calls, so loading states are visible.
+  /// Fake network delay for auth and circle calls, so loading states show.
+  @override
   final Duration latency;
   final DemoSeed seed;
   late final DemoSimulator simulator;
@@ -47,6 +50,9 @@ class FakeRepository extends AppRepository implements DemoMailbox {
   final FakeAuth accounts;
   final _store = FakeStore();
   int _nextUid = 1;
+
+  @override
+  FakeStore get store => _store;
 
   Future<void> _wait() => latency == Duration.zero ? Future.value() : Future.delayed(latency);
 
@@ -73,6 +79,8 @@ class FakeRepository extends AppRepository implements DemoMailbox {
     await _wait();
     final account = accounts.checkPassword(email, password);
     _store.auth.value = _store.profiles[account.uid]?.copyWith(emailVerified: account.verified);
+    // Any account can join TRAIL7 and watch Jero and Shane move.
+    if (simulate) simulator.start();
   }
 
   @override
@@ -95,6 +103,7 @@ class FakeRepository extends AppRepository implements DemoMailbox {
     // Signed in, but held at the verification screen until verified.
     _store.auth.value = user;
     accounts.sendVerification(account);
+    if (simulate) simulator.start();
   }
 
   @override
@@ -191,25 +200,15 @@ class FakeRepository extends AppRepository implements DemoMailbox {
     final store = _store.activitiesOf(uid);
     store.value = [activity, ...store.value.where((a) => a.id != activity.id)]
       ..sort((a, b) => b.startedAt.compareTo(a.startedAt));
+    syncFeeds(uid, activity.id, activity);
   }
 
   @override
   Future<void> deleteActivity(String uid, String activityId) async {
     final store = _store.activitiesOf(uid);
     store.value = store.value.where((a) => a.id != activityId).toList();
+    syncFeeds(uid, activityId, null);
   }
-
-  // Circles -------------------------------------------------------------------
-
-  @override
-  Stream<List<Circle>> watchCircles(String uid) =>
-      _store.circles.stream.map((all) => all.where((c) => c.memberUids.contains(uid)).toList());
-
-  @override
-  Stream<List<Member>> watchMembers(String circleId) => _store.membersOf(circleId).stream;
-
-  @override
-  Stream<List<CircleAlert>> watchAlerts(String circleId) => _store.alertsOf(circleId).stream;
 
   @override
   void dispose() {

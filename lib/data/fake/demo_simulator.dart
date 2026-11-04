@@ -17,31 +17,35 @@ abstract interface class DemoWorld {
 
 /// Moves Jero around his loop once per [interval]. His bike is guarded with a
 /// 50 m boundary, so ~20 s in the geofence trips and an alert is written.
+/// Shane rides his scooter loop with a short stop every two minutes.
 class DemoSimulator {
   DemoSimulator(
     this.world, {
-    required this.loop,
+    required List<GeoPoint> loop,
     required this.boundary,
+    List<GeoPoint>? shaneLoop,
     this.interval = const Duration(seconds: 1),
-  }) : _cumulative = _cumulativeDistances(loop);
+  }) : _jero = LoopRider(loop),
+       _shane = shaneLoop == null ? null : LoopRider(shaneLoop);
 
   final DemoWorld world;
-  final List<GeoPoint> loop;
   final Boundary boundary;
   final Duration interval;
-  final List<double> _cumulative;
+  final LoopRider _jero;
+  final LoopRider? _shane;
 
   static const idleSteps = 8;
   static const cruiseMps = 5.6;
+  static const shaneMps = 7.5;
 
   Timer? _timer;
   int _steps = 0;
-  double _traveled = 0;
   int _outsideRun = 0;
   bool _alerted = false;
 
   bool get running => _timer != null;
   bool get alerted => _alerted;
+  double get _secs => interval.inMilliseconds / 1000;
 
   void start() => _timer ??= Timer.periodic(interval, (_) => step());
 
@@ -55,16 +59,19 @@ class DemoSimulator {
     _steps++;
     final now = DateTime.now();
     if (_steps > idleSteps) _moveJero(now);
-    if (_steps % 60 == 0) _heartbeat(DemoIds.shane, now);
+    if (_shane != null && _steps > idleSteps * 2) {
+      _moveShane(now);
+    } else if (_steps % 60 == 0) {
+      _heartbeat(DemoIds.shane, now);
+    }
   }
 
   void _moveJero(DateTime now) {
     final jero = world.member(DemoIds.jero);
     if (jero == null) return;
     final mps = cruiseMps + 1.2 * math.sin(_steps / 7);
-    final prev = _positionAt(_traveled);
-    _traveled = (_traveled + mps * interval.inMilliseconds / 1000) % _cumulative.last;
-    final pos = _positionAt(_traveled);
+    final prev = _jero.position;
+    final pos = _jero.advance(mps * _secs);
 
     // Same rule the real guard uses: 2 consecutive fixes outside radius + accuracy.
     final outside = !insideBoundary(pos.lat, pos.lng, boundary, 5);
@@ -106,12 +113,51 @@ class DemoSimulator {
     );
   }
 
+  void _moveShane(DateTime now) {
+    final shane = world.member(DemoIds.shane);
+    final rider = _shane;
+    if (shane == null || rider == null) return;
+    // Rides for 100 s, then waits 20 s (a light, a shop), and repeats.
+    final stopped = _steps % 120 >= 100;
+    final mps = stopped ? 0.0 : shaneMps + 1.5 * math.sin(_steps / 9);
+    final prev = rider.position;
+    final pos = rider.advance(mps * _secs);
+    // While stopped only a heartbeat is written, like the real write budget.
+    if (stopped && shane.status == MemberStatus.parked && _steps % 60 != 0) return;
+    world.putMember(
+      shane.copyWith(
+        lat: pos.lat,
+        lng: pos.lng,
+        speedKmh: mpsToKmh(mps),
+        heading: stopped ? shane.heading : bearingDeg(prev, pos),
+        status: stopped ? MemberStatus.parked : MemberStatus.tracking,
+        ts: now,
+      ),
+    );
+  }
+
   void _heartbeat(String uid, DateTime now) {
     final m = world.member(uid);
     if (m != null) world.putMember(m.copyWith(ts: now));
   }
+}
 
-  GeoPoint _positionAt(double d) {
+/// Walks a closed polyline by distance, wrapping at the end.
+class LoopRider {
+  LoopRider(this.loop) : _cumulative = _cumulativeDistances(loop);
+
+  final List<GeoPoint> loop;
+  final List<double> _cumulative;
+  double _traveled = 0;
+
+  GeoPoint get position => _at(_traveled);
+
+  GeoPoint advance(double meters) {
+    _traveled = (_traveled + meters) % _cumulative.last;
+    return position;
+  }
+
+  GeoPoint _at(double d) {
     var i = 1;
     while (i < _cumulative.length - 1 && _cumulative[i] < d) {
       i++;

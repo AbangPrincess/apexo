@@ -53,7 +53,7 @@ class MemberTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (isOwner) const _Tag('Owner'),
+          if (isOwner) const MemberTag('Owner'),
         ],
       ),
       subtitle: Row(
@@ -92,8 +92,8 @@ class MemberTile extends StatelessWidget {
   }
 }
 
-class _Tag extends StatelessWidget {
-  const _Tag(this.label);
+class MemberTag extends StatelessWidget {
+  const MemberTag(this.label, {super.key});
 
   final String label;
 

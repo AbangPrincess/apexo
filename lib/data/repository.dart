@@ -3,6 +3,7 @@ import '../core/units.dart';
 import 'models/activity.dart';
 import 'models/circle.dart';
 import 'models/circle_alert.dart';
+import 'models/shared_activity.dart';
 import 'models/user.dart';
 
 /// User-facing auth failure with a message that is safe to show.
@@ -67,6 +68,18 @@ abstract interface class ActivityRepository {
   Future<void> deleteActivity(String uid, String activityId);
 }
 
+/// Circle action failure with a message that is safe to show.
+class CircleException implements Exception {
+  const CircleException(this.message);
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
+/// SPEC G4 write budget: at most 3 circles per user.
+const maxCirclesPerUser = 3;
+
 abstract interface class CircleRepository {
   /// Circles where [uid] is in memberUids.
   Stream<List<Circle>> watchCircles(String uid);
@@ -74,6 +87,28 @@ abstract interface class CircleRepository {
 
   /// Newest first.
   Stream<List<CircleAlert>> watchAlerts(String circleId);
+
+  /// Activities members shared with the circle, newest first.
+  Stream<List<SharedActivity>> watchCircleFeed(String circleId);
+
+  /// Creates a circle owned by [owner] with a fresh invite code.
+  Future<Circle> createCircle(AppUser owner, String name, {required bool sharing});
+
+  /// Null when no circle uses [inviteCode].
+  Future<CirclePreview?> findCircle(String inviteCode);
+
+  /// Adds only [user]'s own uid and member doc, then shares their recent
+  /// "Circles" activities with it.
+  Future<void> joinCircle(String circleId, AppUser user, {required bool sharing});
+
+  /// The owner's role passes to the next member; the last one out deletes it.
+  Future<void> leaveCircle(String circleId, String uid);
+
+  /// Owner only.
+  Future<void> removeMember(String circleId, String ownerUid, String memberUid);
+
+  /// Writes the caller's own member doc.
+  Future<void> updateMember(String circleId, Member member);
 }
 
 /// Everything the app needs from a backend.

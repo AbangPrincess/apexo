@@ -15,10 +15,12 @@ import '../me/settings_controller.dart';
 import 'activities_controller.dart';
 
 /// Route on a map, the full stat grid, weather at the start, and delete.
+/// Activities shared by others ([ownerName] set) are read-only.
 class ActivityDetailScreen extends StatelessWidget {
-  const ActivityDetailScreen({super.key, required this.activity});
+  const ActivityDetailScreen({super.key, required this.activity, this.ownerName});
 
   final Activity activity;
+  final String? ownerName;
 
   Future<void> _delete(BuildContext context) async {
     final ok = await confirmAction(
@@ -58,17 +60,18 @@ class ActivityDetailScreen extends StatelessWidget {
               MapMarker(id: 'end', point: points.last, size: 22, child: const _Dot(AppColors.ink)),
             ],
           );
-    final details = _Details(activity: activity, units: units);
+    final details = _Details(activity: activity, units: units, ownerName: ownerName);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(activity.title),
         actions: [
-          IconButton(
-            tooltip: 'Delete activity',
-            icon: const Icon(Icons.delete_outline_rounded),
-            onPressed: () => _delete(context),
-          ),
+          if (ownerName == null)
+            IconButton(
+              tooltip: 'Delete activity',
+              icon: const Icon(Icons.delete_outline_rounded),
+              onPressed: () => _delete(context),
+            ),
           const SizedBox(width: Space.s),
         ],
       ),
@@ -97,10 +100,11 @@ class ActivityDetailScreen extends StatelessWidget {
 }
 
 class _Details extends StatelessWidget {
-  const _Details({required this.activity, required this.units});
+  const _Details({required this.activity, required this.units, this.ownerName});
 
   final Activity activity;
   final Units units;
+  final String? ownerName;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +133,10 @@ class _Details extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(a.type.label, style: t.titleMedium),
+                  Text(
+                    ownerName == null ? a.type.label : '${a.type.label} by $ownerName',
+                    style: t.titleMedium,
+                  ),
                   Text(
                     '${formatLongDate(a.startedAt)} at ${formatClock(a.startedAt)}',
                     style: muted,

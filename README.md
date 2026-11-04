@@ -16,7 +16,9 @@ Ride tracking, live circles and theft alerts for bikes, motorbikes and cars. Bui
 What the demo shows:
 - **Home**: a weather card (temperature, feels-like, wind and its direction, the next 6 hours with rain chance), a Great / OK / Caution / Avoid ride call with the reason, and the best time to ride in the next 12 hours. Below it are this week's totals and 6 sample activities around Koronadal City, each with its route drawn. Pull down to refresh. Tap an activity to see it on a map with all its stats, or delete it.
 - **Record**: pick Cycling, Motorcycling or Driving, check the ride call for that activity, and press START. In the demo, simulated GPS rides a loop so you can try it at your desk (switch it off to use real GPS). The time, distance and speed update live. The ride auto-pauses when you stop. Finish to name it, choose who sees it, and save. The weather at the start is saved with it.
-- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane on the map. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. An alert appears, his ring turns red and the Alerts tab gets a badge.
+- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane riding on the map. Drag the member sheet up or down and tap a member to focus them. The locate button finds you. Turn on **Share my location** to show yourself to the circle. A "Sharing live" bar then stays on every tab until you pause. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. An alert appears, his ring turns red and the Alerts tab gets a badge.
+- **Circles**: tap the circle name to switch circles, create one (you get a 6-character code to share) or join with a code. Joining always shows a consent screen first, where you choose to share or start paused. The people icon opens Members, where you can pause sharing, leave, or (as owner) remove someone. You can be in up to 3 circles. To try joining, create a new account and enter `TRAIL7`.
+- **Shared rides**: activities saved as "Circles" appear on members' Home feeds with the rider's name. Jero's and Shane's rides already show on yours.
 - **Me**: a profile with a cover photo, profile photo, bio and hometown, achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
 - **Create account**: you get a verification email before the account opens. In demo mode, emails appear in a "Demo inbox" because nothing is really sent.
 
@@ -65,7 +67,9 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 - Push notifications while the app is fully closed need the paid Firebase plan.
 - The public OpenStreetMap tiles are fine for development and demos. Production needs a tile provider.
 - GPS is weaker under tree cover.
-- Android 14 foreground-service rules apply. Android shows a "Recording ride" notification while recording.
+- Android 14 foreground-service rules apply. Android shows a "Recording ride" notification while recording and a "Sharing location" notification while sharing.
+- Live sharing runs while the app is open (or recording). On the web it stops when the tab closes. Members see your last update with its age.
+- Battery level comes from the device. Some browsers can't report it, so your circle sees the last known value.
 - Demo mode keeps everything in memory, so it resets when you reload.
 - Weather needs an internet connection. It refreshes every 15 minutes. Offline, it keeps showing the last result with its age until the app restarts.
 
@@ -75,6 +79,7 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 - Profile photos are stored as small images on the profile itself, so they work on the free Firebase plan.
 - Packages are added in the phase that first uses them.
 - Tabs load the first time you open them, so map tiles download only when you open Circle.
+- Live location goes only to circles you joined through the consent screen, at most every 5 s while moving (after 10 m) and once a minute when still. Pausing also hides your last position. Nothing about your location is stored on the device.
 - Weather is for your location only if you have already allowed location access, sent rounded to about 1 km. Otherwise (and in the demo) it is for Koronadal City. Weather is kept in memory only.
 
 The full decision log is in [DEVELOPMENT.md](DEVELOPMENT.md). The product spec is in [SPEC.md](SPEC.md).

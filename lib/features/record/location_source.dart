@@ -19,6 +19,12 @@ abstract interface class LocationSource {
   Future<bool> hasAccess();
   Future<LocationAccess> ensureAccess();
   Stream<Fix> fixes(ActivityType type);
+
+  /// Low-rate fixes for live sharing (10 m filter, slower when still).
+  Stream<Fix> sharingFixes();
+
+  /// One precise position when access is already granted, else null.
+  Future<GeoPoint?> currentPosition();
   Future<void> openSettings();
 }
 
@@ -46,13 +52,13 @@ class DeviceLocationSource implements LocationSource {
 
   /// Rough position for the weather, only when access is already granted
   /// (never shows the system dialog). Null when unavailable.
-  Future<GeoPoint?> positionIfAllowed() async {
+  Future<GeoPoint?> positionIfAllowed({bool precise = false}) async {
     try {
       if (!await hasAccess()) return null;
       final p = await geo.Geolocator.getCurrentPosition(
-        locationSettings: const geo.LocationSettings(
-          accuracy: geo.LocationAccuracy.low,
-          timeLimit: Duration(seconds: 10),
+        locationSettings: geo.LocationSettings(
+          accuracy: precise ? geo.LocationAccuracy.high : geo.LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 10),
         ),
       );
       return GeoPoint(p.latitude, p.longitude);
@@ -63,18 +69,52 @@ class DeviceLocationSource implements LocationSource {
 
   @override
   Stream<Fix> fixes(ActivityType type) =>
-      geo.Geolocator.getPositionStream(locationSettings: _settings(type)).map(
-        (p) => Fix(
-          p.latitude,
-          p.longitude,
-          p.timestamp,
-          accuracyM: p.accuracy,
-          speedMps: p.speed >= 0 ? p.speed : null,
-        ),
-      );
+      geo.Geolocator.getPositionStream(locationSettings: _settings(type)).map(_toFix);
+
+  @override
+  Future<GeoPoint?> currentPosition() => positionIfAllowed(precise: true);
+
+  @override
+  Stream<Fix> sharingFixes() =>
+      geo.Geolocator.getPositionStream(locationSettings: _sharingSettings()).map(_toFix);
+
+  static Fix _toFix(geo.Position p) => Fix(
+    p.latitude,
+    p.longitude,
+    p.timestamp,
+    accuracyM: p.accuracy,
+    speedMps: p.speed >= 0 ? p.speed : null,
+  );
 
   @override
   Future<void> openSettings() => geo.Geolocator.openAppSettings();
+
+  /// 10 m filter, so a phone lying still sends nothing; Android shows the
+  /// ongoing "Sharing location" notification while it runs.
+  geo.LocationSettings _sharingSettings() {
+    const accuracy = geo.LocationAccuracy.high;
+    if (kIsWeb) return geo.WebSettings(accuracy: accuracy, distanceFilter: 10);
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => geo.AndroidSettings(
+        accuracy: accuracy,
+        distanceFilter: 10,
+        intervalDuration: const Duration(seconds: 5),
+        foregroundNotificationConfig: const geo.ForegroundNotificationConfig(
+          notificationTitle: 'Sharing location',
+          notificationText: 'Your circles can see where you are. Pause it in Circle.',
+          notificationChannelName: 'Location sharing',
+          setOngoing: true,
+        ),
+      ),
+      TargetPlatform.iOS || TargetPlatform.macOS => geo.AppleSettings(
+        accuracy: accuracy,
+        distanceFilter: 10,
+        pauseLocationUpdatesAutomatically: true,
+        showBackgroundLocationIndicator: true,
+      ),
+      _ => const geo.LocationSettings(accuracy: accuracy, distanceFilter: 10),
+    };
+  }
 
   /// High accuracy, 5 m distance filter; Android shows the ongoing
   /// "Recording ride" notification so recording survives a locked screen.
@@ -129,6 +169,14 @@ class SimulatedLocationSource implements LocationSource {
 
   @override
   Future<void> openSettings() async {}
+
+  /// When not recording, the demo rider is parked at [start].
+  @override
+  Stream<Fix> sharingFixes() =>
+      Stream.value(Fix(start.lat, start.lng, clock.now(), accuracyM: 5, speedMps: 0));
+
+  @override
+  Future<GeoPoint?> currentPosition() async => start;
 
   @override
   Stream<Fix> fixes(ActivityType type) {
