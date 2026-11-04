@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 import '../../core/geo.dart';
 import '../../core/theme.dart';
 import '../../data/models/circle.dart';
+import '../../data/models/circle_alert.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/map_view.dart';
-import '../../widgets/member_avatar.dart';
 import '../../widgets/responsive.dart';
-import '../../widgets/visuals.dart';
+import '../alerts/alerts_controller.dart';
+import '../guard/guard_screen.dart';
 import 'circle_controller.dart';
+import 'circle_pins.dart';
 import 'circle_switcher.dart';
 import 'invite_card.dart';
 import 'member_panel.dart';
@@ -71,6 +73,11 @@ class _CircleScreenState extends State<CircleScreen> {
       appBar: AppBar(
         title: circle == null ? const Text('Circle') : const CircleSwitcher(),
         actions: [
+          IconButton(
+            tooltip: 'Guard mode',
+            icon: const Icon(Icons.shield_outlined),
+            onPressed: () => openGuard(context),
+          ),
           if (circle != null) ...[
             IconButton(
               tooltip: 'Invite people',
@@ -108,28 +115,30 @@ class _CircleScreenState extends State<CircleScreen> {
     final me = ctrl.me;
     final onMap = ctrl.members.where((m) => m.onMap).toList();
     final here = me != null && me.onMap ? null : _here;
+    // Open theft alerts in this circle: the vehicle's last reported spot.
+    final open = context.select<AlertsController, List<CircleAlert>>(
+      (a) =>
+          a.filtered(scope: AlertScope.circle, circleId: circle.id).where((x) => x.open).toList(),
+    );
+    final focus = ctrl.pendingFocus;
+    if (focus != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final p = ctrl.takeFocus();
+        if (!mounted || p == null) return;
+        try {
+          _map.focus(p);
+        } catch (_) {
+          // The map was not laid out yet; it opened on the spot anyway.
+        }
+      });
+    }
     final map = RepaintBoundary(
       child: MapView(
         controller: _map,
-        initialCenter: onMap.isEmpty ? (here ?? _fallbackCenter) : onMap.first.point,
-        fitPoints: [for (final m in onMap) m.point],
-        markers: [
-          for (final m in onMap)
-            MapMarker(
-              id: m.uid,
-              point: m.point,
-              size: 52,
-              child: MemberAvatar(
-                initial: m.initial,
-                ringColor: m.status.color,
-                badge: m.vehicle?.type.icon,
-                highlight: m.uid == ctrl.uid,
-                outline: true,
-                size: 48,
-              ),
-            ),
-          if (here != null) MapMarker(id: 'here', point: here, size: 22, child: const _HereDot()),
-        ],
+        initialCenter: focus ?? (onMap.isEmpty ? (here ?? _fallbackCenter) : onMap.first.point),
+        initialZoom: focus == null ? 14 : 16,
+        fitPoints: focus != null ? const [] : [for (final m in onMap) m.point],
+        markers: circlePins(members: onMap, openAlerts: open, myUid: ctrl.uid, here: here),
       ),
     );
     final locate = FloatingActionButton.small(
@@ -212,19 +221,3 @@ class _CircleScreenState extends State<CircleScreen> {
 
 /// Map center used only when nobody in the circle is sharing.
 const _fallbackCenter = GeoPoint(6.50, 124.85);
-
-class _HereDot extends StatelessWidget {
-  const _HereDot();
-
-  @override
-  Widget build(BuildContext context) => Semantics(
-    label: 'You are here (not shared)',
-    child: Container(
-      decoration: BoxDecoration(
-        color: AppColors.ink,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 3),
-      ),
-    ),
-  );
-}

@@ -57,8 +57,13 @@ abstract interface class ProfileRepository {
     String? hometown,
     String? photoUrl,
     String? coverUrl,
+    String? activeVehicleId,
   });
   Stream<List<Vehicle>> watchVehicles(String uid);
+
+  /// Adds or replaces users/{uid}/vehicles/{vehicle.id}.
+  Future<void> saveVehicle(String uid, Vehicle vehicle);
+  Future<void> deleteVehicle(String uid, String vehicleId);
 }
 
 abstract interface class ActivityRepository {
@@ -109,6 +114,15 @@ abstract interface class CircleRepository {
 
   /// Writes the caller's own member doc.
   Future<void> updateMember(String circleId, Member member);
+
+  /// Any member may raise an alert.
+  Future<void> addAlert(String circleId, CircleAlert alert);
+
+  /// The alert's owner moves it along with the vehicle or marks it recovered.
+  Future<void> updateAlert(String circleId, CircleAlert alert);
+
+  /// Adds only [uid] to ackBy ("It's me" / seen).
+  Future<void> ackAlert(String circleId, String alertId, String uid);
 }
 
 /// Everything the app needs from a backend.

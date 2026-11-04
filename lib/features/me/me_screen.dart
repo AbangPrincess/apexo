@@ -13,6 +13,7 @@ import '../../data/repository.dart';
 import '../auth/session_controller.dart';
 import '../circle/circle_controller.dart';
 import '../feed/activities_controller.dart';
+import '../guard/garage_card.dart';
 import 'achievements_section.dart';
 import 'edit_profile_screen.dart';
 import 'photo_picker.dart';
@@ -117,6 +118,8 @@ class MeScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: Space.m),
+                                const GarageCard(),
+                                const SizedBox(height: Space.m),
                                 week,
                                 const SizedBox(height: Space.m),
                                 totals,
@@ -131,6 +134,8 @@ class MeScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           intro,
+                          const SizedBox(height: Space.l),
+                          const GarageCard(),
                           const SizedBox(height: Space.l),
                           const Divider(),
                           const SizedBox(height: Space.l),

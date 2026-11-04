@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme.dart';
 import 'data/repository.dart';
 import 'data/weather_source.dart';
+import 'features/alerts/alert_notifier.dart';
+import 'features/alerts/alerts_controller.dart';
 import 'features/auth/session_controller.dart';
 import 'features/auth/sign_in_screen.dart';
 import 'features/auth/verify_email_screen.dart';
@@ -13,6 +15,9 @@ import 'features/circle/circle_controller.dart';
 import 'features/circle/sharing_controller.dart';
 import 'features/feed/activities_controller.dart';
 import 'features/feed/circle_feed_controller.dart';
+import 'features/guard/guard_controller.dart';
+import 'features/guard/motion_source.dart';
+import 'features/guard/vehicles_controller.dart';
 import 'features/me/settings_controller.dart';
 import 'features/record/location_source.dart';
 import 'features/record/record_controller.dart';
@@ -21,13 +26,24 @@ import 'shell/app_shell.dart';
 import 'widgets/brand_mark.dart';
 
 class ApexoApp extends StatelessWidget {
-  const ApexoApp({super.key, required this.repository, required this.prefs, this.weatherSource});
+  const ApexoApp({
+    super.key,
+    required this.repository,
+    required this.prefs,
+    this.weatherSource,
+    this.alertNotifier,
+    this.motionSource,
+  });
 
   final AppRepository repository;
   final SharedPreferences prefs;
 
   /// Open-Meteo unless a test passes a fake.
   final WeatherSource? weatherSource;
+
+  /// The device's notifications and accelerometer unless a test passes fakes.
+  final AlertNotifier? alertNotifier;
+  final MotionSource? motionSource;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +74,19 @@ class ApexoApp extends StatelessWidget {
             repository,
             context.read<RecordController>(),
             readBattery: readBatteryLevel,
+          ),
+        ),
+        ChangeNotifierProvider(create: (_) => VehiclesController(repository)),
+        ChangeNotifierProvider(create: (_) => AlertsController(repository)),
+        ChangeNotifierProvider(create: (_) => alertNotifier ?? AlertNotifier()),
+        ChangeNotifierProvider(
+          create: (context) => GuardController(
+            repository,
+            context.read<VehiclesController>(),
+            context.read<AlertsController>(),
+            context.read<RecordController>(),
+            readBattery: readBatteryLevel,
+            motion: motionSource,
           ),
         ),
       ],

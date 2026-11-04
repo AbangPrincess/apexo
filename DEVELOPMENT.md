@@ -21,7 +21,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 [x] P2 Record + feed + activity detail (+ owner requests: email verification, sign-in lockout, password reset, profile photos and achievements)
 [x] P3 Weather
 [x] P4 Circles
-[ ] P5 Vehicle guard + alerts
+[x] P5 Vehicle guard + alerts
 [ ] P6 Firebase + polish + GitHub deploy
 [ ] P7 Optional extras (ONLY if the owner asks)
 
@@ -32,7 +32,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - Tabs are built lazily (first visit), so the map and its tiles load only when Circle is opened.
 - Units and default activity live on the user profile (synced) and are cached in shared_preferences so the UI starts with them. Only these two settings are stored locally; no email, password or location is persisted on the device.
 - Demo mode is in-memory: new accounts and changes reset on reload. The demo password check never logs or persists anything.
-- Demo alert: Jero's 50 m boundary is evaluated with `insideBoundary`; the alert fires after 2 consecutive outside fixes (~20 s after sign-in), once per session. Full re-arm logic arrives in P5.
+- Demo alert: Jero's 50 m boundary uses the real `GeofenceWatch`; the alert fires after 2 consecutive outside fixes (~20 s after sign-in) and, in the demo only, once per session so later laps stay quiet.
 - Demo invite code TRAIL7 is kept as specified even though it contains I and L; generated codes (P4) exclude look-alikes and joining normalizes case and spaces.
 - Password minimum is 8 characters (Firebase only enforces 6).
 - P2: new passwords need 8+ characters with a letter and a number (live checklist on sign-up).
@@ -64,3 +64,13 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - P4: "Circles" activities are copied to `circles/{cid}/feed/{aid}` in every circle of the owner (client fan-out, no Cloud Functions). The copy drops the vehicle link and thins the path to 25 m. Joining backfills your 20 latest; leaving or removal deletes your entries. Others' activities open read-only (no delete).
 - P4: packages share_plus (invite sharing; copies to the clipboard where sharing fails) and battery_plus (member battery; null where unsupported).
 - P4: create/join flows clear any open snackbar so it never covers their buttons; consent buttons are pinned at the bottom (thumb reach on small phones).
+- P5: guard rules are pure Dart in lib/core/guard_logic.dart. `GeofenceWatch`: exit after 2 consecutive fixes outside radius + accuracy, once per exit, re-armed after 2 consecutive fixes back inside (the spec says "after re-entry"; 2 fixes stops edge jitter re-arming it). `BatteryWatch`: low battery once at 15 %, re-armed above 20 %. `NudgeDetector`: 3 jolts above the sensitivity threshold within 2 s, then quiet for 5 min.
+- P5: only leaving the boundary marks the vehicle stolen and turns the ring red. A nudge or low battery is a warning alert only, because a bump should not declare a theft.
+- P5: the active vehicle is `users/{uid}.activeVehicleId` (empty means the first). `VehiclesController` keeps my pin's vehicle in step in every circle and writes only when it differs. Switching vehicles and deleting a guarded one are blocked while armed.
+- P5: one alert event is written to every circle I am in under the same id. `AlertsController` watches all circles, shows each event once, merges acks, and only counts alerts from others that arrive after a circle's first load as "incoming". While the vehicle is missing, the owner's phone moves the alert along (`follow`, throttled by `ShareGate`), so View on map and Navigate lead to where it is now. Updates start from each circle's own copy so acks are kept. P6 should use field-level updates for alerts and member docs, so concurrent writers never overwrite each other.
+- P5: incoming theft alerts show a dialog (View on map, Navigate, It's me = ack) plus a system notification with sound (flutter_local_notifications, channel "Theft alerts", iOS time-sensitive); low battery shows a snackbar. Notification permission is asked on ARM and from a card in Alerts, never unasked. On the web nothing is set up (no service worker) until the person turns it on.
+- P5: guard mode does not auto-resume. If the backend says guarded but this phone is not watching, the Guard screen offers "Watch from this phone" or "Disarm", because auto-resuming on a second phone would alarm at once.
+- P5: guard uses its own low-rate location stream with the Android "Guard mode on" notification and no iOS auto-pause. The demo vehicle stays parked; "Test the alarm (demo)" feeds two fixes outside the boundary.
+- P5: packages flutter_local_notifications (Android needs core library desugaring, now in build.gradle.kts; iOS AppDelegate sets the notification delegate), sensors_plus (user accelerometer at the normal rate) and url_launcher (Navigate opens https://www.google.com/maps/dir/?api=1&destination=LAT,LNG; Android manifest queries https).
+- P5: CircleController no longer holds alerts; it keeps the active circle, members and a pending map focus for "View on map".
+- Backend (decided 2026-11-04): stay on Firebase Spark (Auth + Firestore) as specified. With uncertain usage, it wins on never pausing (Supabase's free tier pauses after a week without activity), needing no card and no email-service setup, and having offline sync built in; the daily write limits only matter with many users, and `ShareGate` keeps writes low. Push while the app is closed stays a known limit. If real users arrive, turn on Blaze for one Cloud Function (alert push) and move live positions to the Realtime Database.

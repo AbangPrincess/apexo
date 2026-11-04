@@ -62,8 +62,19 @@ class CircleWorld implements DemoWorld {
   }
 
   @override
-  void addAlert(CircleAlert alert) {
+  CircleAlert? alert(String id) {
+    for (final a in store.alertsOf(circleId).value) {
+      if (a.id == id) return a;
+    }
+    return null;
+  }
+
+  @override
+  void putAlert(CircleAlert alert) {
     final alerts = store.alertsOf(circleId);
-    alerts.value = [alert, ...alerts.value];
+    final rest = alerts.value.where((a) => a.id != alert.id);
+    alerts.value = alerts.value.any((a) => a.id == alert.id)
+        ? [for (final a in alerts.value) a.id == alert.id ? alert : a]
+        : [alert, ...rest];
   }
 }

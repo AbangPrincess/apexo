@@ -16,7 +16,10 @@ Ride tracking, live circles and theft alerts for bikes, motorbikes and cars. Bui
 What the demo shows:
 - **Home**: a weather card (temperature, feels-like, wind and its direction, the next 6 hours with rain chance), a Great / OK / Caution / Avoid ride call with the reason, and the best time to ride in the next 12 hours. Below it are this week's totals and 6 sample activities around Koronadal City, each with its route drawn. Pull down to refresh. Tap an activity to see it on a map with all its stats, or delete it.
 - **Record**: pick Cycling, Motorcycling or Driving, check the ride call for that activity, and press START. In the demo, simulated GPS rides a loop so you can try it at your desk (switch it off to use real GPS). The time, distance and speed update live. The ride auto-pauses when you stop. Finish to name it, choose who sees it, and save. The weather at the start is saved with it.
-- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane riding on the map. Drag the member sheet up or down and tap a member to focus them. The locate button finds you. Turn on **Share my location** to show yourself to the circle. A "Sharing live" bar then stays on every tab until you pause. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. An alert appears, his ring turns red and the Alerts tab gets a badge.
+- **Circle**: "Trail Buddies" (invite code `TRAIL7`) with Jero and Shane riding on the map. Drag the member sheet up or down and tap a member to focus them. The locate button finds you. Turn on **Share my location** to show yourself to the circle. A "Sharing live" bar then stays on every tab until you pause. About 20 s after you sign in, Jero's bike leaves its 50 m boundary. A dialog pops up ("Jero's Blue MTB is on the move", how far it moved and the limit) with **View on map**, **Navigate** and **It's me**. His ring turns red, a red pin marks the bike's last spot (it follows the bike) and the Alerts tab gets a badge.
+- **Guard mode**: the shield icon in Circle (or Vehicles on Me) opens it. Pick the alert distance (20-500 m), optionally turn on movement detection, and press **ARM GUARD**. The boundary is set where the phone is and drawn on the map. A "Guard mode on" bar stays on every tab. In the demo, **Test the alarm** carries the bike out of its boundary, so you can see the whole flow, then **Mark recovered**.
+- **Alerts**: everything from all your circles, newest first. Filter by All / Mine / This circle, by type and by date. Tap a theft alert to see it on the map. "Get alerts as notifications" turns on system notifications with sound.
+- **Vehicles**: add or edit your bike, motorbike or car and choose the active one. It shows on your pin and is the one guard mode protects.
 - **Circles**: tap the circle name to switch circles, create one (you get a 6-character code to share) or join with a code. Joining always shows a consent screen first, where you choose to share or start paused. The people icon opens Members, where you can pause sharing, leave, or (as owner) remove someone. You can be in up to 3 circles. To try joining, create a new account and enter `TRAIL7`.
 - **Shared rides**: activities saved as "Circles" appear on members' Home feeds with the rider's name. Jero's and Shane's rides already show on yours.
 - **Me**: a profile with a cover photo, profile photo, bio and hometown, achievements for distance milestones and more, a weekly chart, and totals per activity type. The gear icon opens Settings (units, default activity, sign out).
@@ -64,7 +67,10 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 ## Known limits
 
 - The web version can't track in the background. Keep the tab open while recording.
-- Push notifications while the app is fully closed need the paid Firebase plan.
+- Push notifications while the app is fully closed need the paid Firebase plan. Alerts reach you while Apexo is open or running in the background (for example while sharing or guarding).
+- Guard mode watches the vehicle only while Apexo runs on the phone left with it. If the phone or app is closed, guard mode stays "on" but nothing watches, and the Guard screen says so. On the web it stops when the tab closes.
+- Movement detection needs a phone accelerometer. Desktop browsers don't have one.
+- Web notifications need browser permission and are not available in every browser.
 - The public OpenStreetMap tiles are fine for development and demos. Production needs a tile provider.
 - GPS is weaker under tree cover.
 - Android 14 foreground-service rules apply. Android shows a "Recording ride" notification while recording and a "Sharing location" notification while sharing.

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import '../../core/geo.dart';
+import '../../core/guard_logic.dart';
 import '../../core/units.dart';
 import '../models/circle.dart';
 import '../models/circle_alert.dart';
@@ -12,12 +13,16 @@ import 'demo_seed.dart';
 abstract interface class DemoWorld {
   Member? member(String uid);
   void putMember(Member member);
-  void addAlert(CircleAlert alert);
+  CircleAlert? alert(String id);
+
+  /// Adds the alert, or replaces the one with the same id.
+  void putAlert(CircleAlert alert);
 }
 
 /// Moves Jero around his loop once per [interval]. His bike is guarded with a
-/// 50 m boundary, so ~20 s in the geofence trips and an alert is written.
-/// Shane rides his scooter loop with a short stop every two minutes.
+/// 50 m boundary, so ~20 s in the geofence trips and an alert is written that
+/// then follows the bike. Shane rides his scooter loop with a short stop
+/// every two minutes.
 class DemoSimulator {
   DemoSimulator(
     this.world, {
@@ -38,13 +43,13 @@ class DemoSimulator {
   static const cruiseMps = 5.6;
   static const shaneMps = 7.5;
 
+  late final _fence = GeofenceWatch(boundary);
   Timer? _timer;
   int _steps = 0;
-  int _outsideRun = 0;
-  bool _alerted = false;
+  String? _alertId;
 
   bool get running => _timer != null;
-  bool get alerted => _alerted;
+  bool get alerted => _alertId != null;
   double get _secs => interval.inMilliseconds / 1000;
 
   void start() => _timer ??= Timer.periodic(interval, (_) => step());
@@ -73,29 +78,38 @@ class DemoSimulator {
     final prev = _jero.position;
     final pos = _jero.advance(mps * _secs);
 
-    // Same rule the real guard uses: 2 consecutive fixes outside radius + accuracy.
-    final outside = !insideBoundary(pos.lat, pos.lng, boundary, 5);
-    _outsideRun = outside ? _outsideRun + 1 : 0;
+    // Same rule the real guard uses. The demo alerts once per session, so
+    // later laps through the boundary stay quiet.
+    final exit = _fence.addFix(pos, 5) == GeofenceEvent.exit;
 
     var status = jero.status == MemberStatus.alert ? MemberStatus.alert : MemberStatus.tracking;
     var vehicle = jero.vehicle;
-    if (_outsideRun >= 2 && !_alerted) {
-      _alerted = true;
+    final open = _alertId == null ? null : world.alert(_alertId!);
+    if (exit && _alertId == null) {
       status = MemberStatus.alert;
       vehicle = vehicle?.withStatus(VehicleStatus.stolen);
       final name = vehicle?.name ?? 'vehicle';
-      world.addAlert(
+      _alertId = 'alert-${now.microsecondsSinceEpoch}';
+      world.putAlert(
         CircleAlert(
-          id: 'alert-${now.microsecondsSinceEpoch}',
+          id: _alertId!,
           type: AlertType.geofence,
           ownerUid: DemoIds.jero,
+          ownerName: jero.displayName,
+          vehicleId: 'jero-mtb',
           vehicleName: name,
           message: "${jero.displayName}'s $name is on the move",
           lat: pos.lat,
           lng: pos.lng,
-          distanceM: distanceM(boundary.center, pos),
+          distanceM: _fence.distanceFrom(pos),
+          radiusM: boundary.radiusM,
           ts: now,
         ),
+      );
+    } else if (open != null && open.recoveredAt == null && _steps % 5 == 0) {
+      // Like the real guard, the open alert follows the vehicle.
+      world.putAlert(
+        open.copyWith(lat: pos.lat, lng: pos.lng, distanceM: _fence.distanceFrom(pos)),
       );
     }
 

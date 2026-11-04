@@ -3,7 +3,6 @@ import 'dart:math';
 import '../../core/invite_code.dart';
 import '../models/activity.dart';
 import '../models/circle.dart';
-import '../models/circle_alert.dart';
 import '../models/shared_activity.dart';
 import '../models/user.dart';
 import '../repository.dart';
@@ -36,9 +35,6 @@ mixin FakeCircles on AppRepository {
 
   @override
   Stream<List<Member>> watchMembers(String circleId) => store.membersOf(circleId).stream;
-
-  @override
-  Stream<List<CircleAlert>> watchAlerts(String circleId) => store.alertsOf(circleId).stream;
 
   @override
   Stream<List<SharedActivity>> watchCircleFeed(String circleId) => store.feedOf(circleId).stream;

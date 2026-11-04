@@ -5,9 +5,13 @@ import 'package:provider/provider.dart';
 
 import '../core/theme.dart';
 import '../data/models/circle_alert.dart';
+import '../features/alerts/alert_actions.dart';
+import '../features/alerts/alert_dialog.dart';
+import '../features/alerts/alert_notifier.dart';
+import '../features/alerts/alerts_controller.dart';
 import '../features/alerts/alerts_screen.dart';
-import '../features/circle/circle_controller.dart';
 import '../features/circle/circle_screen.dart';
+import '../features/guard/guard_screen.dart';
 import '../features/feed/home_screen.dart';
 import '../features/me/me_screen.dart';
 import '../features/record/record_controller.dart';
@@ -34,11 +38,13 @@ class _AppShellState extends State<AppShell> {
   late AppTab _lastTab = _shell.tab;
   StreamSubscription<CircleAlert>? _alertSub;
 
+  bool _dialogOpen = false;
+
   @override
   void initState() {
     super.initState();
     _shell.addListener(_onTabChanged);
-    _alertSub = context.read<CircleController>().incomingAlerts.listen(_announce);
+    _alertSub = context.read<AlertsController>().incoming.listen(_announce);
   }
 
   @override
@@ -51,14 +57,40 @@ class _AppShellState extends State<AppShell> {
   void _onTabChanged() {
     final tab = _shell.tab;
     if (tab == AppTab.alerts || _lastTab == AppTab.alerts) {
-      context.read<CircleController>().markAlertsSeen();
+      context.read<AlertsController>().markSeen();
     }
     _lastTab = tab;
     setState(() => _visited.add(tab));
   }
 
-  void _announce(CircleAlert alert) {
-    if (!mounted || _shell.tab == AppTab.alerts) return;
+  /// Someone else's alert: a system notification with sound (it also works
+  /// while Apexo is in the background), plus a dialog for theft alerts.
+  Future<void> _announce(CircleAlert alert) async {
+    if (!mounted) return;
+    final alerts = context.read<AlertsController>();
+    context.read<AlertNotifier>().show(alert, alertDetail(alert));
+    if (alert.type == AlertType.lowbattery) return _snack(alert);
+    // One dialog at a time; the Alerts tab lists the rest.
+    if (_dialogOpen) return;
+    _dialogOpen = true;
+    final choice = await showIncomingAlert(context, alert);
+    _dialogOpen = false;
+    if (!mounted) return;
+    final latest = alerts.byId(alert.id) ?? alert;
+    switch (choice) {
+      case AlertChoice.viewOnMap:
+        viewAlertOnMap(context, _shell, latest);
+      case AlertChoice.navigate:
+        await navigateToAlert(context, latest);
+      case AlertChoice.itsMe:
+        await alerts.ack(latest);
+      case null:
+        break;
+    }
+  }
+
+  void _snack(CircleAlert alert) {
+    if (_shell.tab == AppTab.alerts) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -86,7 +118,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final unseen = context.select<CircleController, int>((c) => c.unseenCount);
+    final unseen = context.select<AlertsController, int>((c) => c.unseenCount);
     final recording = context.select<RecordController, bool>((r) => r.isActive);
     final tab = _shell.tab;
     final badge = tab == AppTab.alerts ? 0 : unseen;
@@ -101,7 +133,7 @@ class _AppShellState extends State<AppShell> {
             ],
           ),
         ),
-        SharingBanner(onTap: () => _shell.go(AppTab.circle)),
+        SharingBanner(onSharing: () => _shell.go(AppTab.circle), onGuard: () => openGuard(context)),
       ],
     );
 

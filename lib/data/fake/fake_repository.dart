@@ -8,13 +8,14 @@ import '../repository.dart';
 import 'demo_feed.dart';
 import 'demo_seed.dart';
 import 'demo_simulator.dart';
+import 'fake_alerts.dart';
 import 'fake_auth.dart';
 import 'fake_circles.dart';
 import 'fake_store.dart';
 
 /// In-memory demo backend that mirrors the Firestore layout. Nothing is
 /// persisted or logged; everything resets when the app reloads.
-class FakeRepository extends AppRepository with FakeCircles implements DemoMailbox {
+class FakeRepository extends AppRepository with FakeCircles, FakeAlerts implements DemoMailbox {
   FakeRepository({
     this.simulate = true,
     this.latency = const Duration(milliseconds: 350),
@@ -171,6 +172,7 @@ class FakeRepository extends AppRepository with FakeCircles implements DemoMailb
     String? hometown,
     String? photoUrl,
     String? coverUrl,
+    String? activeVehicleId,
   }) async {
     final current = _store.profiles[uid];
     if (current == null) return;
@@ -182,6 +184,7 @@ class FakeRepository extends AppRepository with FakeCircles implements DemoMailb
       hometown: hometown,
       photoUrl: photoUrl,
       coverUrl: coverUrl,
+      activeVehicleId: activeVehicleId,
     );
     _store.profiles[uid] = next;
     if (_store.auth.value?.uid == uid) _store.auth.value = next;
@@ -189,6 +192,21 @@ class FakeRepository extends AppRepository with FakeCircles implements DemoMailb
 
   @override
   Stream<List<Vehicle>> watchVehicles(String uid) => _store.vehiclesOf(uid).stream;
+
+  @override
+  Future<void> saveVehicle(String uid, Vehicle vehicle) async {
+    final store = _store.vehiclesOf(uid);
+    final exists = store.value.any((v) => v.id == vehicle.id);
+    store.value = exists
+        ? [for (final v in store.value) v.id == vehicle.id ? vehicle : v]
+        : [...store.value, vehicle];
+  }
+
+  @override
+  Future<void> deleteVehicle(String uid, String vehicleId) async {
+    final store = _store.vehiclesOf(uid);
+    store.value = store.value.where((v) => v.id != vehicleId).toList();
+  }
 
   // Activities ----------------------------------------------------------------
 

@@ -16,6 +16,7 @@ class AppUser {
     this.hometown = '',
     this.photoUrl = '',
     this.coverUrl = '',
+    this.activeVehicleId = '',
     this.emailVerified = true,
   });
 
@@ -31,6 +32,9 @@ class AppUser {
   /// https URL or a small data: URI. Empty when not set.
   final String photoUrl;
   final String coverUrl;
+
+  /// The vehicle shown on my pin and guarded; empty means the first one.
+  final String activeVehicleId;
   final bool emailVerified;
 
   String get initial {
@@ -50,6 +54,7 @@ class AppUser {
         hometown: readString(m['hometown']),
         photoUrl: readString(m['photoUrl']),
         coverUrl: readString(m['coverUrl']),
+        activeVehicleId: readString(m['activeVehicleId']),
         emailVerified: emailVerified,
       );
 
@@ -63,6 +68,7 @@ class AppUser {
     'hometown': hometown,
     'photoUrl': photoUrl,
     'coverUrl': coverUrl,
+    'activeVehicleId': activeVehicleId,
   };
 
   /// Pass an empty string to clear a text or photo field.
@@ -74,6 +80,7 @@ class AppUser {
     String? hometown,
     String? photoUrl,
     String? coverUrl,
+    String? activeVehicleId,
     bool? emailVerified,
   }) => AppUser(
     uid: uid,
@@ -86,6 +93,7 @@ class AppUser {
     hometown: hometown ?? this.hometown,
     photoUrl: photoUrl ?? this.photoUrl,
     coverUrl: coverUrl ?? this.coverUrl,
+    activeVehicleId: activeVehicleId ?? this.activeVehicleId,
     emailVerified: emailVerified ?? this.emailVerified,
   );
 }
@@ -138,4 +146,21 @@ class Vehicle {
     'boundary': boundary?.toMap(),
     'armedAt': armedAt,
   };
+
+  /// [disarm] clears the boundary and arming time.
+  Vehicle copyWith({
+    VehicleType? type,
+    String? name,
+    VehicleStatus? status,
+    Boundary? boundary,
+    DateTime? armedAt,
+    bool disarm = false,
+  }) => Vehicle(
+    id: id,
+    type: type ?? this.type,
+    name: name ?? this.name,
+    status: status ?? this.status,
+    boundary: disarm ? null : boundary ?? this.boundary,
+    armedAt: disarm ? null : armedAt ?? this.armedAt,
+  );
 }

@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import '../../core/geo.dart';
 import '../../data/models/circle.dart';
-import '../../data/models/circle_alert.dart';
 import '../../data/models/user.dart';
 import '../../data/repository.dart';
 
-/// The active circle, its members and alerts for the signed-in user.
+/// The active circle and its members for the signed-in user. Alerts from
+/// all circles live in AlertsController.
 class CircleController extends ChangeNotifier {
   CircleController(this._repo) {
     _authSub = _repo.authStateChanges().listen(_onUser);
@@ -17,19 +18,14 @@ class CircleController extends ChangeNotifier {
   late final StreamSubscription<AppUser?> _authSub;
   StreamSubscription<List<Circle>>? _circlesSub;
   StreamSubscription<List<Member>>? _membersSub;
-  StreamSubscription<List<CircleAlert>>? _alertsSub;
-  final _incoming = StreamController<CircleAlert>.broadcast();
 
   String? _uid;
   AppUser? _user;
   List<Circle> _circles = const [];
   String? _circleId;
   List<Member> _members = const [];
-  List<CircleAlert> _alerts = const [];
-  Set<String> _knownAlertIds = {};
-  bool _alertsPrimed = false;
   bool _loaded = false;
-  DateTime _seenUntil = DateTime.now();
+  GeoPoint? _focus;
 
   String? get uid => _uid;
   bool get loaded => _loaded;
@@ -47,16 +43,19 @@ class CircleController extends ChangeNotifier {
   }
 
   List<Member> get members => _members;
-  List<CircleAlert> get alerts => _alerts;
 
-  /// Alerts raised by others after this session started.
-  Stream<CircleAlert> get incomingAlerts => _incoming.stream;
+  /// A spot the map should move to (e.g. "View on map" on an alert).
+  GeoPoint? get pendingFocus => _focus;
 
-  int get unseenCount => _alerts.where((a) => a.ts.isAfter(_seenUntil)).length;
+  GeoPoint? takeFocus() {
+    final f = _focus;
+    _focus = null;
+    return f;
+  }
 
-  void markAlertsSeen() {
-    if (unseenCount == 0) return;
-    _seenUntil = DateTime.now();
+  void focusOn(String circleId, GeoPoint p) {
+    _focus = p;
+    if (circleId != _circleId) _select(circleId);
     notifyListeners();
   }
 
@@ -67,8 +66,8 @@ class CircleController extends ChangeNotifier {
     _circlesSub?.cancel();
     _circles = const [];
     _loaded = false;
+    _focus = null;
     _select(null);
-    _seenUntil = DateTime.now();
     final uid = _uid;
     if (uid != null) _circlesSub = _repo.watchCircles(uid).listen(_onCircles);
     notifyListeners();
@@ -113,30 +112,13 @@ class CircleController extends ChangeNotifier {
 
   void _select(String? circleId) {
     _membersSub?.cancel();
-    _alertsSub?.cancel();
     _circleId = circleId;
     _members = const [];
-    _alerts = const [];
-    _knownAlertIds = {};
-    _alertsPrimed = false;
     if (circleId == null) return;
     _membersSub = _repo.watchMembers(circleId).listen((list) {
       _members = list;
       notifyListeners();
     });
-    _alertsSub = _repo.watchAlerts(circleId).listen(_onAlerts);
-  }
-
-  void _onAlerts(List<CircleAlert> list) {
-    if (_alertsPrimed) {
-      for (final a in list) {
-        if (!_knownAlertIds.contains(a.id) && a.ownerUid != _uid) _incoming.add(a);
-      }
-    }
-    _knownAlertIds = {for (final a in list) a.id};
-    _alertsPrimed = true;
-    _alerts = list;
-    notifyListeners();
   }
 
   @override
@@ -144,8 +126,6 @@ class CircleController extends ChangeNotifier {
     _authSub.cancel();
     _circlesSub?.cancel();
     _membersSub?.cancel();
-    _alertsSub?.cancel();
-    _incoming.close();
     super.dispose();
   }
 }

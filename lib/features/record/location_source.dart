@@ -23,6 +23,9 @@ abstract interface class LocationSource {
   /// Low-rate fixes for live sharing (10 m filter, slower when still).
   Stream<Fix> sharingFixes();
 
+  /// Low-rate fixes for guard mode; keeps running while the phone is still.
+  Stream<Fix> guardFixes();
+
   /// One precise position when access is already granted, else null.
   Future<GeoPoint?> currentPosition();
   Future<void> openSettings();
@@ -75,8 +78,25 @@ class DeviceLocationSource implements LocationSource {
   Future<GeoPoint?> currentPosition() => positionIfAllowed(precise: true);
 
   @override
-  Stream<Fix> sharingFixes() =>
-      geo.Geolocator.getPositionStream(locationSettings: _sharingSettings()).map(_toFix);
+  Stream<Fix> sharingFixes() => geo.Geolocator.getPositionStream(
+    locationSettings: _lowRateSettings(
+      title: 'Sharing location',
+      text: 'Your circles can see where you are. Pause it in Circle.',
+      channel: 'Location sharing',
+      pauseWhenStill: true,
+    ),
+  ).map(_toFix);
+
+  @override
+  Stream<Fix> guardFixes() => geo.Geolocator.getPositionStream(
+    locationSettings: _lowRateSettings(
+      title: 'Guard mode on',
+      text: 'Apexo alerts your circle if this vehicle leaves its boundary.',
+      channel: 'Guard mode',
+      // iOS would not resume a paused stream when a thief moves the vehicle.
+      pauseWhenStill: false,
+    ),
+  ).map(_toFix);
 
   static Fix _toFix(geo.Position p) => Fix(
     p.latitude,
@@ -89,9 +109,14 @@ class DeviceLocationSource implements LocationSource {
   @override
   Future<void> openSettings() => geo.Geolocator.openAppSettings();
 
-  /// 10 m filter, so a phone lying still sends nothing; Android shows the
-  /// ongoing "Sharing location" notification while it runs.
-  geo.LocationSettings _sharingSettings() {
+  /// 10 m filter, so a phone lying still sends nothing; Android shows an
+  /// ongoing notification ([title], [text]) while the stream runs.
+  geo.LocationSettings _lowRateSettings({
+    required String title,
+    required String text,
+    required String channel,
+    required bool pauseWhenStill,
+  }) {
     const accuracy = geo.LocationAccuracy.high;
     if (kIsWeb) return geo.WebSettings(accuracy: accuracy, distanceFilter: 10);
     return switch (defaultTargetPlatform) {
@@ -99,17 +124,18 @@ class DeviceLocationSource implements LocationSource {
         accuracy: accuracy,
         distanceFilter: 10,
         intervalDuration: const Duration(seconds: 5),
-        foregroundNotificationConfig: const geo.ForegroundNotificationConfig(
-          notificationTitle: 'Sharing location',
-          notificationText: 'Your circles can see where you are. Pause it in Circle.',
-          notificationChannelName: 'Location sharing',
+        foregroundNotificationConfig: geo.ForegroundNotificationConfig(
+          notificationTitle: title,
+          notificationText: text,
+          notificationChannelName: channel,
+          enableWakeLock: !pauseWhenStill,
           setOngoing: true,
         ),
       ),
       TargetPlatform.iOS || TargetPlatform.macOS => geo.AppleSettings(
         accuracy: accuracy,
         distanceFilter: 10,
-        pauseLocationUpdatesAutomatically: true,
+        pauseLocationUpdatesAutomatically: pauseWhenStill,
         showBackgroundLocationIndicator: true,
       ),
       _ => const geo.LocationSettings(accuracy: accuracy, distanceFilter: 10),
@@ -174,6 +200,10 @@ class SimulatedLocationSource implements LocationSource {
   @override
   Stream<Fix> sharingFixes() =>
       Stream.value(Fix(start.lat, start.lng, clock.now(), accuracyM: 5, speedMps: 0));
+
+  /// The demo vehicle stays parked; the guard's "Test the alarm" moves it.
+  @override
+  Stream<Fix> guardFixes() => sharingFixes();
 
   @override
   Future<GeoPoint?> currentPosition() async => start;
