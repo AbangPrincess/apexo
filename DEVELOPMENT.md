@@ -11,7 +11,7 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - Commits: short messages ("first commit", "second commit", ...), and only when the owner asks. Never push unasked.
 
 ## Conventions
-- Material 3, provider + ChangeNotifier. Repository interfaces in lib/data with FakeRepository (demo, in-memory) and FirebaseRepository; pick by `DefaultFirebaseOptions.isConfigured` (placeholder lib/firebase_options.dart until `flutterfire configure`). Never add the google-services Gradle plugin by hand.
+- Material 3, provider + ChangeNotifier. Repository interfaces in lib/data with FakeRepository (demo, in-memory) and FirebaseRepository (lib/data/firebase). `createRepository()` picks Firebase when `DefaultFirebaseOptions.currentPlatform` returns options (the committed placeholder throws, so it falls back to the demo); `--dart-define=APEXO_DEMO=true` forces the demo. Never add the google-services Gradle plugin by hand.
 - Layout: lib/core (theme, geo, units, weather logic), lib/data, lib/features/{auth,feed,record,circle,guard,alerts,me}, lib/widgets. Pure logic in lib/core with tests in test/.
 - Responsive and adaptive: phones (Android + iPhone) get the bottom bar; >= 600 px (tablets, web) get a side rail and width-capped content. Respect safe areas; use adaptive widgets (Switch.adaptive, showAdaptiveDialog) so iPhone feels native.
 - Original UI and copy only. Do not copy other apps' names, logos or assets.
@@ -22,7 +22,8 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 [x] P3 Weather
 [x] P4 Circles
 [x] P5 Vehicle guard + alerts
-[ ] P6 Firebase + polish + GitHub deploy
+[x] P6 Firebase backend + rules + GitHub deploy
+[ ] P6b Polish: permission rationale screens, dark theme, accessibility pass, error and offline states, 3-slide onboarding, placeholder app icon
 [ ] P7 Optional extras (ONLY if the owner asks)
 
 ## Decisions
@@ -74,3 +75,14 @@ Activity tracking + live circles + theft guard for bikes, motorbikes and cars. F
 - P5: packages flutter_local_notifications (Android needs core library desugaring, now in build.gradle.kts; iOS AppDelegate sets the notification delegate), sensors_plus (user accelerometer at the normal rate) and url_launcher (Navigate opens https://www.google.com/maps/dir/?api=1&destination=LAT,LNG; Android manifest queries https).
 - P5: CircleController no longer holds alerts; it keeps the active circle, members and a pending map focus for "View on map".
 - Backend (decided 2026-11-04): stay on Firebase Spark (Auth + Firestore) as specified. With uncertain usage, it wins on never pausing (Supabase's free tier pauses after a week without activity), needing no card and no email-service setup, and having offline sync built in; the daily write limits only matter with many users, and `ShareGate` keeps writes low. Push while the app is closed stays a known limit. If real users arrive, turn on Blaze for one Cloud Function (alert push) and move live positions to the Realtime Database.
+- P6 split: dark theme touches 54 files (colors are `AppColors` constants), so polish moved to P6b; P6 is the Firebase backend, rules and deploy.
+- P6: `FirebaseRepository` is built from mixins like the fake (fb_auth, fb_profile, fb_circles, fb_alerts) and is tested against fake_cloud_firestore and firebase_auth_mocks (dev only). The rules are not emulator-tested yet: firebase-tools needs Java 21+ (this machine has 20).
+- P6: until the email is verified the profile comes from Auth alone, because every rule requires `email_verified`; the first verified sign-in creates users/{uid}. `reloadUser` refreshes the ID token so the rules see the new claim. Client-side `LoginThrottle` mirrors the demo lockout on top of Firebase's own limits.
+- P6: inviteCodes/{code} {circleId, name, ownerName, memberCount} is readable by exact code only (no listing); it is how non-members find a circle, since circle docs are members-only. Joining adds only your own uid (rules check the set difference); leaving removes only you and a leaving owner hands over to a member; the owner removes one member at a time; the last one out deletes the circle, its alerts and the code.
+- P6: member docs and alerts are updated field by field (`changedFields` against the last snapshot), so sharing, guard and vehicle writes never overwrite each other. A write to a removed member's doc fails quietly instead of recreating it.
+- P6: writes wait at most 4 s for the server (`settle`); offline, Firestore keeps them in the local cache and syncs later, so the UI never hangs.
+- P6: feed copies are keyed `<ownerUid>_<activityId>` with an `activityId` field. The backfill reads the 50 newest activities and keeps "Circles" ones client-side, so no composite index is needed (no firestore.indexes.json).
+- P6: web keeps nothing on disk (Firestore cache off, Auth persistence SESSION), in line with the Inspect-surface rule; phones keep Firestore's offline cache and stay signed in.
+- P6: the real `lib/firebase_options.dart` stays out of Git with `git update-index --skip-worktree`; google-services files and .firebaserc are ignored. The Pages build is always the demo (`APEXO_DEMO`), analyzes and tests first, and uses Flutter 3.38.7.
+- P6: a profile with both photos at their caps is ~960 KB of base64, just under Firestore's 1 MiB doc limit. If photo caps grow, move photos to their own docs.
+- P6: firebase-auth's Android SDK is compiled with Kotlin 2.4 metadata, so the Kotlin Gradle plugin moved from 2.2.20 to 2.3.21 (android/settings.gradle.kts) and `kotlinOptions.jvmTarget` became the `kotlin { compilerOptions }` block. Debug APK and the Pages web build both pass. Locally in Git Bash, prefix web builds with `MSYS_NO_PATHCONV=1` or the base href turns into a Windows path.

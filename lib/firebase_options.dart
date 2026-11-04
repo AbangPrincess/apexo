@@ -1,7 +1,9 @@
-// Placeholder. `flutterfire configure` replaces this file with the real
-// options (P6); keep `isConfigured` in the generated file set to true.
+import 'package:firebase_core/firebase_core.dart';
 
-class DefaultFirebaseOptions {
-  /// False until Firebase is configured, so the demo backend is used.
-  static const bool isConfigured = false;
+/// Placeholder. `flutterfire configure` replaces this file with the real
+/// options; while it throws, the app runs on the demo backend. Keep the
+/// real file out of Git (see README "Needs you").
+abstract final class DefaultFirebaseOptions {
+  static FirebaseOptions get currentPlatform =>
+      throw UnsupportedError('Firebase is not configured yet. Run flutterfire configure.');
 }

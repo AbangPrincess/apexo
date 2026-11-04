@@ -10,8 +10,12 @@ Ride tracking, live circles and theft alerts for bikes, motorbikes and cars. Bui
 ## Run it (no setup needed)
 
 1. Install Flutter and the VS Code "Flutter" extension, then run `flutter doctor`.
-2. Open this folder in VS Code and press **F5**. The "Apexo (Chrome)" launch option opens the app in Chrome.
+2. Open this folder in VS Code and press **F5** with **Apexo demo (Chrome)** selected. The app opens in Chrome on the built-in demo backend.
 3. Tap **Continue with demo account**.
+
+For the real thing, plug in an Android phone with USB debugging on and run **Apexo (phone over USB)**. It uses Firebase once you have done the steps under "Needs you" (until then it runs the demo too). **Apexo (Chrome)** does the same in the browser.
+
+The public demo is published to GitHub Pages on every push to `main` (`.github/workflows/pages.yml`). It always runs the demo backend.
 
 What the demo shows:
 - **Home**: a weather card (temperature, feels-like, wind and its direction, the next 6 hours with rain chance), a Great / OK / Caution / Avoid ride call with the reason, and the best time to ride in the next 12 hours. Below it are this week's totals and 6 sample activities around Koronadal City, each with its route drawn. Pull down to refresh. Tap an activity to see it on a map with all its stats, or delete it.
@@ -61,8 +65,25 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 
 ## Needs you
 
-- **Real emails** (verification and password reset) need the Firebase backend, which comes in phase 6. Until then, demo emails show in the in-app Demo inbox.
-- **iPhone**: building needs a Mac with Xcode. The location and photo permission texts are already in place.
+- **Firebase** (real accounts, emails and syncing). The code is ready; it needs your Google account:
+  1. In the [Firebase console](https://console.firebase.google.com), create a project (the free Spark plan is enough; Google Analytics is optional).
+  2. **Authentication > Sign-in method**: turn on **Email/Password**.
+  3. **Firestore Database > Create database**: pick a location near your users and start in **production mode**.
+  4. **Firestore Database > Rules**: replace everything with the contents of [`firestore.rules`](firestore.rules) and press **Publish**. (Or run `firebase deploy --only firestore:rules --project YOUR_PROJECT_ID`.)
+  5. In this folder, run these one at a time:
+     ```bash
+     dart pub global activate flutterfire_cli
+     firebase login
+     flutterfire configure --platforms=android,ios,web --no-apply-gradle-plugins
+     ```
+     Pick the project you made. It rewrites `lib/firebase_options.dart`. (If your FlutterFire version doesn't know `--no-apply-gradle-plugins`, run it without that flag.)
+  6. Keep the real options out of Git (the values are not passwords, but a public repo doesn't need them):
+     ```bash
+     git update-index --skip-worktree lib/firebase_options.dart
+     ```
+  7. Run **Apexo (phone over USB)** and create an account. The verification email comes from Firebase (check spam the first time).
+- **GitHub Pages**: on GitHub, open **Settings > Pages** and set **Source** to **GitHub Actions**. The next push publishes the demo at `https://abangprincess.github.io/apexo/`. (Pages on a private repository needs a paid GitHub plan.)
+- **iPhone**: building needs a Mac with Xcode. The location and photo permission texts are already in place. Push notifications on iPhone also need an Apple Developer account.
 
 ## Known limits
 
@@ -77,6 +98,8 @@ Each color keeps one meaning on every screen. Volt and orange always sit on dark
 - Live sharing runs while the app is open (or recording). On the web it stops when the tab closes. Members see your last update with its age.
 - Battery level comes from the device. Some browsers can't report it, so your circle sees the last known value.
 - Demo mode keeps everything in memory, so it resets when you reload.
+- On the web, the real backend keeps nothing on disk: no offline copy of the data, and you are signed out when the tab closes. The phone apps keep an offline copy and stay signed in.
+- The free Firebase plan allows 20,000 writes and 50,000 reads a day. Live sharing is limited to one write every 5 s while moving, so a few friends are fine. Many daily users would need the Blaze plan.
 - Weather needs an internet connection. It refreshes every 15 minutes. Offline, it keeps showing the last result with its age until the app restarts.
 
 ## Assumptions

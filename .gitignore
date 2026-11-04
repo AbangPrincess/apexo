@@ -55,3 +55,8 @@ key.properties
 *.pem
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+# Firebase project link and emulator logs (project ids stay local)
+.firebaserc
+firebase-debug.log
+firestore-debug.log

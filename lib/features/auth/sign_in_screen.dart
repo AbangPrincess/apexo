@@ -79,23 +79,26 @@ class _SignInScreenState extends State<SignInScreen> {
                 style: t.bodyLarge?.copyWith(color: AppColors.textMuted, height: 1.4),
               ),
               const SizedBox(height: Space.l),
-              FilledButton.icon(
-                onPressed: session.busy ? null : session.signInDemo,
-                icon: pending == SessionAction.demo
-                    ? const ButtonSpinner(color: Colors.white)
-                    : const Icon(Icons.play_arrow_rounded),
-                label: const Text('Continue with demo account'),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
-              ),
-              const SizedBox(height: Space.s),
-              Text(
-                'No sign-up needed. Demo data resets when you reload.',
-                textAlign: TextAlign.center,
-                style: t.bodySmall?.copyWith(color: AppColors.textMuted),
-              ),
-              const SizedBox(height: Space.l),
-              const OrDivider('or sign in with email'),
-              const SizedBox(height: Space.l),
+              // The real backend has no demo account.
+              if (session.isDemo) ...[
+                FilledButton.icon(
+                  onPressed: session.busy ? null : session.signInDemo,
+                  icon: pending == SessionAction.demo
+                      ? const ButtonSpinner(color: Colors.white)
+                      : const Icon(Icons.play_arrow_rounded),
+                  label: const Text('Continue with demo account'),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                ),
+                const SizedBox(height: Space.s),
+                Text(
+                  'No sign-up needed. Demo data resets when you reload.',
+                  textAlign: TextAlign.center,
+                  style: t.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
+                const SizedBox(height: Space.l),
+                const OrDivider('or sign in with email'),
+                const SizedBox(height: Space.l),
+              ],
               TextFormField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,

@@ -7,5 +7,5 @@ import 'data/backend.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
-  runApp(ApexoApp(repository: createRepository(), prefs: prefs));
+  runApp(ApexoApp(repository: await createRepository(), prefs: prefs));
 }

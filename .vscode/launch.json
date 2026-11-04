@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Apexo demo (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": ["--dart-define=APEXO_DEMO=true"]
+    },
+    {
       "name": "Apexo (Chrome)",
       "request": "launch",
       "type": "dart",
@@ -9,7 +17,7 @@
       "deviceId": "chrome"
     },
     {
-      "name": "Apexo (selected device)",
+      "name": "Apexo (phone over USB)",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart"

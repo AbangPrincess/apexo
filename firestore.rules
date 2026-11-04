@@ -1,0 +1,166 @@
+rules_version = '2';
+
+// Apexo security rules (SPEC G4). Only verified accounts read or write.
+// Publish: Firebase console > Firestore > Rules (paste this file), or
+// `firebase deploy --only firestore:rules`.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function verified() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+    function me() { return request.auth.uid; }
+    function str(v, max) { return v is string && v.size() <= max; }
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function circlePath(cid) { return /databases/$(database)/documents/circles/$(cid); }
+    // Membership before this write, and after it (for writes batched with a join).
+    function memberBefore(cid) {
+      return verified() && exists(circlePath(cid)) && me() in get(circlePath(cid)).data.memberUids;
+    }
+    function memberAfter(cid) {
+      return verified() && me() in getAfter(circlePath(cid)).data.memberUids;
+    }
+    function ownerBefore(cid) {
+      return verified() && exists(circlePath(cid)) && get(circlePath(cid)).data.ownerUid == me();
+    }
+
+    function validActivity(d) {
+      return d.type in ['cycling', 'motorcycling', 'driving']
+        && str(d.title, 120)
+        && d.distanceM is number && d.movingSec is number
+        && str(d.path, 900000)
+        && d.visibility in ['private', 'circles'];
+    }
+    function validVehicle(d) {
+      return d.type in ['bike', 'motorbike', 'car']
+        && str(d.name, 30)
+        && d.status in ['ok', 'guarding', 'stolen']
+        && (d.boundary == null || (d.boundary.lat is number && d.boundary.lng is number
+            && d.boundary.radiusM >= 20 && d.boundary.radiusM <= 500));
+    }
+    function validMember(d) {
+      return d.keys().hasOnly(['displayName', 'lat', 'lng', 'speedKmh', 'heading', 'battery',
+          'status', 'sharing', 'ts', 'vehicle'])
+        && str(d.displayName, 60)
+        && d.lat is number && d.lat >= -90 && d.lat <= 90
+        && d.lng is number && d.lng >= -180 && d.lng <= 180
+        && d.speedKmh is number && d.heading is number
+        && d.battery is int && d.battery >= 0 && d.battery <= 100
+        && d.status in ['tracking', 'parked', 'alert', 'paused']
+        && d.sharing is bool && d.ts is timestamp
+        && (d.vehicle == null || (d.vehicle.type in ['bike', 'motorbike', 'car']
+            && str(d.vehicle.name, 30) && d.vehicle.status in ['ok', 'guarding', 'stolen']));
+    }
+
+    // Your own profile, vehicles and activities.
+    match /users/{uid} {
+      function mine() { return verified() && me() == uid; }
+      allow read, delete: if mine();
+      allow create, update: if mine()
+        && str(request.resource.data.displayName, 60) && request.resource.data.displayName.size() > 0
+        && request.resource.data.units in ['km', 'mi']
+        && request.resource.data.defaultActivity in ['cycling', 'motorcycling', 'driving']
+        && str(request.resource.data.bio, 500) && str(request.resource.data.hometown, 100)
+        // Photos are small data URIs (avatar 200 KB, cover 500 KB before base64).
+        && str(request.resource.data.photoUrl, 280000) && str(request.resource.data.coverUrl, 700000);
+
+      match /vehicles/{vid} {
+        allow read, delete: if mine();
+        allow create, update: if mine() && validVehicle(request.resource.data);
+      }
+      match /activities/{aid} {
+        allow read, delete: if mine();
+        allow create, update: if mine() && validActivity(request.resource.data);
+      }
+    }
+
+    // The only way to find a circle you are not in: get one by its exact code.
+    match /inviteCodes/{code} {
+      allow get: if verified();
+      allow create: if verified()
+        && getAfter(circlePath(request.resource.data.circleId)).data.ownerUid == me()
+        && getAfter(circlePath(request.resource.data.circleId)).data.inviteCode == code
+        && request.resource.data.memberCount == 1;
+      allow update: if verified() && (
+          (changedOnly(['memberCount'])
+            && (request.resource.data.memberCount - resource.data.memberCount) in [1, -1])
+          || ownerBefore(resource.data.circleId));
+      allow delete: if ownerBefore(resource.data.circleId);
+    }
+
+    match /circles/{cid} {
+      function oldUids() { return resource.data.memberUids.toSet(); }
+      function newUids() { return request.resource.data.memberUids.toSet(); }
+      // Join: add only yourself.
+      function joining() {
+        return changedOnly(['memberUids']) && !(me() in resource.data.memberUids)
+          && newUids() == oldUids().union([me()].toSet())
+          && request.resource.data.memberUids.size() <= 50;
+      }
+      // Leave: remove only yourself; a leaving owner hands over to a member.
+      function leaving() {
+        return me() in resource.data.memberUids && changedOnly(['memberUids', 'ownerUid'])
+          && newUids() == oldUids().difference([me()].toSet())
+          && request.resource.data.ownerUid in request.resource.data.memberUids
+          && (request.resource.data.ownerUid == resource.data.ownerUid
+              || resource.data.ownerUid == me());
+      }
+      // The owner removes exactly one other member.
+      function removing() {
+        return resource.data.ownerUid == me() && changedOnly(['memberUids'])
+          && oldUids().hasAll(newUids()) && newUids().size() == oldUids().size() - 1
+          && me() in request.resource.data.memberUids;
+      }
+
+      allow read: if verified() && me() in resource.data.memberUids;
+      allow create: if verified()
+        && request.resource.data.ownerUid == me()
+        && request.resource.data.memberUids == [me()]
+        && str(request.resource.data.name, 30) && request.resource.data.name.size() > 0
+        && request.resource.data.inviteCode is string
+        && request.resource.data.inviteCode.size() == 6;
+      allow update: if verified() && (joining() || leaving() || removing());
+      allow delete: if verified() && resource.data.ownerUid == me()
+        && resource.data.memberUids.size() <= 1;
+
+      // Each member writes only their own doc; the owner may remove one.
+      match /members/{uid} {
+        allow read: if memberBefore(cid);
+        allow create: if me() == uid && memberAfter(cid) && validMember(request.resource.data);
+        allow update: if me() == uid && memberBefore(cid) && validMember(request.resource.data);
+        allow delete: if verified() && (me() == uid || ownerBefore(cid));
+      }
+
+      // Copies of "Circles" activities, keyed <ownerUid>_<activityId>.
+      match /feed/{fid} {
+        allow read: if memberBefore(cid);
+        allow create, update: if memberAfter(cid)
+          && request.resource.data.ownerUid == me()
+          && fid == me() + '_' + request.resource.data.activityId
+          && validActivity(request.resource.data);
+        allow delete: if verified()
+          && (resource == null || resource.data.ownerUid == me() || ownerBefore(cid));
+      }
+
+      // Members raise their own alerts; the owner moves or closes them;
+      // anyone in the circle adds only their own ack.
+      match /alerts/{aid} {
+        allow read: if memberBefore(cid);
+        allow create: if memberBefore(cid)
+          && request.resource.data.ownerUid == me()
+          && request.resource.data.type in ['geofence', 'motion', 'lowbattery', 'sos']
+          && request.resource.data.ackBy == []
+          && str(request.resource.data.message, 200)
+          && request.resource.data.lat is number && request.resource.data.lng is number;
+        allow update: if memberBefore(cid) && (
+            (resource.data.ownerUid == me()
+              && changedOnly(['lat', 'lng', 'distanceM', 'recoveredAt']))
+            || (changedOnly(['ackBy'])
+              && request.resource.data.ackBy.toSet() == resource.data.ackBy.toSet().union([me()].toSet())));
+        allow delete: if ownerBefore(cid);
+      }
+    }
+  }
+}
