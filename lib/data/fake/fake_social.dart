@@ -12,14 +12,14 @@ import 'fake_store.dart';
 void seedDemoProfiles(FakeStore store, String circleId) {
   for (final p in const [
     PublicProfile(
-      uid: DemoIds.jero,
-      displayName: 'Jero',
+      uid: DemoIds.john,
+      displayName: 'John',
       hometown: 'Koronadal City',
       bio: 'Weekend trail rider. Usually the one who waits at the top.',
     ),
     PublicProfile(
-      uid: DemoIds.shane,
-      displayName: 'Shane',
+      uid: DemoIds.sarah,
+      displayName: 'Sarah',
       hometown: 'Tupi',
       bio: 'Scooter commuter, Sunday runner and coffee-stop planner.',
     ),

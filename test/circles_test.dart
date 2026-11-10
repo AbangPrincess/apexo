@@ -74,7 +74,7 @@ void main() {
   test('owner leaving passes ownership; the last one out deletes it', () async {
     final me = await demo();
     await repo.leaveCircle(DemoIds.circle, me.uid);
-    expect(circle(DemoIds.circle).ownerUid, DemoIds.jero);
+    expect(circle(DemoIds.circle).ownerUid, DemoIds.john);
     expect(members(DemoIds.circle).map((m) => m.uid), isNot(contains(me.uid)));
     expect(repo.store.feedOf(DemoIds.circle).value.where((s) => s.ownerUid == me.uid), isEmpty);
 
@@ -86,19 +86,19 @@ void main() {
   test('only the owner removes members, and not themselves', () async {
     final me = await demo();
     expect(
-      () => repo.removeMember(DemoIds.circle, DemoIds.jero, DemoIds.shane),
+      () => repo.removeMember(DemoIds.circle, DemoIds.john, DemoIds.sarah),
       throwsA(isA<CircleException>()),
     );
     expect(
       () => repo.removeMember(DemoIds.circle, me.uid, me.uid),
       throwsA(isA<CircleException>()),
     );
-    await repo.removeMember(DemoIds.circle, me.uid, DemoIds.shane);
-    expect(circle(DemoIds.circle).memberUids, isNot(contains(DemoIds.shane)));
-    expect(members(DemoIds.circle).map((m) => m.uid), isNot(contains(DemoIds.shane)));
+    await repo.removeMember(DemoIds.circle, me.uid, DemoIds.sarah);
+    expect(circle(DemoIds.circle).memberUids, isNot(contains(DemoIds.sarah)));
+    expect(members(DemoIds.circle).map((m) => m.uid), isNot(contains(DemoIds.sarah)));
     // A late write from the removed member does not bring them back.
     await repo.updateMember(DemoIds.circle, repo.seed.members.last);
-    expect(members(DemoIds.circle).map((m) => m.uid), isNot(contains(DemoIds.shane)));
+    expect(members(DemoIds.circle).map((m) => m.uid), isNot(contains(DemoIds.sarah)));
   });
 
   test('"Circles" activities reach the circle feed; private or deleted ones leave it', () async {

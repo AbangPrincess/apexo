@@ -114,8 +114,9 @@ class _RecordScreenState extends State<RecordScreen> {
           rec.useSimulated
               ? 'Using simulated GPS.'
               : kIsWeb
-              ? "Keep this tab open while recording. It records without internet once it's open."
-              : 'GPS starts when you press Start. No internet needed.',
+              ? 'Keep this tab open: the screen stays on while you record, because a locked '
+                    'iPhone pauses web pages. No internet needed once it is open.'
+              : 'Keeps recording with the screen locked until you finish. No internet needed.',
           textAlign: TextAlign.center,
           style: muted,
         ),

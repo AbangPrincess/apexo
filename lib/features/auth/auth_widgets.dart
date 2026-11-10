@@ -187,23 +187,27 @@ class OrDivider extends StatelessWidget {
 
   final String label;
 
+  /// The label takes only its own width (wrapping past 70% with very large
+  /// text) and the two lines share the rest equally, so it stays centered.
   @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      const Expanded(child: Divider()),
-      Flexible(
-        flex: 3,
-        child: Padding(
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, c) => Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: c.maxWidth * 0.7),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+            ),
           ),
         ),
-      ),
-      const Expanded(child: Divider()),
-    ],
+        const Expanded(child: Divider()),
+      ],
+    ),
   );
 }
 

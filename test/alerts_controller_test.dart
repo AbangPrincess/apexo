@@ -40,7 +40,7 @@ void main() {
     alerts.incoming.listen((a) => heard.add(a.id));
     expect(alerts.all.single.type, AlertType.lowbattery, reason: 'the seeded alert');
 
-    await repo.addAlert(DemoIds.circle, alert('a1', DemoIds.jero, AlertType.geofence));
+    await repo.addAlert(DemoIds.circle, alert('a1', DemoIds.john, AlertType.geofence));
     await repo.addAlert(DemoIds.circle, alert('a2', DemoIds.you, AlertType.geofence));
     await pumpEventQueue();
     expect(heard, ['a1']);
@@ -77,7 +77,7 @@ void main() {
     final me = repo.currentUser!;
     final second = await repo.createCircle(me, 'Night Riders', sharing: false);
     await pumpEventQueue();
-    await repo.addAlert(DemoIds.circle, alert('jero', DemoIds.jero, AlertType.geofence));
+    await repo.addAlert(DemoIds.circle, alert('john', DemoIds.john, AlertType.geofence));
     await repo.addAlert(
       second.id,
       alert('old', DemoIds.you, AlertType.motion, ago: const Duration(days: 10)),
@@ -87,7 +87,7 @@ void main() {
     List<String> ids(List<CircleAlert> list) => [for (final a in list) a.id];
     expect(ids(alerts.filtered(scope: AlertScope.mine)), ['old']);
     expect(ids(alerts.filtered(scope: AlertScope.circle, circleId: second.id)), ['old']);
-    expect(ids(alerts.filtered(type: AlertType.geofence)), ['jero']);
+    expect(ids(alerts.filtered(type: AlertType.geofence)), ['john']);
     expect(ids(alerts.filtered(period: AlertPeriod.week)), isNot(contains('old')));
     expect(alerts.filtered(), hasLength(3));
   });

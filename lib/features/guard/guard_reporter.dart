@@ -7,7 +7,7 @@ import '../../data/models/user.dart';
 import '../../data/repository.dart';
 import 'vehicles_controller.dart';
 
-/// "Jero's", but "Your" for the demo account, which is called "You".
+/// "John's", but "Your" for the demo account, which is called "You".
 String possessive(String name) => name == 'You' ? 'Your' : "$name's";
 
 /// What guard mode writes: alerts to every circle I am in, my ring color,

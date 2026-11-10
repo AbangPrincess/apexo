@@ -12,9 +12,9 @@ void main() {
       await signInDemo(tester);
 
       // Circle members' rides show on Home with their name, read-only.
-      expect(find.textContaining('Shane ·', skipOffstage: false), findsOneWidget);
+      expect(find.textContaining('Sarah ·', skipOffstage: false), findsOneWidget);
       await tapVisible(tester, find.text('Coffee Run', skipOffstage: false));
-      expect(find.textContaining('by Shane'), findsOneWidget);
+      expect(find.textContaining('by Sarah'), findsOneWidget);
       expect(find.byTooltip('Delete activity'), findsNothing);
       await tester.pageBack();
       await tester.pumpAndSettle();
@@ -70,12 +70,12 @@ void main() {
       expect(find.text('3 members · Owner: You'), findsOneWidget);
       await tapVisible(tester, find.text('Join with sharing paused'));
       expect(find.text('You joined Trail Buddies.'), findsOneWidget);
-      expect(find.text('Jero'), findsOneWidget);
+      expect(find.text('John'), findsOneWidget);
       expect(find.text('4 members'), findsOneWidget);
 
       await goTo(tester, 'home');
       expect(find.text('No activities yet'), findsNothing);
-      expect(find.textContaining('Shane ·', skipOffstage: false), findsOneWidget);
+      expect(find.textContaining('Sarah ·', skipOffstage: false), findsOneWidget);
     });
   }
 

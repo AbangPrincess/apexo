@@ -28,7 +28,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await goTo(tester, 'circle');
-      expect(find.text('Jero'), findsOneWidget);
+      expect(find.text('John'), findsOneWidget);
       expect(find.text('TRAIL7'), findsOneWidget);
 
       await goTo(tester, 'record');
@@ -52,7 +52,7 @@ void main() {
       expect(find.descendant(of: recordWeather, matching: find.text('Now')), findsOneWidget);
 
       await goTo(tester, 'alerts');
-      expect(find.text("Shane's phone battery is at 15%"), findsOneWidget);
+      expect(find.text("Sarah's phone battery is at 15%"), findsOneWidget);
 
       await goTo(tester, 'me');
       expect(find.text('Achievements'), findsOneWidget);

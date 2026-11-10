@@ -29,7 +29,7 @@ White surfaces, #F4F4F5 secondary, 1 px #E4E5E8 hairline borders, no shadows or 
 
 ## P1 Foundation + demo backend + app shell
 - Scaffold (`flutter create --org io.github.abangprincess --project-name apexo --platforms android,web .`), add packages, folder layout, theme, bottom-nav shell with 5 styled screens and friendly empty states, Me > settings (units, default activity).
-- Repository interfaces + FakeRepository seeded with: demo user "You", circle "Trail Buddies" (code TRAIL7), member Jero (rides a scripted loop around Koronadal City, 6.50, 124.85, and leaves his 50 m boundary after ~20 s so an alert fires), member Shane (parked), and 6 sample activities across cycling/motorcycling/driving. Everything must run with zero setup.
+- Repository interfaces + FakeRepository seeded with: demo user "You", circle "Trail Buddies" (code TRAIL7), member John (rides a scripted loop around Koronadal City, 6.50, 124.85, and leaves the 50 m boundary after ~20 s so an alert fires), member Sarah (parked), and 6 sample activities across cycling/motorcycling/driving. Everything must run with zero setup.
 - Auth screens: "Continue with demo account", plus email/password sign in and create account wired to the repository.
 - Pure libs + tests: haversine, path length, insideBoundary(lat,lng,boundary,accuracy), polyline encode/decode, path simplification (>=10 m), km/mi conversion, avg/max speed with GPS-jump filter.
 - Goal of this phase: I press F5 in VS Code, choose Chrome, and SEE the whole app moving with demo data.
@@ -48,7 +48,7 @@ White surfaces, #F4F4F5 secondary, 1 px #E4E5E8 hairline borders, no shadows or 
 ## P4 Circles
 - Circle tab: map with member pins = round initial avatar with a status ring (green tracking, red alert, gray parked/paused) and a small vehicle badge; draggable bottom sheet listing members (name, status, last update, battery, speed), tap to focus; locate-me button.
 - Create circle (name, then a 6-character invite code with Share via share_plus), Join (enter code, then the consent screen, then joined), Members screen (pause sharing toggle, leave circle, owner can remove a member).
-- Live sharing: while "Share my location" is on, publish my member doc within the write budget and show a persistent indicator. In demo mode, animate Jero and Shane.
+- Live sharing: while "Share my location" is on, publish my member doc within the write budget and show a persistent indicator. In demo mode, animate John and Sarah.
 - Activities saved with visibility "Circles" appear in members' Home feeds with the owner's name.
 
 ## P5 Vehicle guard + alerts

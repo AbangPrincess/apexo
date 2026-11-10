@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../core/geo.dart';
@@ -78,11 +80,15 @@ class ProfileHeader extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
+                    // Room for the badge, so all of it can be tapped.
+                    SizedBox.square(dimension: (r + 4) * (1 + math.sqrt1_2) + 24),
                     UserAvatar(photoUrl: user.photoUrl, initial: user.initial, radius: r, ring: 4),
+                    // Centered on the photo's edge at the lower right (45°),
+                    // half on the photo and half off; 48 pt to tap.
                     Positioned(
-                      right: 4,
-                      bottom: 4,
-                      child: _PhotoButton(icon: Icons.photo_camera_outlined, onTap: onChangeAvatar),
+                      left: (r + 4) * (1 + math.sqrt1_2) - 24,
+                      top: (r + 4) * (1 + math.sqrt1_2) - 24,
+                      child: _AvatarBadge(size: wide ? 40 : 34, onTap: onChangeAvatar),
                     ),
                   ],
                 ),
@@ -164,4 +170,31 @@ class _PhotoButton extends StatelessWidget {
       style: style,
     );
   }
+}
+
+/// The small camera badge on the profile photo, ringed in the page color so
+/// it stands apart from the photo.
+class _AvatarBadge extends StatelessWidget {
+  const _AvatarBadge({required this.size, required this.onTap});
+
+  final double size;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: 'Change profile photo',
+    onPressed: onTap,
+    iconSize: size * 0.5,
+    icon: const Icon(Icons.photo_camera_outlined),
+    style: IconButton.styleFrom(
+      fixedSize: Size.square(size),
+      minimumSize: Size.square(size),
+      padding: EdgeInsets.zero,
+      // Small to look at, full size to tap.
+      tapTargetSize: MaterialTapTargetSize.padded,
+      backgroundColor: AppColors.surfaceAlt,
+      foregroundColor: AppColors.text,
+      side: BorderSide(color: AppColors.surface, width: 2.5),
+    ),
+  );
 }

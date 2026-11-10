@@ -6,7 +6,7 @@ import '../models/user.dart';
 import 'demo_routes.dart';
 import 'demo_seed.dart';
 
-/// Trail Buddies' shared feed: Jero's and Shane's rides plus the demo
+/// Trail Buddies' shared feed: John's and Sarah's rides plus the demo
 /// user's own "Circles" activities, newest first.
 List<SharedActivity> demoCircleFeed(DemoSeed seed) {
   final now = seed.now;
@@ -14,14 +14,14 @@ List<SharedActivity> demoCircleFeed(DemoSeed seed) {
       DateTime(now.year, now.month, now.day - daysAgo, hour, minute);
   AppUser friend(String uid, String name) =>
       AppUser(uid: uid, displayName: name, email: '', createdAt: now);
-  final jero = friend(DemoIds.jero, 'Jero');
-  final shane = friend(DemoIds.shane, 'Shane');
+  final john = friend(DemoIds.john, 'John');
+  final sarah = friend(DemoIds.sarah, 'Sarah');
 
   final items = [
     SharedActivity.of(
-      shane,
+      sarah,
       DemoSeed.buildActivity(
-        'shane-1',
+        'sarah-1',
         ActivityType.motorcycling,
         'Coffee Run',
         at(1, 7, 15),
@@ -33,9 +33,9 @@ List<SharedActivity> demoCircleFeed(DemoSeed seed) {
       now,
     ),
     SharedActivity.of(
-      jero,
+      john,
       DemoSeed.buildActivity(
-        'jero-1',
+        'john-1',
         ActivityType.cycling,
         'Ridge Trail Loop',
         at(2, 5, 30),
@@ -54,9 +54,9 @@ List<SharedActivity> demoCircleFeed(DemoSeed seed) {
       now,
     ),
     SharedActivity.of(
-      jero,
+      john,
       DemoSeed.buildActivity(
-        'jero-2',
+        'john-2',
         ActivityType.cycling,
         'Recovery Spin',
         at(4, 17, 50),
@@ -68,9 +68,9 @@ List<SharedActivity> demoCircleFeed(DemoSeed seed) {
       now,
     ),
     SharedActivity.of(
-      shane,
+      sarah,
       DemoSeed.buildActivity(
-        'shane-2',
+        'sarah-2',
         ActivityType.running,
         'Morning Jog',
         at(3, 5, 40),

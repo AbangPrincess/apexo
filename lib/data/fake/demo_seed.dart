@@ -10,8 +10,8 @@ import 'demo_routes.dart';
 
 abstract final class DemoIds {
   static const you = 'demo-you';
-  static const jero = 'demo-jero';
-  static const shane = 'demo-shane';
+  static const john = 'demo-john';
+  static const sarah = 'demo-sarah';
   static const circle = 'trail-buddies';
   static const inviteCode = 'TRAIL7';
 }
@@ -38,8 +38,8 @@ class DemoSeed {
     Vehicle(id: 'v-moto', type: VehicleType.motorbike, name: 'Commuter'),
   ];
 
-  /// Jero's scripted ride; starts at his parking spot.
-  late final List<GeoPoint> jeroLoop = demoLoop(
+  /// John's scripted ride; starts at the parking spot.
+  late final List<GeoPoint> johnLoop = demoLoop(
     offsetM(koronadal, northM: 250, eastM: -350),
     northM: 420,
     eastM: 600,
@@ -48,9 +48,9 @@ class DemoSeed {
     n: 240,
   );
 
-  late final Boundary jeroBoundary = Boundary(
-    lat: jeroLoop.first.lat,
-    lng: jeroLoop.first.lng,
+  late final Boundary johnBoundary = Boundary(
+    lat: johnLoop.first.lat,
+    lng: johnLoop.first.lng,
     radiusM: 50,
   );
 
@@ -59,15 +59,15 @@ class DemoSeed {
     name: 'Trail Buddies',
     inviteCode: DemoIds.inviteCode,
     ownerUid: DemoIds.you,
-    memberUids: const [DemoIds.you, DemoIds.jero, DemoIds.shane],
+    memberUids: const [DemoIds.you, DemoIds.john, DemoIds.sarah],
     createdAt: now.subtract(const Duration(days: 30)),
   );
 
-  late final GeoPoint _shaneSpot = offsetM(koronadal, northM: -420, eastM: -380);
+  late final GeoPoint _sarahSpot = offsetM(koronadal, northM: -420, eastM: -380);
 
-  /// Shane's scooter loop; starts (and ends) at his parking spot.
-  late final List<GeoPoint> shaneLoop = demoLoop(
-    offsetM(_shaneSpot, eastM: -520),
+  /// Sarah's scooter loop; starts (and ends) at the parking spot.
+  late final List<GeoPoint> sarahLoop = demoLoop(
+    offsetM(_sarahSpot, eastM: -520),
     northM: 380,
     eastM: 520,
     wobble: 0.1,
@@ -88,10 +88,10 @@ class DemoSeed {
       vehicle: const MemberVehicle(type: VehicleType.bike, name: 'Trail bike'),
     ),
     Member(
-      uid: DemoIds.jero,
-      displayName: 'Jero',
-      lat: jeroLoop.first.lat,
-      lng: jeroLoop.first.lng,
+      uid: DemoIds.john,
+      displayName: 'John',
+      lat: johnLoop.first.lat,
+      lng: johnLoop.first.lng,
       battery: 64,
       status: MemberStatus.parked,
       ts: now,
@@ -102,10 +102,10 @@ class DemoSeed {
       ),
     ),
     Member(
-      uid: DemoIds.shane,
-      displayName: 'Shane',
-      lat: _shaneSpot.lat,
-      lng: _shaneSpot.lng,
+      uid: DemoIds.sarah,
+      displayName: 'Sarah',
+      lat: _sarahSpot.lat,
+      lng: _sarahSpot.lng,
       battery: 41,
       status: MemberStatus.parked,
       ts: now.subtract(const Duration(minutes: 3)),
@@ -117,11 +117,11 @@ class DemoSeed {
     CircleAlert(
       id: 'alert-seed-1',
       type: AlertType.lowbattery,
-      ownerUid: DemoIds.shane,
+      ownerUid: DemoIds.sarah,
       vehicleName: 'Black scooter',
-      message: "Shane's phone battery is at 15%",
-      lat: _shaneSpot.lat,
-      lng: _shaneSpot.lng,
+      message: "Sarah's phone battery is at 15%",
+      lat: _sarahSpot.lat,
+      lng: _sarahSpot.lng,
       distanceM: 0,
       ts: _at(1, 21, 14),
       ackBy: const [DemoIds.you],

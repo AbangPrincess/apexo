@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:clock/clock.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 
 import '../../core/activity_summary.dart';
 import '../../core/activity_type.dart';
 import '../../core/geo.dart';
 import '../../core/polyline.dart';
 import '../../core/ride_tracker.dart';
+import '../../core/screen_awake.dart';
 import '../../core/stats.dart';
 import '../../data/models/activity.dart';
 import '../../data/models/user.dart';
@@ -23,6 +25,10 @@ class RecordController extends ChangeNotifier {
     _authSub = _repo.authStateChanges().listen((u) {
       if (u == null && isActive) discard();
     });
+    // A web page stops while hidden (a locked iPhone, another app).
+    if (kIsWeb) {
+      _life = AppLifecycleListener(onHide: () => _hiddenAt = clock.now(), onShow: _onShow);
+    }
   }
 
   final AppRepository _repo;
@@ -32,6 +38,8 @@ class RecordController extends ChangeNotifier {
   /// Supplies the weather snapshot saved with each activity.
   final WeatherController? weather;
   late final StreamSubscription<AppUser?> _authSub;
+  AppLifecycleListener? _life;
+  DateTime? _hiddenAt;
 
   /// Demo backend defaults to simulated GPS; it can be switched off.
   bool useSimulated;
@@ -102,6 +110,8 @@ class RecordController extends ChangeNotifier {
         );
     // Ticks the on-screen clock between fixes.
     _clock = Timer.periodic(const Duration(seconds: 1), (_) => notifyListeners());
+    // Phones record with the screen locked; the web keeps it on instead.
+    keepScreenAwake(true);
     notifyListeners();
     return true;
   }
@@ -171,7 +181,23 @@ class RecordController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Back on screen after the page was hidden: a web page records nothing
+  /// then, so say so instead of leaving a silent gap.
+  void _onShow() {
+    final at = _hiddenAt;
+    _hiddenAt = null;
+    if (at == null || !isActive || state == RideState.paused) return;
+    final gap = clock.now().difference(at);
+    if (gap < const Duration(seconds: 20)) return;
+    final away = gap.inMinutes < 1 ? '${gap.inSeconds} s' : '${gap.inMinutes} min';
+    _error =
+        "The screen was locked or Apexo was hidden for $away, and a web page can't record "
+        'then. Recording goes on from here; the Android app records with the screen locked.';
+    notifyListeners();
+  }
+
   void _stopStreams() {
+    keepScreenAwake(false);
     _fixes?.cancel();
     _fixes = null;
     _clock?.cancel();
@@ -188,6 +214,7 @@ class RecordController extends ChangeNotifier {
   void dispose() {
     _stopStreams();
     _authSub.cancel();
+    _life?.dispose();
     super.dispose();
   }
 }

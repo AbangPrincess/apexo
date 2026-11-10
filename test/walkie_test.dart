@@ -62,8 +62,8 @@ void main() {
     await signInDemo(tester);
     VoiceClip clip(String id) => VoiceClip(
       id: id,
-      fromUid: DemoIds.jero,
-      fromName: 'Jero',
+      fromUid: DemoIds.john,
+      fromName: 'John',
       durationMs: 3000,
       mime: 'audio/mp4',
     );
@@ -78,7 +78,7 @@ void main() {
     await pumpApp(tester, sizes['iPhone']!);
     await signInDemo(tester);
     await goTo(tester, 'circle');
-    await tapVisible(tester, find.byKey(const ValueKey('profile-${DemoIds.jero}')));
+    await tapVisible(tester, find.byKey(const ValueKey('profile-${DemoIds.john}')));
     expect(find.textContaining('Weekend trail rider'), findsOneWidget);
     expect(find.text('Koronadal City'), findsOneWidget);
     expect(find.textContaining('@'), findsNothing);

@@ -36,9 +36,9 @@ class FakeRepository extends AppRepository
     seedDemoProfiles(_store, seed.circle.id);
     simulator = DemoSimulator(
       CircleWorld(_store, seed.circle.id),
-      loop: seed.jeroLoop,
-      boundary: seed.jeroBoundary,
-      shaneLoop: seed.shaneLoop,
+      loop: seed.johnLoop,
+      boundary: seed.johnBoundary,
+      sarahLoop: seed.sarahLoop,
     );
   }
 
@@ -89,7 +89,7 @@ class FakeRepository extends AppRepository
     await _wait();
     final account = accounts.checkPassword(email, password);
     _store.auth.value = _store.profiles[account.uid]?.copyWith(emailVerified: account.verified);
-    // Any account can join TRAIL7 and watch Jero and Shane move.
+    // Any account can join TRAIL7 and watch John and Sarah move.
     if (simulate) simulator.start();
   }
 

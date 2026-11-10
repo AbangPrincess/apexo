@@ -145,7 +145,14 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   Text('New to Apexo?', style: t.bodyMedium),
                   TextButton(
+                    key: const ValueKey('open-create-account'),
                     onPressed: session.busy ? null : _openCreateAccount,
+                    // A word space after the question, not the button's
+                    // usual padding; still 48 pt tall to tap.
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      minimumSize: const Size(0, 48),
+                    ),
                     child: const Text('Create account'),
                   ),
                 ],

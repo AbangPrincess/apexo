@@ -19,29 +19,29 @@ abstract interface class DemoWorld {
   void putAlert(CircleAlert alert);
 }
 
-/// Moves Jero around his loop once per [interval]. His bike is guarded with a
+/// Moves John around the loop once per [interval]. The bike is guarded with a
 /// 50 m boundary, so ~20 s in the geofence trips and an alert is written that
-/// then follows the bike. Shane rides his scooter loop with a short stop
+/// then follows the bike. Sarah rides the scooter loop with a short stop
 /// every two minutes.
 class DemoSimulator {
   DemoSimulator(
     this.world, {
     required List<GeoPoint> loop,
     required this.boundary,
-    List<GeoPoint>? shaneLoop,
+    List<GeoPoint>? sarahLoop,
     this.interval = const Duration(seconds: 1),
-  }) : _jero = LoopRider(loop),
-       _shane = shaneLoop == null ? null : LoopRider(shaneLoop);
+  }) : _john = LoopRider(loop),
+       _sarah = sarahLoop == null ? null : LoopRider(sarahLoop);
 
   final DemoWorld world;
   final Boundary boundary;
   final Duration interval;
-  final LoopRider _jero;
-  final LoopRider? _shane;
+  final LoopRider _john;
+  final LoopRider? _sarah;
 
   static const idleSteps = 8;
   static const cruiseMps = 5.6;
-  static const shaneMps = 7.5;
+  static const sarahMps = 7.5;
 
   late final _fence = GeofenceWatch(boundary);
   Timer? _timer;
@@ -63,27 +63,27 @@ class DemoSimulator {
   void step() {
     _steps++;
     final now = DateTime.now();
-    if (_steps > idleSteps) _moveJero(now);
-    if (_shane != null && _steps > idleSteps * 2) {
-      _moveShane(now);
+    if (_steps > idleSteps) _moveJohn(now);
+    if (_sarah != null && _steps > idleSteps * 2) {
+      _moveSarah(now);
     } else if (_steps % 60 == 0) {
-      _heartbeat(DemoIds.shane, now);
+      _heartbeat(DemoIds.sarah, now);
     }
   }
 
-  void _moveJero(DateTime now) {
-    final jero = world.member(DemoIds.jero);
-    if (jero == null) return;
+  void _moveJohn(DateTime now) {
+    final john = world.member(DemoIds.john);
+    if (john == null) return;
     final mps = cruiseMps + 1.2 * math.sin(_steps / 7);
-    final prev = _jero.position;
-    final pos = _jero.advance(mps * _secs);
+    final prev = _john.position;
+    final pos = _john.advance(mps * _secs);
 
     // Same rule the real guard uses. The demo alerts once per session, so
     // later laps through the boundary stay quiet.
     final exit = _fence.addFix(pos, 5) == GeofenceEvent.exit;
 
-    var status = jero.status == MemberStatus.alert ? MemberStatus.alert : MemberStatus.tracking;
-    var vehicle = jero.vehicle;
+    var status = john.status == MemberStatus.alert ? MemberStatus.alert : MemberStatus.tracking;
+    var vehicle = john.vehicle;
     final open = _alertId == null ? null : world.alert(_alertId!);
     if (exit && _alertId == null) {
       status = MemberStatus.alert;
@@ -94,11 +94,11 @@ class DemoSimulator {
         CircleAlert(
           id: _alertId!,
           type: AlertType.geofence,
-          ownerUid: DemoIds.jero,
-          ownerName: jero.displayName,
-          vehicleId: 'jero-mtb',
+          ownerUid: DemoIds.john,
+          ownerName: john.displayName,
+          vehicleId: 'john-mtb',
           vehicleName: name,
-          message: "${jero.displayName}'s $name is on the move",
+          message: "${john.displayName}'s $name is on the move",
           lat: pos.lat,
           lng: pos.lng,
           distanceM: _fence.distanceFrom(pos),
@@ -114,12 +114,12 @@ class DemoSimulator {
     }
 
     world.putMember(
-      jero.copyWith(
+      john.copyWith(
         lat: pos.lat,
         lng: pos.lng,
         speedKmh: mpsToKmh(mps),
         heading: bearingDeg(prev, pos),
-        battery: _steps % 90 == 0 ? math.max(5, jero.battery - 1) : jero.battery,
+        battery: _steps % 90 == 0 ? math.max(5, john.battery - 1) : john.battery,
         status: status,
         vehicle: vehicle,
         ts: now,
@@ -127,23 +127,23 @@ class DemoSimulator {
     );
   }
 
-  void _moveShane(DateTime now) {
-    final shane = world.member(DemoIds.shane);
-    final rider = _shane;
-    if (shane == null || rider == null) return;
+  void _moveSarah(DateTime now) {
+    final sarah = world.member(DemoIds.sarah);
+    final rider = _sarah;
+    if (sarah == null || rider == null) return;
     // Rides for 100 s, then waits 20 s (a light, a shop), and repeats.
     final stopped = _steps % 120 >= 100;
-    final mps = stopped ? 0.0 : shaneMps + 1.5 * math.sin(_steps / 9);
+    final mps = stopped ? 0.0 : sarahMps + 1.5 * math.sin(_steps / 9);
     final prev = rider.position;
     final pos = rider.advance(mps * _secs);
     // While stopped only a heartbeat is written, like the real write budget.
-    if (stopped && shane.status == MemberStatus.parked && _steps % 60 != 0) return;
+    if (stopped && sarah.status == MemberStatus.parked && _steps % 60 != 0) return;
     world.putMember(
-      shane.copyWith(
+      sarah.copyWith(
         lat: pos.lat,
         lng: pos.lng,
         speedKmh: mpsToKmh(mps),
-        heading: stopped ? shane.heading : bearingDeg(prev, pos),
+        heading: stopped ? sarah.heading : bearingDeg(prev, pos),
         status: stopped ? MemberStatus.parked : MemberStatus.tracking,
         ts: now,
       ),

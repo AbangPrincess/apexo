@@ -67,7 +67,7 @@ void main() {
       expect(validatePassword('short'), isNotNull);
       expect(validatePassword('longenough1'), isNull);
       expect(validateDisplayName('  '), isNotNull);
-      expect(validateDisplayName('Jero'), isNull);
+      expect(validateDisplayName('John'), isNull);
     });
   });
 }

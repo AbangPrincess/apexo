@@ -88,7 +88,7 @@ class RecordStats extends StatelessWidget {
   }
 }
 
-/// "Recording", "Paused", "Auto-paused" or "GPS ready" with a colored dot.
+/// "Recording", "Paused", "Stopped · still recording" or "GPS ready" with a colored dot.
 /// Solid, so it stays readable over the map.
 class RecordStatusPill extends StatelessWidget {
   const RecordStatusPill({
@@ -109,7 +109,8 @@ class RecordStatusPill extends StatelessWidget {
     final (label, color) = switch (state) {
       _ when waiting => ('GPS ready · start moving', AppColors.onDarkMuted),
       RideState.recording => ('Recording', AppColors.tracking),
-      RideState.autoPaused => ('Auto-paused · start moving to resume', AppColors.caution),
+      // Still recording: only the moving-time clock waits until you move.
+      RideState.autoPaused => ('Stopped · still recording', AppColors.caution),
       _ => ('Paused', AppColors.onDarkMuted),
     };
     final t = Theme.of(context).textTheme;

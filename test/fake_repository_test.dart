@@ -34,7 +34,7 @@ void main() {
     expect(circles.single.inviteCode, 'TRAIL7');
 
     final members = await repo.watchMembers(circles.single.id).first;
-    expect(members.map((m) => m.displayName), ['You', 'Jero', 'Shane']);
+    expect(members.map((m) => m.displayName), ['You', 'John', 'Sarah']);
   });
 
   test('seeded paths are encoded with points >= 10 m apart', () async {
@@ -48,7 +48,7 @@ void main() {
     }
   });
 
-  test('Jero leaves his 50 m boundary after about 20 s and one alert fires', () async {
+  test('John leaves the 50 m boundary after about 20 s and one alert fires', () async {
     await repo.signInDemo();
     var steps = 0;
     while (!repo.simulator.alerted && steps < 60) {
@@ -61,7 +61,7 @@ void main() {
     final geofence = alerts.where((a) => a.type == AlertType.geofence).toList();
     expect(geofence, hasLength(1));
     expect(geofence.single.distanceM, greaterThan(50));
-    expect(geofence.single.message, contains('Jero'));
+    expect(geofence.single.message, contains('John'));
 
     for (var i = 0; i < 30; i++) {
       repo.simulator.step();
@@ -69,12 +69,12 @@ void main() {
     final after = await repo.watchAlerts(DemoIds.circle).first;
     expect(after.where((a) => a.type == AlertType.geofence), hasLength(1));
 
-    final jero = (await repo.watchMembers(DemoIds.circle).first).firstWhere(
-      (m) => m.uid == DemoIds.jero,
+    final john = (await repo.watchMembers(DemoIds.circle).first).firstWhere(
+      (m) => m.uid == DemoIds.john,
     );
-    expect(jero.status, MemberStatus.alert);
-    expect(jero.vehicle!.status, VehicleStatus.stolen);
-    expect(jero.speedKmh, greaterThan(10));
+    expect(john.status, MemberStatus.alert);
+    expect(john.vehicle!.status, VehicleStatus.stolen);
+    expect(john.speedKmh, greaterThan(10));
   });
 
   test('email accounts: create, sign out, sign in', () async {

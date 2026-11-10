@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'app_harness.dart';
 
-/// Drives the demo simulator until Jero's bike leaves its boundary.
-Future<void> jeroLeaves(WidgetTester tester, FakeRepository repo) async {
+/// Drives the demo simulator until John's bike leaves its boundary.
+Future<void> johnLeaves(WidgetTester tester, FakeRepository repo) async {
   for (var i = 0; i < 60 && !repo.simulator.alerted; i++) {
     repo.simulator.step();
   }
@@ -52,9 +52,9 @@ void main() {
   testWidgets("another member's theft: dialog, It's me, filters", (tester) async {
     final repo = await pumpApp(tester, sizes['iPhone']!);
     await signInDemo(tester);
-    await jeroLeaves(tester, repo);
+    await johnLeaves(tester, repo);
 
-    expect(find.text("Jero's Blue MTB is on the move"), findsOneWidget);
+    expect(find.text("John's Blue MTB is on the move"), findsOneWidget);
     expect(find.textContaining('(limit 50 m)'), findsOneWidget);
     expect(find.text('Navigate'), findsOneWidget);
     await tapVisible(tester, find.text("It's me"));
@@ -67,14 +67,14 @@ void main() {
     await tapVisible(tester, find.text('Clear'));
     await tapVisible(tester, find.text('Any type'));
     await tapVisible(tester, find.text('Low battery').last);
-    expect(find.text("Shane's phone battery is at 15%"), findsOneWidget);
-    expect(find.text("Jero's Blue MTB is on the move"), findsNothing);
+    expect(find.text("Sarah's phone battery is at 15%"), findsOneWidget);
+    expect(find.text("John's Blue MTB is on the move"), findsNothing);
   });
 
   testWidgets('View on map opens Circle at the missing vehicle', (tester) async {
     final repo = await pumpApp(tester, sizes['tablet']!);
     await signInDemo(tester);
-    await jeroLeaves(tester, repo);
+    await johnLeaves(tester, repo);
     await tapVisible(tester, find.text('View on map'));
     expect(find.text('Trail Buddies'), findsOneWidget);
     expect(find.byType(AlertPin), findsOneWidget);

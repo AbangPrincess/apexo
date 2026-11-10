@@ -20,7 +20,7 @@ class ConsentView extends StatelessWidget {
 
   final String circleName;
 
-  /// e.g. "3 members · Owner: Jero".
+  /// e.g. "3 members · Owner: John".
   final String? details;
   final String shareLabel;
   final String pausedLabel;
