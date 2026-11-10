@@ -54,7 +54,7 @@ White surfaces, #F4F4F5 secondary, 1 px #E4E5E8 hairline borders, no shadows or 
 ## P5 Vehicle guard + alerts
 - Vehicles: add/edit (type, name) and choose the active one.
 - Guard mode (meant for the phone left on the vehicle): ARM sets the boundary to the current location, default radius 50 m (slider 20-500 m), draws the circle on the map, shows the foreground notification "Guard mode on", sends a heartbeat every 60 s with battery. Evaluate the geofence on every fix: alert only after 2 consecutive fixes outside radius + accuracy, once per exit, re-arm after re-entry (prevents GPS-jitter false alarms). Optional accelerometer nudge detection (sensors_plus) with a sensitivity setting. Low-battery alert at 15 %.
-- On alert: write circles/*/alerts, set the vehicle to 'stolen' and the member ring to red. Every other member's app shows a dialog plus a local notification and sound: "<Name>'s <vehicle> is on the move" with "Moved N m from its boundary (limit R m)", buttons View on map, Navigate, and "It's me" (acknowledge). The owner can "Mark recovered".
+- On alert: write circles/*/alerts, set the vehicle to 'stolen' and the member ring to red. Every other member's app shows a dialog plus a local notification and sound: "<Name>'s <vehicle> is on the move" with "Moved N km away (limit R km)" (in the Kilometers/Miles setting), buttons View on map, Navigate, and "It's me" (acknowledge). The owner can "Mark recovered".
 - Alerts tab: chronological list with filters (All/Mine/Circle, type, date); tap to open on the map.
 
 ## P6 Firebase + polish + GitHub deploy

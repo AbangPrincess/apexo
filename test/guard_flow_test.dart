@@ -41,7 +41,7 @@ void main() {
       expect(find.text('Trail bike left its boundary'), findsOneWidget, reason: 'the bar');
       await goTo(tester, 'alerts');
       expect(find.text('Your Trail bike is on the move'), findsOneWidget);
-      expect(find.text('Moved 95 m from its boundary (limit 50 m)'), findsOneWidget);
+      expect(find.text('Moved 0.09 km away (limit 0.05 km)'), findsOneWidget);
       await tapVisible(tester, find.text('Mark recovered'));
       expect(find.text('Trail bike marked recovered'), findsOneWidget);
       expect(find.textContaining('Recovered'), findsOneWidget);
@@ -55,7 +55,7 @@ void main() {
     await johnLeaves(tester, repo);
 
     expect(find.text("John's Blue MTB is on the move"), findsOneWidget);
-    expect(find.textContaining('(limit 50 m)'), findsOneWidget);
+    expect(find.textContaining('(limit 0.05 km)'), findsOneWidget);
     expect(find.text('Navigate'), findsOneWidget);
     await tapVisible(tester, find.text("It's me"));
 

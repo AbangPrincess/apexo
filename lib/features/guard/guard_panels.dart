@@ -4,10 +4,12 @@ import 'package:provider/provider.dart';
 import '../../core/geo.dart';
 import '../../core/theme.dart';
 import '../../core/time_format.dart';
+import '../../core/units.dart';
 import '../../data/models/user.dart';
 import '../../data/repository.dart';
 import '../../widgets/map_view.dart';
 import '../alerts/alert_dialog.dart';
+import '../me/settings_controller.dart';
 import 'guard_controller.dart';
 
 /// The boundary on a map, with where the vehicle is now.
@@ -80,6 +82,7 @@ class ArmedPanel extends StatelessWidget {
     final b = guard.boundary;
     final since = vehicle.armedAt;
     final d = guard.distanceM;
+    final units = context.select<SettingsController, Units>((s) => s.units);
     final demo = context.read<AppRepository>().isDemo;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -112,13 +115,13 @@ class ArmedPanel extends StatelessWidget {
                 [
                   'Watching ${vehicle.name}',
                   if (since != null) 'since ${formatClock(since)}',
-                  if (b != null) 'alert beyond ${b.radiusM.round()} m',
+                  if (b != null) 'alert beyond ${distanceText(b.radiusM, units)}',
                 ].join(' · '),
                 style: t.bodyMedium?.copyWith(color: AppColors.onDarkMuted),
               ),
               const SizedBox(height: Space.m),
               Text(
-                d == null ? '—' : '${d.round()} m',
+                d == null ? '—' : distanceText(d, units),
                 style: t.displaySmall?.copyWith(color: Colors.white, fontFeatures: kTabular),
               ),
               Text(
@@ -153,6 +156,7 @@ class StolenPanel extends StatelessWidget {
     final t = Theme.of(context).textTheme;
     final b = guard.boundary;
     final d = guard.distanceM;
+    final units = context.select<SettingsController, Units>((s) => s.units);
     final at = guard.lastPosition;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,8 +181,8 @@ class StolenPanel extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       [
-                        if (d != null) '${d.round()} m from the spot',
-                        if (b != null) 'limit ${b.radiusM.round()} m',
+                        if (d != null) '${distanceText(d, units)} from the spot',
+                        if (b != null) 'limit ${distanceText(b.radiusM, units)}',
                         'your circles were alerted',
                       ].join(' · '),
                       style: t.bodyMedium,

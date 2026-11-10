@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme.dart';
+import '../../core/units.dart';
 import '../../data/models/circle_alert.dart';
 import '../../shell/app_tab.dart';
 import '../../widgets/time_ago.dart';
 import '../../widgets/visuals.dart';
+import '../me/settings_controller.dart';
 import 'alert_actions.dart';
+import 'alert_buttons.dart';
 import 'alert_dialog.dart';
+import 'alert_heading.dart';
 import 'alerts_controller.dart';
 
 class AlertCard extends StatelessWidget {
@@ -29,6 +33,12 @@ class AlertCard extends StatelessWidget {
       if (a.recoveredAt != null) 'Recovered' else if (acked) 'Seen',
     ].join(' · ');
     final shell = context.read<ShellController>();
+    final units = context.select<SettingsController, Units>((s) => s.units);
+    final (third, onThird) = mine
+        ? ('Mark recovered', () => markRecovered(context, a))
+        : !acked
+        ? ("It's me", () => context.read<AlertsController>().ack(a))
+        : (null, null);
 
     return Card(
       shape: RoundedRectangleBorder(
@@ -37,10 +47,12 @@ class AlertCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: theft ? () => viewAlertOnMap(context, shell, a) : null,
+        // 16 pt on every side, below the last button too. The buttons span
+        // the card, the same 16 pt from both edges.
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(Space.m, Space.m, Space.m, Space.s),
+          padding: const EdgeInsets.all(Space.m),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,52 +63,30 @@ class AlertCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(a.message, style: t.titleMedium),
-                        const SizedBox(height: 2),
-                        Text(alertDetail(a), style: t.bodyMedium),
-                        const SizedBox(height: Space.xs),
-                        TimeAgo(
-                          a.ts,
-                          suffix: ' · $status',
-                          style: t.bodySmall?.copyWith(color: AppColors.textMuted),
-                        ),
-                      ],
+                    child: AlertHeading(
+                      a.message,
+                      alertDetail(a, units),
+                      titleStyle: t.titleMedium!,
+                      detailStyle: t.bodyMedium!,
+                      meta: TimeAgo(
+                        a.ts,
+                        suffix: ' · $status',
+                        style: t.bodySmall?.copyWith(color: AppColors.textMuted),
+                      ),
                     ),
                   ),
                 ],
               ),
               if (a.open) ...[
-                const SizedBox(height: Space.xs),
-                Wrap(
-                  spacing: Space.xs,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => viewAlertOnMap(context, shell, a),
-                      icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text('View on map'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => navigateToAlert(context, a),
-                      icon: const Icon(Icons.directions_outlined, size: 18),
-                      label: const Text('Navigate'),
-                    ),
-                    if (mine)
-                      TextButton(
-                        onPressed: () => markRecovered(context, a),
-                        child: const Text('Mark recovered'),
-                      )
-                    else if (!acked)
-                      TextButton(
-                        onPressed: () => context.read<AlertsController>().ack(a),
-                        child: const Text("It's me"),
-                      ),
-                  ],
+                const SizedBox(height: Space.m),
+                AlertActions(
+                  onViewMap: () => viewAlertOnMap(context, shell, a),
+                  onNavigate: () => navigateToAlert(context, a),
+                  third: third,
+                  onThird: onThird,
+                  quietThird: !mine,
                 ),
-              ] else
-                const SizedBox(height: Space.s),
+              ],
             ],
           ),
         ),

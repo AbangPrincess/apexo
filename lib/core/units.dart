@@ -30,6 +30,10 @@ String formatDistance(double meters, Units units) {
   return v.toStringAsFixed(v.abs() < 100 ? 2 : 1);
 }
 
+/// Distance with its unit, e.g. "0.05 km" or "12.34 mi".
+String distanceText(double meters, Units units) =>
+    '${formatDistance(meters, units)} ${units.distanceLabel}';
+
 /// Speed number only, e.g. "18.4".
 String formatSpeed(double kmh, Units units) {
   final v = units == Units.km ? kmh : kmToMi(kmh);

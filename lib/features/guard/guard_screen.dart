@@ -4,12 +4,14 @@ import 'package:provider/provider.dart';
 
 import '../../core/guard_logic.dart';
 import '../../core/theme.dart';
+import '../../core/units.dart';
 import '../../data/models/user.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/permission_rationale.dart';
 import '../../widgets/responsive.dart';
 import '../../widgets/visuals.dart';
 import '../alerts/alert_notifier.dart';
+import '../me/settings_controller.dart';
 import '../record/location_rationale.dart';
 import 'guard_controller.dart';
 import 'guard_panels.dart';
@@ -30,6 +32,7 @@ class GuardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final guard = context.watch<GuardController>();
+    final units = context.select<SettingsController, Units>((s) => s.units);
     final loaded = context.select<VehiclesController, bool>((c) => c.loaded);
     final v = guard.vehicle;
     final t = Theme.of(context).textTheme;
@@ -84,7 +87,7 @@ class GuardScreen extends StatelessWidget {
                 else ...[
                   Text(
                     'Leave this phone on or in the vehicle. If it moves more than '
-                    '${guard.radiusM.round()} m from where you arm it, everyone in your circles '
+                    '${distanceText(guard.radiusM, units)} from where you arm it, everyone in your circles '
                     'gets an alert.',
                     style: t.bodyMedium?.copyWith(height: 1.4),
                   ),
@@ -128,6 +131,7 @@ class _SetupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final guard = context.watch<GuardController>();
+    final units = context.select<SettingsController, Units>((s) => s.units);
     final t = Theme.of(context).textTheme;
     return Card(
       child: Padding(
@@ -141,7 +145,7 @@ class _SetupCard extends StatelessWidget {
                 children: [
                   Expanded(child: Text('Alert distance', style: t.titleSmall)),
                   Text(
-                    '${guard.radiusM.round()} m',
+                    distanceText(guard.radiusM, units),
                     style: t.titleMedium?.copyWith(fontFeatures: kTabular),
                   ),
                 ],
@@ -152,7 +156,7 @@ class _SetupCard extends StatelessWidget {
               min: GuardController.minRadiusM,
               max: GuardController.maxRadiusM,
               divisions: 48,
-              label: '${guard.radiusM.round()} m',
+              label: distanceText(guard.radiusM, units),
               onChanged: guard.setRadius,
             ),
             const Divider(),

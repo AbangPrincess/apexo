@@ -1,17 +1,22 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme.dart';
+import '../../core/units.dart';
 import '../../data/models/circle_alert.dart';
-import '../../widgets/adaptive.dart';
 import '../../widgets/visuals.dart';
+import '../me/settings_controller.dart';
+import 'alert_buttons.dart';
+import 'alert_heading.dart';
 
-/// "Moved 120 m from its boundary (limit 50 m)" and friends.
-String alertDetail(CircleAlert a) => switch (a.type) {
+/// "Moved 0.07 km away (limit 0.05 km)" and friends. Distances follow the
+/// Kilometers / Miles setting like ride distances (owner, 2026-11-11); the
+/// distance is from where the vehicle was guarded.
+String alertDetail(CircleAlert a, Units units) => switch (a.type) {
   AlertType.geofence =>
-    'Moved ${a.distanceM.round()} m from its boundary'
-        '${a.radiusM > 0 ? ' (limit ${a.radiusM.round()} m)' : ''}',
+    'Moved ${distanceText(a.distanceM, units)} away'
+        '${a.radiusM > 0 ? ' (limit ${distanceText(a.radiusM, units)})' : ''}',
   AlertType.motion => 'Movement detected while guarded',
   AlertType.lowbattery => 'Guard mode may stop soon',
   AlertType.sos => 'Asked the circle for help',
@@ -31,33 +36,72 @@ enum AlertChoice { viewOnMap, navigate, itsMe }
 
 /// The interruption other members see when a vehicle in their circle
 /// moves. Dismissing it (tap outside, back) leaves the alert unacknowledged.
-Future<AlertChoice?> showIncomingAlert(BuildContext context, CircleAlert a) {
-  final apple = isApple(context);
-  Widget action(BuildContext ctx, String label, AlertChoice c, {bool primary = false}) {
-    void pop() => Navigator.of(ctx).pop(c);
-    if (apple) {
-      return CupertinoDialogAction(isDefaultAction: primary, onPressed: pop, child: Text(label));
-    }
-    return primary
-        ? FilledButton(onPressed: pop, child: Text(label))
-        : TextButton(onPressed: pop, child: Text(label));
-  }
+/// Same layout on iPhone, Android and the web: View on map and Navigate
+/// side by side under the title, a quiet "It's me" of the same size below.
+Future<AlertChoice?> showIncomingAlert(BuildContext context, CircleAlert a) =>
+    showDialog<AlertChoice>(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => IncomingAlertDialog(alert: a),
+    );
 
-  return showAdaptiveDialog<AlertChoice>(
-    context: context,
-    barrierDismissible: true,
-    builder: (ctx) => AlertDialog.adaptive(
-      icon: apple ? null : Icon(a.type.icon, color: a.type.color, size: 32),
-      title: Text(a.message),
-      content: Text(alertDetail(a)),
-      actions: [
-        if (a.type != AlertType.lowbattery)
-          action(ctx, 'View on map', AlertChoice.viewOnMap, primary: true),
-        if (a.type != AlertType.lowbattery) action(ctx, 'Navigate', AlertChoice.navigate),
-        action(ctx, a.type == AlertType.lowbattery ? 'OK' : "It's me", AlertChoice.itsMe),
-      ],
-    ),
-  );
+class IncomingAlertDialog extends StatelessWidget {
+  const IncomingAlertDialog({super.key, required this.alert});
+
+  final CircleAlert alert;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final units = context.select<SettingsController, Units>((s) => s.units);
+    final battery = alert.type == AlertType.lowbattery;
+    void pick(AlertChoice c) => Navigator.of(context).pop(c);
+    return Dialog(
+      insetPadding: const EdgeInsets.all(Space.l),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        // The same 24 pt on every side, so the last button sits as far
+        // from the bottom edge as the icon does from the top.
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(Space.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(alert.type.icon, color: alert.type.color, size: 32),
+              const SizedBox(height: Space.m),
+              AlertHeading(
+                alert.message,
+                alertDetail(alert, units),
+                titleStyle: t.titleLarge!,
+                detailStyle: t.bodyMedium!.copyWith(color: AppColors.textMuted),
+                center: true,
+                gap: Space.s,
+              ),
+              const SizedBox(height: Space.l),
+              // Low battery never pops up (a snack bar instead).
+              if (!battery)
+                AlertActions(
+                  filledMap: true,
+                  onViewMap: () => pick(AlertChoice.viewOnMap),
+                  onNavigate: () => pick(AlertChoice.navigate),
+                  third: "It's me",
+                  onThird: () => pick(AlertChoice.itsMe),
+                )
+              else ...[
+                Center(
+                  child: TextButton(
+                    onPressed: () => pick(AlertChoice.itsMe),
+                    child: const Text('OK'),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Small red pin for an open alert's last known spot on the map.

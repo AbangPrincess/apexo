@@ -14,6 +14,7 @@ import '../features/circle/circle_screen.dart';
 import '../features/guard/guard_screen.dart';
 import '../features/feed/home_screen.dart';
 import '../features/me/me_screen.dart';
+import '../features/me/settings_controller.dart';
 import '../features/record/record_controller.dart';
 import '../features/record/record_screen.dart';
 import '../widgets/responsive.dart';
@@ -72,7 +73,10 @@ class _AppShellState extends State<AppShell> {
   Future<void> _announce(CircleAlert alert) async {
     if (!mounted) return;
     final alerts = context.read<AlertsController>();
-    context.read<AlertNotifier>().show(alert, alertDetail(alert));
+    context.read<AlertNotifier>().show(
+      alert,
+      alertDetail(alert, context.read<SettingsController>().units),
+    );
     if (alert.type == AlertType.lowbattery) return _snack(alert);
     // One dialog at a time; the Alerts tab lists the rest.
     if (_dialogOpen) return;
